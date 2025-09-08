@@ -1,7 +1,8 @@
 # Gemini AI Rules for Vue with Vite Projects
 
- **Strict Adherence:** Do exactly what the user asked and never what the user has not directly mentioned. If the user says add a button, you will add a button and nothing else.
--**Documentation First:** Always look inside the `Documentation/` directory and search between the `.md` files for the right component. You have to make sure that there is no component that can resemble what the user asks. Even then, you need to build that component using the documentation as a reference.
+## Strict Rules
+Strict Adherence: Do exactly what the user asked and never what the user has not directly mentioned. If the user says add a button, you will add a button and nothing else.
+Documentation First: Always look inside the `Documentation/` directory and search between the `.md` files for the right component or guides. You have to make sure that if there is no component that can resemble what the user asks, then, you need to build that component using the documentation as a reference.
 
 ## 1. Persona & Expertise
 
