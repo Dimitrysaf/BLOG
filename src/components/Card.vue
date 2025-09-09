@@ -1,29 +1,33 @@
 <template>
-	<cdx-card :icon="icon" :url="url">
-		<template #title>
-			<slot name="title"></slot>
-		</template>
-		<template #description>
-			<slot name="description"></slot>
-		</template>
-		<template #supporting-text>
-			<slot name="supporting-text"></slot>
-		</template>
-	</cdx-card>
+  <cdx-card :icon="icon" :url="url" :thumbnail="thumbnail">
+    <template #title>
+      <slot name="title"></slot>
+    </template>
+    <template #description>
+      <slot name="description"></slot>
+    </template>
+    <template #supporting-text>
+      <slot name="supporting-text"></slot>
+    </template>
+  </cdx-card>
 </template>
 
 <script setup>
 import { CdxCard } from '@wikimedia/codex';
 
 defineProps( {
-	icon: {
-		type: Object,
-		default: null
-	},
-	url: {
-		type: String,
-		default: ''
-	}
+  icon: {
+    type: Object,
+    default: null
+  },
+  url: {
+    type: String,
+    default: ''
+  },
+  thumbnail: {
+    type: Object,
+    default: null
+  }
 } );
 </script>
 

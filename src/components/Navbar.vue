@@ -2,7 +2,7 @@
   <nav class="navbar">
     <Container>
       <div class="navbar-content">
-        <a href="/" class="logo">Logo</a>
+        <a href="/" class="logo">Gov<span class="blue">gr</span></a>
         <div class="navbar-actions">
           <Search />
           <AccountMenu :is-logged-in="isLoggedIn" />
@@ -42,6 +42,11 @@ const isLoggedIn = ref(false);
   font-weight: bold;
   text-decoration: none;
   color: #333;
+}
+
+.logo .blue {
+  color: #3366cc;
+  font-weight: normal;
 }
 
 .navbar-actions {

@@ -31,33 +31,33 @@ const selection = ref( null );
 
 const loggedInMenuItems = [
   {
-    label: 'Account',
+    label: 'Λογαριασμός',
     items: [
-      { label: 'My account', value: 'account', icon: cdxIconUserAvatarOutline },
-      { label: 'Settings', value: 'settings', icon: cdxIconSettings },
-      { label: 'Log out', value: 'logout', icon: cdxIconLogOut, action: 'destructive' },
+      { label: 'Ο λογαγιαριασμός μου', value: 'account', icon: cdxIconUserAvatarOutline },
+      { label: 'Ρυθμίσεις', value: 'settings', icon: cdxIconSettings },
+      { label: 'Αποσύνδεση', value: 'logout', icon: cdxIconLogOut, action: 'destructive' },
     ]
   },
   {
-    label: 'Appearance',
+    label: 'Εμφάνιση',
     items: [
-      { label: 'Switch theme', value: 'theme', icon: cdxIconMoon }
+      { label: 'Αλλαγή θέματος', value: 'theme', icon: cdxIconMoon }
     ]
   }
 ];
 
 const notLoggedInMenuItems = [
   {
-    label: 'Account',
+    label: 'Λογαριασμός',
     items: [
-      { label: 'Log in', value: 'login', icon: cdxIconLogIn },
-      { label: 'Sign up', value: 'signup', icon: cdxIconUserAdd },
+      { label: 'Σύνδεση', value: 'login', icon: cdxIconLogIn },
+      { label: 'Εγγραφή', value: 'signup', icon: cdxIconUserAdd },
     ]
   },
   {
-    label: 'Appearance',
+    label: 'Εμφάνιση',
     items: [
-      { label: 'Switch theme', value: 'theme', icon: cdxIconMoon }
+      { label: 'Αλλαγή θέματος', value: 'theme', icon: cdxIconMoon }
     ]
   }
 ];
@@ -67,7 +67,7 @@ const currentMenuItems = computed( () => {
 } );
 
 const footer = {
-  label: 'Help',
+  label: 'Βοήθεια',
   value: 'help',
   icon: cdxIconHelp
 };

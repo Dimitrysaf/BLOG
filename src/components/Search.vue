@@ -6,13 +6,13 @@
 
     <cdx-dialog
         v-model:open="open"
-        title="Search"
+        title="Αναζήτηση"
         :use-close-button="true"
     >
       <cdx-search-input
           v-model="currentSearchTerm"
-          aria-label="Search..."
-          placeholder="Search..."
+          aria-label="Αναζήτηση..."
+          placeholder="Αναζήτηση..."
       />
 
       <ul v-if="searchResults.length > 0" class="search-results">
@@ -25,11 +25,11 @@
       </ul>
 
       <div v-else-if="hasSearched" class="search-status">
-        No results found for "{{ currentSearchTerm }}"
+        Κανένα αποτέλεσμα για "{{ currentSearchTerm }}"
       </div>
 
       <div v-else class="recommended-searches">
-        <p>Try searching for:</p>
+        <p>Προτινόμενα:</p>
         <Card
           v-for="recommendation in recommended"
           :key="recommendation.label"
@@ -66,24 +66,24 @@ import Card from './Card.vue';
 const open = ref(false);
 const recommended = [
   {
-    label: 'Vue 3',
+    label: '1',
     icon: cdxIconBook,
-    description: 'The progressive JavaScript framework.'
+    description: '1'
   },
   {
-    label: 'Composition API',
+    label: '2',
     icon: cdxIconCode,
-    description: 'A new way to write and organize component logic.'
+    description: '2'
   },
   {
-    label: 'Vite',
+    label: '3',
     icon: cdxIconArticle,
-    description: 'A fast and modern build tool for web development.'
+    description: '3'
   },
   {
-    label: 'Pinia',
+    label: '4',
     icon: cdxIconInfoFilled,
-    description: 'The official state management library for Vue.'
+    description: '4'
   }
 ];
 
