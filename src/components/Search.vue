@@ -11,13 +11,11 @@
     >
       <cdx-search-input
           v-model="currentSearchTerm"
-          aria-label="Search Wikidata"
-          placeholder="Search Wikidata"
+          aria-label="Search..."
+          placeholder="Search..."
       />
 
-      <div v-if="loading" class="search-status">Loading search results...</div>
-
-      <ul v-else-if="searchResults.length > 0" class="search-results">
+      <ul v-if="searchResults.length > 0" class="search-results">
         <li v-for="result in searchResults" :key="result.value" class="search-result-item">
             <a :href="result.url" target="_blank" rel="noopener noreferrer">
               <span class="search-result-label">{{ result.label }}</span>
@@ -26,7 +24,7 @@
         </li>
       </ul>
 
-      <div v-else-if="hasSearched && !loading" class="search-status">
+      <div v-else-if="hasSearched" class="search-status">
         No results found for "{{ currentSearchTerm }}"
       </div>
 
@@ -53,77 +51,20 @@ import {
   CdxSearchInput
 } from '@wikimedia/codex';
 import { cdxIconSearch } from '@wikimedia/codex-icons';
+import { useLocalSearch } from '../composables/useLocalSearch.js';
 
 const open = ref(false);
 const recommended = ['Vue 3', 'Composition API', 'Vite', 'Pinia'];
 
-const searchResults = ref([]);
 const currentSearchTerm = ref('');
-const loading = ref(false);
-const hasSearched = ref(false);
-let debounceTimer = null;
-
-watch(currentSearchTerm, (newVal) => {
-  clearTimeout(debounceTimer);
-
-  if (!newVal.trim()) {
-    searchResults.value = [];
-    hasSearched.value = false;
-    loading.value = false;
-    return;
-  }
-
-  loading.value = true;
-  hasSearched.value = true;
-
-  debounceTimer = setTimeout(() => {
-    fetchResults(newVal);
-  }, 300);
-});
+const { searchResults, hasSearched } = useLocalSearch(currentSearchTerm);
 
 watch(open, (isOpen) => {
   if (!isOpen) {
     // Reset state when dialog closes
     currentSearchTerm.value = '';
-    searchResults.value = [];
-    hasSearched.value = false;
-    loading.value = false;
   }
 });
-
-function fetchResults(searchTerm) {
-  const params = new URLSearchParams({
-    origin: '*',
-    action: 'wbsearchentities',
-    format: 'json',
-    limit: '20',
-    props: 'url|description',
-    language: 'en',
-    uselang: 'en',
-    type: 'item',
-    search: searchTerm
-  });
-  fetch(`https://www.wikidata.org/w/api.php?${params.toString()}`)
-    .then((response) => response.json())
-    .then((data) => {
-      searchResults.value = data.search && data.search.length > 0 ?
-        adaptApiResponse(data.search) :
-        [];
-    }).catch(() => {
-      searchResults.value = [];
-    }).finally(() => {
-      loading.value = false;
-    });
-}
-
-function adaptApiResponse(pages) {
-  return pages.map(({ id, label, url, description }) => ({
-    value: id,
-    label,
-    description,
-    url,
-  }));
-}
 
 const search = (searchTerm) => {
   currentSearchTerm.value = searchTerm;
