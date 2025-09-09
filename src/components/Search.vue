@@ -30,13 +30,16 @@
 
       <div v-else class="recommended-searches">
         <p>Try searching for:</p>
-        <cdx-button
+        <Card
           v-for="recommendation in recommended"
-          :key="recommendation"
-          @click="search(recommendation)"
+          :key="recommendation.label"
+          :icon="recommendation.icon"
+          :url="'javascript:void(0);'"
+          @click="search(recommendation.label)"
         >
-          {{ recommendation }}
-        </cdx-button>
+          <template #title>{{ recommendation.label }}</template>
+          <template #description>{{ recommendation.description }}</template>
+        </Card>
       </div>
     </cdx-dialog>
   </div>
@@ -50,11 +53,39 @@ import {
   CdxIcon,
   CdxSearchInput
 } from '@wikimedia/codex';
-import { cdxIconSearch } from '@wikimedia/codex-icons';
+import {
+  cdxIconSearch,
+  cdxIconBook,
+  cdxIconCode,
+  cdxIconArticle,
+  cdxIconInfoFilled
+} from '@wikimedia/codex-icons';
 import { useLocalSearch } from '../composables/useLocalSearch.js';
+import Card from './Card.vue';
 
 const open = ref(false);
-const recommended = ['Vue 3', 'Composition API', 'Vite', 'Pinia'];
+const recommended = [
+  {
+    label: 'Vue 3',
+    icon: cdxIconBook,
+    description: 'The progressive JavaScript framework.'
+  },
+  {
+    label: 'Composition API',
+    icon: cdxIconCode,
+    description: 'A new way to write and organize component logic.'
+  },
+  {
+    label: 'Vite',
+    icon: cdxIconArticle,
+    description: 'A fast and modern build tool for web development.'
+  },
+  {
+    label: 'Pinia',
+    icon: cdxIconInfoFilled,
+    description: 'The official state management library for Vue.'
+  }
+];
 
 const currentSearchTerm = ref('');
 const { searchResults, hasSearched } = useLocalSearch(currentSearchTerm);
