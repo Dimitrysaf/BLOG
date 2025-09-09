@@ -4,16 +4,16 @@
       <cdx-icon :icon="cdxIconSearch"></cdx-icon>
     </cdx-button>
 
-    <cdx-dialog v-model:open="open" title="Search" :use-close-button="true" @default="onDialogDefault">
-      <template #header>
-        <cdx-search-input
-            v-model="currentSearchTerm"
-            :use-button="true"
-            aria-label="Search Wikidata"
-            placeholder="Search Wikidata"
-            @submit-click="onSubmit"
-        />
-      </template>
+    <cdx-dialog
+        v-model:open="open"
+        title="Search"
+        :use-close-button="true"
+    >
+      <cdx-search-input
+          v-model="currentSearchTerm"
+          aria-label="Search Wikidata"
+          placeholder="Search Wikidata"
+      />
 
       <div v-if="loading" class="search-status">Loading search results...</div>
 
@@ -26,7 +26,7 @@
         </li>
       </ul>
 
-      <div v-else-if="hasSearched" class="search-status">
+      <div v-else-if="hasSearched && !loading" class="search-status">
         No results found for "{{ currentSearchTerm }}"
       </div>
 
@@ -61,7 +61,25 @@ const searchResults = ref([]);
 const currentSearchTerm = ref('');
 const loading = ref(false);
 const hasSearched = ref(false);
+let debounceTimer = null;
 
+watch(currentSearchTerm, (newVal) => {
+  clearTimeout(debounceTimer);
+
+  if (!newVal.trim()) {
+    searchResults.value = [];
+    hasSearched.value = false;
+    loading.value = false;
+    return;
+  }
+
+  loading.value = true;
+  hasSearched.value = true;
+
+  debounceTimer = setTimeout(() => {
+    fetchResults(newVal);
+  }, 300);
+});
 
 watch(open, (isOpen) => {
   if (!isOpen) {
@@ -72,10 +90,6 @@ watch(open, (isOpen) => {
     loading.value = false;
   }
 });
-
-function onDialogDefault() {
-    open.value = false;
-}
 
 function fetchResults(searchTerm) {
   const params = new URLSearchParams({
@@ -89,8 +103,17 @@ function fetchResults(searchTerm) {
     type: 'item',
     search: searchTerm
   });
-  return fetch(`https://www.wikidata.org/w/api.php?${params.toString()}`)
-    .then((response) => response.json());
+  fetch(`https://www.wikidata.org/w/api.php?${params.toString()}`)
+    .then((response) => response.json())
+    .then((data) => {
+      searchResults.value = data.search && data.search.length > 0 ?
+        adaptApiResponse(data.search) :
+        [];
+    }).catch(() => {
+      searchResults.value = [];
+    }).finally(() => {
+      loading.value = false;
+    });
 }
 
 function adaptApiResponse(pages) {
@@ -102,38 +125,13 @@ function adaptApiResponse(pages) {
   }));
 }
 
-function onSubmit() {
-  if (!currentSearchTerm.value.trim()) {
-    return;
-  }
-  
-  hasSearched.value = true;
-  loading.value = true;
-  searchResults.value = [];
-
-  fetchResults(currentSearchTerm.value).then((data) => {
-    searchResults.value = data.search && data.search.length > 0 ?
-      adaptApiResponse(data.search) :
-      [];
-  }).catch(() => {
-    searchResults.value = [];
-  }).finally(() => {
-    loading.value = false;
-  });
-}
-
 const search = (searchTerm) => {
   currentSearchTerm.value = searchTerm;
-  onSubmit();
 };
 
 </script>
 
 <style scoped>
-:deep(.cdx-dialog__header) {
-  padding: 0;
-}
-
 .recommended-searches {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -178,5 +176,11 @@ const search = (searchTerm) => {
 .search-result-description {
   font-size: 0.9em;
   color: #54595d;
+}
+
+@media screen and (max-width: 600px) {
+  .recommended-searches {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
