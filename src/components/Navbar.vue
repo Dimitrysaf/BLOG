@@ -1,0 +1,52 @@
+<template>
+  <nav class="navbar">
+    <Container>
+      <div class="navbar-content">
+        <a href="/" class="logo">Logo</a>
+        <div class="navbar-actions">
+          <Search />
+          <AccountMenu :is-logged-in="isLoggedIn" />
+        </div>
+      </div>
+    </Container>
+  </nav>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import Container from './Container.vue';
+import AccountMenu from './AccountMenu.vue';
+import Search from './Search.vue';
+
+const isLoggedIn = ref(false);
+
+</script>
+
+<style scoped>
+.navbar {
+  height: 63px;
+  background-color: #f8f8f8;
+  border-bottom: 1px solid #e7e7e7;
+  width: 100%;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 63px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #333;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem; 
+}
+</style>
