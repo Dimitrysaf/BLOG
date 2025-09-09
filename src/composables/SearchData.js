@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue';
 
 // This data could eventually come from a store, a static JSON file, or another API.
-const localData = [
+const data = [
   { value: 'vue', label: 'Vue.js', description: 'The Progressive JavaScript Framework.', url: 'https://vuejs.org/' },
   { value: 'vite', label: 'Vite', description: 'Next Generation Frontend Tooling.', url: 'https://vitejs.dev/' },
   { value: 'pinia', label: 'Pinia', description: 'The intuitive store for Vue.js.', url: 'https://pinia.vuejs.org/' },
@@ -14,7 +14,7 @@ const localData = [
  * @param {import('vue').Ref<string>} searchTerm - The reactive search term.
  * @returns {{searchResults: import('vue').Ref<Array>, hasSearched: import('vue').Ref<boolean>}}
  */
-export function useLocalSearch(searchTerm) {
+export function SearchData(searchTerm) {
   const searchResults = ref([]);
   const hasSearched = ref(false);
 
@@ -28,7 +28,7 @@ export function useLocalSearch(searchTerm) {
     }
 
     hasSearched.value = true;
-    searchResults.value = localData.filter(item =>
+    searchResults.value = data.filter(item =>
       item.label.toLowerCase().includes(term) ||
       (item.description && item.description.toLowerCase().includes(term))
     );

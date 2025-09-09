@@ -1,11 +1,13 @@
 <template>
   <div>
-    <div class="search-buttons-container">
-      <cdx-button weight="quiet" @click="open = true">
-        <cdx-icon :icon="cdxIconSearch"></cdx-icon>
-      </cdx-button>
-    </div>
-
+      <cdx-search-input
+        v-model="currentSearchTerm"
+        aria-label="Αναζήτηση..."
+        placeholder="Αναζήτηση..."
+        readonly
+        @click="open = true"
+        class="search-input-as-button"
+      />
     <cdx-dialog
         v-model:open="open"
         title="Αναζήτηση"
@@ -50,21 +52,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import {
-  CdxButton,
   CdxDialog,
-  CdxIcon,
   CdxSearchInput
 } from '@wikimedia/codex';
-import {
-  cdxIconSearch,
-  cdxIconBook,
-  cdxIconCode,
-  cdxIconArticle,
-  cdxIconInfoFilled
-} from '@wikimedia/codex-icons';
 import { SearchData } from '../composables/SearchData.js';
 import { recommended } from '../composables/Recommended';
 import Card from './Card.vue';
+import Container from './Container.vue';
 
 const open = ref(false);
 
@@ -131,26 +125,9 @@ const search = (searchTerm) => {
   color: #54595d;
 }
 
-.search-buttons-container {
-  display: flex;
-  gap: 10px; /* Space between buttons */
-  align-items: center;
-}
-
-.search-field-button {
-  flex-grow: 1; /* Allows the button to take up available space */
-  padding: 8px 15px;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.search-input-as-button {
   cursor: pointer;
-  font-size: 1em;
-  color: #333;
-  text-align: left; /* Align text to the left within the button */
-}
-
-.search-field-button:hover {
-  background-color: #e0e0e0;
+  width: 100%;
 }
 
 @media screen and (max-width: 600px) {

@@ -3,6 +3,7 @@
 ## Strict Rules
 Strict Adherence: Do exactly what the user asked and never what the user has not directly mentioned. If the user says add a button, you will add a button and nothing else.
 Documentation First: Always look inside the `Documentation/` directory and search between the `.md` files for the right component or guides. You have to make sure that if there is no component that can resemble what the user asks, then, you need to build that component using the documentation as a reference.
+No Comments: Do not leave comments behind. Always make sure to have a clean code. Comments about sections are allowed, e.g. `/*HEADER*/` or `/*FUNCTIONS*/` nothing else.
 
 ## 1. Persona & Expertise
 

@@ -2,7 +2,9 @@
   <nav class="navbar">
     <Container>
       <div class="navbar-content">
-        <a href="/" class="logo">Gov<span class="blue">gr</span></a>
+        <a href="/" class="logo">
+          <img src="/src/assets/Coat_of_arms_of_Greece.svg" alt="Coat of Arms of Greece" class="navbar-logo" />Gov<span class="blue">gr</span>
+        </a>
         <div class="navbar-actions">
           <Search />
           <AccountMenu :is-logged-in="isLoggedIn" />
@@ -38,10 +40,18 @@ const isLoggedIn = ref(false);
 }
 
 .logo {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
   text-decoration: none;
   color: #333;
+  display: flex; 
+  align-items: center; 
+  gap: 4px;
+}
+
+.navbar-logo {
+  height: 30px;
+  width: auto;
 }
 
 .logo .blue {
