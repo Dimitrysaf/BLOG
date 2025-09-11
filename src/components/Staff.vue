@@ -2,17 +2,17 @@
   <div>
     <Container>
       <div class="header">
-        <h1>Γραφεία και Υπηρεσίες</h1>
+        <h1>Μέλη</h1>
       </div>
       <div class="card-grid">
         <Card
-          v-for="office in offices"
-          :key="office.id"
-          :url="office.link"
+          v-for="person in staff"
+          :key="person.id"
+          :url="person.link"
+          :thumbnail="{ src: person.image }"
         >
-          <template #title><span v-html="office.title"></span></template>
-          <template #description><span v-html="office.description"></span></template>
-          <template #supporting-text><span v-html="office.supportingText"></span></template>
+          <template #title><span v-html="person.name"></span></template>
+          <template #description><span v-html="person.title"></span></template>
         </Card>
       </div>
     </Container>
@@ -22,22 +22,12 @@
 <script setup lang="ts">
 import Container from './Container.vue';
 import Card from './Card.vue';
-import Staff from './Staff.vue';
 import type { PropType } from 'vue';
-import type { Staff as StaffType } from '../composables/federationData';
-
-interface Office {
-  id: number;
-  title: string;
-  description: string;
-  supportingText: string;
-  link: string;
-  staff: StaffType[];
-}
+import type { Staff } from '../composables/federationData';
 
 defineProps({
-  offices: {
-    type: Array as PropType<Office[]>,
+  staff: {
+    type: Array as PropType<Staff[]>,
     required: true,
   },
 });
@@ -61,7 +51,7 @@ h1::before,
 h1::after {
   content: '';
   flex: 1;
-  border-bottom: 1px solid #c8ccd1; /* base70 */
+  border-bottom: 1px solid #c8ccd1; 
 }
 
 h1::before {
@@ -70,10 +60,6 @@ h1::before {
 
 h1::after {
   margin-left: 16px;
-}
-
-.office-section {
-    margin-bottom: 48px;
 }
 
 .card-grid {

@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router';
 import { federationData, type FederationDataItem } from '../composables/federationData.ts';
 import Offices from '../components/Offices.vue';
 import Breadcrumbs from '../components/Breadcrumbs.vue';
+import Staff from '../components/Staff.vue';
 
 const route = useRoute();
 const loading = ref(true);
@@ -50,9 +51,11 @@ watch(() => route.params.ministry_name, () => {
     </div>
 
     <Breadcrumbs v-if="breadcrumbItems.length" :items="breadcrumbItems" />
-
     <div v-if="ministry.offices.length > 0">
       <Offices :offices="ministry.offices" />
+    </div>
+    <div v-if="ministry.staff && ministry.staff.length > 0">
+      <Staff :staff="ministry.staff" />
     </div>
   </template>
 </template>

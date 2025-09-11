@@ -2,6 +2,7 @@ export interface Staff {
   id: number;
   name: string;
   title: string;
+  image: string;
   link?: string;
 }
 
@@ -33,7 +34,15 @@ export const federationData: FederationDataItem[] = [
     supportingText: '',
     link: '/otey',
     thumbnail: '/src/assets/Coat_of_arms_of_Greece.svg',
-    staff: [],
+    staff: [
+      {
+        id: 1,
+        name: 'ΜΗΤΣΟΤΑΚΗΣ ΚΥΡΙΑΚΟΣ',
+        title: 'ΣΥΜΒΟΥΛΟΣ ΟΤΕΥ',
+        image: 'https://mikropragmata-assets.lifo.gr/wp-content/uploads/2023/12/407476554_10232899470891605_9137350414539873679_n-758x426.jpg',
+        link: '#',
+      },
+    ],
     offices: [
       {
         id: 1,
