@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="search-buttons-container">
-      <cdx-button weight="quiet" @click="open = true">
+      <cdx-button weight="quiet" @click="open = true" aria-label="Αναζήτηση">
         <cdx-icon :icon="cdxIconSearch"></cdx-icon>
       </cdx-button>
     </div>

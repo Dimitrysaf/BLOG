@@ -8,6 +8,10 @@
       </Container>
     </div>
     <NowOnGov />
+    <div id="federation">
+      <Federation />
+    </div>
+    <Regions />
   </div>
 </template>
 
@@ -15,6 +19,8 @@
 import Container from '../components/Container.vue';
 import HomeSearch from '../components/HomeSearch.vue';
 import NowOnGov from '../components/NowOnGov.vue';
+import Federation from '../components/Federation.vue';
+import Regions from '../components/Regions.vue';
 </script>
 
 <style scoped>
@@ -32,16 +38,15 @@ import NowOnGov from '../components/NowOnGov.vue';
 }
 
 .banner-logo {
-  width: 200px;
-  height: 200px;
-  margin-bottom: 20px;
+  width: 150px;
+  height: 150px;
 }
 
 .banner-title {
   font-family: inherit;
-  font-size: xxx-large;
+  font-size: xx-large;
   font-weight: normal;
-  line-height: xxx-large;
+  line-height: xx-large;
   color: white;
   margin-bottom: 20px;
 }

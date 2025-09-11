@@ -37,7 +37,6 @@
         <Card
           v-for="recommendation in recommended"
           :key="recommendation.label"
-          :icon="recommendation.icon"
           :url="'javascript:void(0);'"
           @click="search(recommendation.label)"
         >
