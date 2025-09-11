@@ -37,12 +37,6 @@ const loggedInMenuItems = [
       { label: 'Ρυθμίσεις', value: 'settings', icon: cdxIconSettings },
       { label: 'Αποσύνδεση', value: 'logout', icon: cdxIconLogOut, action: 'destructive' },
     ]
-  },
-  {
-    label: 'Εμφάνιση',
-    items: [
-      { label: 'Αλλαγή θέματος', value: 'theme', icon: cdxIconMoon }
-    ]
   }
 ];
 
@@ -52,12 +46,6 @@ const notLoggedInMenuItems = [
     items: [
       { label: 'Σύνδεση', value: 'login', icon: cdxIconLogIn },
       { label: 'Εγγραφή', value: 'signup', icon: cdxIconUserAdd },
-    ]
-  },
-  {
-    label: 'Εμφάνιση',
-    items: [
-      { label: 'Αλλαγή θέματος', value: 'theme', icon: cdxIconMoon }
     ]
   }
 ];
@@ -86,10 +74,6 @@ function signup() {
   console.log('Triggered signup action');
 }
 
-function switchTheme() {
-  console.log('Triggered switch theme action');
-}
-
 function openSettings() {
   console.log('Triggered open settings action');
 }
@@ -112,9 +96,6 @@ function onSelect( newSelection ) {
       break;
     case 'signup':
       signup();
-      break;
-    case 'theme':
-      switchTheme();
       break;
     case 'settings':
       openSettings();

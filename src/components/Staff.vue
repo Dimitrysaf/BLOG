@@ -10,6 +10,7 @@
           :key="person.id"
           :url="person.link"
           :thumbnail="{ src: person.image }"
+          force-thumbnail
         >
           <template #title><span v-html="person.name"></span></template>
           <template #description><span v-html="person.title"></span></template>
@@ -66,5 +67,22 @@ h1::after {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
+}
+
+:deep(.cdx-card) {
+  flex-direction: column;
+}
+
+:deep(.cdx-card__thumbnail) {
+    width: 100%;
+    margin-inline-end: 0;
+    margin-block-end: 16px;
+}
+
+:deep(.cdx-card__thumbnail.cdx-thumbnail .cdx-thumbnail__image),
+:deep(.cdx-card__thumbnail.cdx-thumbnail .cdx-thumbnail__placeholder) {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }
 </style>

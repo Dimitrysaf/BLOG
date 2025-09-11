@@ -2,7 +2,7 @@
   <div>
     <Container>
       <div class="header">
-        <h1>Γραφεία και Υπηρεσίες</h1>
+        <h1>Γραφεία & Υπηρεσίες</h1>
       </div>
       <div class="card-grid">
         <Card

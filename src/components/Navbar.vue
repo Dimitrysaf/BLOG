@@ -26,10 +26,11 @@ const isLoggedIn = ref(false);
 
 <style scoped>
 .navbar {
-  height: 63px;
+  height: 60px;
   background-color: #f8f8f8;
   border-bottom: 1px solid #e7e7e7;
   width: 100%;
+  border-bottom: solid 2px #c8ccd1;
 }
 
 .navbar-content {
