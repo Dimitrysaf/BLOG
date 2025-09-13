@@ -13,6 +13,15 @@
     @close="onClose"
   >
     <cdx-progress-bar v-if="isLoading" inline aria-label="Logging in..." />
+    <cdx-message 
+      v-if="errorMessage"
+      type="error" 
+      allow-user-dismiss
+      @user-dismissed="errorMessage = null"
+    >
+      {{ errorMessage }}
+    </cdx-message>
+
     <cdx-field
       :status="emailStatus"
       :messages="{ error: emailValidationMessage }"
@@ -53,6 +62,7 @@ import {
   CdxField,
   CdxTextInput,
   CdxProgressBar,
+  CdxMessage,
 } from '@wikimedia/codex';
 import {
   cdxIconLogIn,
@@ -70,6 +80,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'login']);
 
 const isLoading = ref(false);
+const errorMessage = ref(null);
 const email = ref('');
 const password = ref('');
 const emailStatus = ref('default');
@@ -79,6 +90,7 @@ const passwordValidationMessage = ref('Ο κωδικός πρόσβασης εί
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {
+    errorMessage.value = null; // Clear error on close
     email.value = '';
     password.value = '';
     emailStatus.value = 'default';
@@ -87,6 +99,7 @@ watch(() => props.modelValue, (isOpen) => {
 });
 
 async function onLogin() {
+  errorMessage.value = null; // Clear previous error
   const isEmailValid = email.value.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
   const isPasswordValid = password.value.length > 0;
 
@@ -113,7 +126,8 @@ async function onLogin() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+      // Use the error message from the API, or a default one
+      throw new Error(data.message || 'Login failed. Please check your credentials.');
     }
 
     localStorage.setItem('authToken', data.token);
@@ -122,11 +136,10 @@ async function onLogin() {
     onClose();
 
   } catch (error) {
-    console.error('Login error:', error);
+    errorMessage.value = error.message;
+    // We can also reset the field statuses if we want them to re-validate
     emailStatus.value = 'error';
     passwordStatus.value = 'error';
-    emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
-    passwordValidationMessage.value = '';
   } finally {
     isLoading.value = false;
   }

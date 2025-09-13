@@ -13,6 +13,15 @@
     @close="onClose"
   >
     <cdx-progress-bar v-if="isLoading" inline aria-label="Registering..." />
+    <cdx-message 
+      v-if="errorMessage"
+      type="error" 
+      allow-user-dismiss
+      @user-dismissed="errorMessage = null"
+    >
+      {{ errorMessage }}
+    </cdx-message>
+
     <cdx-field
       :status="usernameStatus"
       :messages="{ error: usernameValidationMessage }"
@@ -82,6 +91,7 @@ import {
   CdxField,
   CdxTextInput,
   CdxProgressBar,
+  CdxMessage,
 } from '@wikimedia/codex';
 import {
   cdxIconUserAdd,
@@ -100,6 +110,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'signin']);
 
 const isLoading = ref(false);
+const errorMessage = ref(null);
 const username = ref('');
 const email = ref('');
 const password = ref('');
@@ -117,6 +128,7 @@ const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασ
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {
+    errorMessage.value = null; // Clear error on close
     username.value = '';
     email.value = '';
     password.value = '';
@@ -163,6 +175,7 @@ function validateConfirmPassword() {
 }
 
 async function onSignIn() {
+  errorMessage.value = null; // Clear previous error
   validateUsername();
   validateEmail();
   validatePassword();
@@ -191,18 +204,17 @@ async function onSignIn() {
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Sign-up failed');
+      throw new Error(data.message || 'Sign-up failed. Please try again.');
     }
 
-    const data = await response.json();
     emit('signin', data.user);
     onClose();
 
   } catch (error) {
-    console.error('Sign-in error:', error);
-    // Handle error display here if needed
+    errorMessage.value = error.message;
   } finally {
     isLoading.value = false;
   }
