@@ -153,20 +153,47 @@ function validateConfirmPassword() {
   }
 }
 
-function onSignIn() {
+async function onSignIn() {
   validateUsername();
   validateEmail();
   validatePassword();
   validateConfirmPassword();
 
   if (
-    usernameStatus.value === 'success' &&
-    emailStatus.value === 'success' &&
-    passwordStatus.value === 'success' &&
-    confirmPasswordStatus.value === 'success'
+    usernameStatus.value !== 'success' ||
+    emailStatus.value !== 'success' ||
+    passwordStatus.value !== 'success' ||
+    confirmPasswordStatus.value !== 'success'
   ) {
-    emit('signin', { username: username.value, email: email.value, password: password.value });
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        username: username.value, 
+        email: email.value, 
+        password: password.value 
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Sign-up failed');
+    }
+
+    const data = await response.json();
+    emit('signin', data.user);
     onClose();
+
+  } catch (error) {
+    console.error('Sign-in error:', error);
+    // You can set a general error message here to display to the user
+    // For example, by updating a ref that is displayed in the template.
   }
 }
 

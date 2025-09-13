@@ -79,25 +79,47 @@ watch(() => props.modelValue, (isOpen) => {
   }
 });
 
-function onLogin() {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const isEmailValid = email.value.length > 0 && emailRegex.test(email.value);
+async function onLogin() {
+  const isEmailValid = email.value.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
   const isPasswordValid = password.value.length > 0;
 
-  emailStatus.value = isEmailValid ? 'success' : 'error';
-  passwordStatus.value = isPasswordValid ? 'success' : 'error';
+  emailStatus.value = isEmailValid ? 'default' : 'error';
+  passwordStatus.value = isPasswordValid ? 'default' : 'error';
 
-  if (isEmailValid && isPasswordValid) {
-    // Replace this with your actual authentication logic
-    if (email.value !== 'admin@example.com' || password.value !== 'password') {
-      emailStatus.value = 'error';
-      passwordStatus.value = 'error';
-      emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
-      passwordValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
-    } else {
-      emit('login', { email: email.value, password: password.value });
-      onClose();
+  if (!isEmailValid || !isPasswordValid) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        email: email.value, 
+        password: password.value 
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
     }
+
+    // Securely store the JWT
+    localStorage.setItem('authToken', data.token);
+
+    emit('login', data.user);
+    onClose();
+
+  } catch (error) {
+    console.error('Login error:', error);
+    emailStatus.value = 'error';
+    passwordStatus.value = 'error';
+    emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.' // Generic message for security
+    passwordValidationMessage.value = '' // Hide specific message on the password field
   }
 }
 
