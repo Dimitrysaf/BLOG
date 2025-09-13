@@ -6,10 +6,13 @@
     subtitle="Δημιουργίστε έναν λογαριασμό"
     :primary-action="{ label: 'Εγγραφή', action: 'progressive' }"
     :default-action="{ label: 'Ακύρωση' }"
+    :primary-action-disabled="isLoading"
+    :default-action-disabled="isLoading"
     @primary="onSignIn"
     @default="onClose"
     @close="onClose"
   >
+    <cdx-progress-bar v-if="isLoading" inline aria-label="Registering..." />
     <cdx-field
       :status="usernameStatus"
       :messages="{ error: usernameValidationMessage }"
@@ -20,6 +23,7 @@
       </template>
       <cdx-text-input
         v-model="username"
+        :disabled="isLoading"
         @update:model-value="validateUsername"
       />
     </cdx-field>
@@ -34,6 +38,7 @@
       <cdx-text-input
         v-model="email"
         type="email"
+        :disabled="isLoading"
         @update:model-value="validateEmail"
       />
     </cdx-field>
@@ -48,6 +53,7 @@
       <cdx-text-input
         v-model="password"
         type="password"
+        :disabled="isLoading"
         @update:model-value="validatePassword"
       />
     </cdx-field>
@@ -62,6 +68,7 @@
       <cdx-text-input
         v-model="confirmPassword"
         type="password"
+        :disabled="isLoading"
         @update:model-value="validateConfirmPassword"
       />
     </cdx-field>
@@ -74,6 +81,7 @@ import {
   CdxDialog,
   CdxField,
   CdxTextInput,
+  CdxProgressBar,
 } from '@wikimedia/codex';
 import {
   cdxIconUserAdd,
@@ -91,6 +99,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'signin']);
 
+const isLoading = ref(false);
 const username = ref('');
 const email = ref('');
 const password = ref('');
@@ -168,6 +177,7 @@ async function onSignIn() {
     return;
   }
 
+  isLoading.value = true;
   try {
     const response = await fetch('/api/signup', {
       method: 'POST',
@@ -192,8 +202,9 @@ async function onSignIn() {
 
   } catch (error) {
     console.error('Sign-in error:', error);
-    // You can set a general error message here to display to the user
-    // For example, by updating a ref that is displayed in the template.
+    // Handle error display here if needed
+  } finally {
+    isLoading.value = false;
   }
 }
 

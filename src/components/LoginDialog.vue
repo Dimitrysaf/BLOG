@@ -6,10 +6,13 @@
     subtitle="Σύνδεση στον λογαριασμό σας"
     :primary-action="{ label: 'Σύνδεση', action: 'progressive' }"
     :default-action="{ label: 'Ακύρωση' }"
+    :primary-action-disabled="isLoading"
+    :default-action-disabled="isLoading"
     @primary="onLogin"
     @default="onClose"
     @close="onClose"
   >
+    <cdx-progress-bar v-if="isLoading" inline aria-label="Logging in..." />
     <cdx-field
       :status="emailStatus"
       :messages="{ error: emailValidationMessage }"
@@ -21,6 +24,7 @@
       <cdx-text-input
         v-model="email"
         type="email"
+        :disabled="isLoading"
         @update:model-value="emailStatus = 'default'"
       />
     </cdx-field>
@@ -35,6 +39,7 @@
       <cdx-text-input
         v-model="password"
         type="password"
+        :disabled="isLoading"
         @update:model-value="passwordStatus = 'default'"
       />
     </cdx-field>
@@ -47,6 +52,7 @@ import {
   CdxDialog,
   CdxField,
   CdxTextInput,
+  CdxProgressBar,
 } from '@wikimedia/codex';
 import {
   cdxIconLogIn,
@@ -63,6 +69,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'login']);
 
+const isLoading = ref(false);
 const email = ref('');
 const password = ref('');
 const emailStatus = ref('default');
@@ -90,6 +97,7 @@ async function onLogin() {
     return;
   }
 
+  isLoading.value = true;
   try {
     const response = await fetch('/api/login', {
       method: 'POST',
@@ -108,7 +116,6 @@ async function onLogin() {
       throw new Error(data.message || 'Login failed');
     }
 
-    // Securely store the JWT
     localStorage.setItem('authToken', data.token);
 
     emit('login', data.user);
@@ -118,8 +125,10 @@ async function onLogin() {
     console.error('Login error:', error);
     emailStatus.value = 'error';
     passwordStatus.value = 'error';
-    emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.' // Generic message for security
-    passwordValidationMessage.value = '' // Hide specific message on the password field
+    emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
+    passwordValidationMessage.value = '';
+  } finally {
+    isLoading.value = false;
   }
 }
 
