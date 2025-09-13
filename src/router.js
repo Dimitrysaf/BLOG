@@ -8,7 +8,7 @@ const routes = [
     name: 'Home',
     component: Home,
     meta: {
-      title: 'Αρχική - Ομοσπονδιακή Πύλη της Ελλάδας',
+      title: 'Αρχική - Ιστολόγιο',
       favicon: ''
     }
   },
@@ -17,7 +17,7 @@ const routes = [
     name: 'NotFound',
     component: NotFound,
     meta: {
-      title: 'Σελίδα δεν βρέθηκε - Ομοσπονδιακή Πύλη της Ελλάδας',
+      title: 'Σελίδα δεν βρέθηκε - Ιστολόγιο',
       favicon: ''
     }
   },

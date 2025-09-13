@@ -2,7 +2,7 @@
   <footer class="footer">
     <Container>
       <div class="footer-content">
-        <p class="footer-text">&copy; 2025 Η Ελληνική Συνομοσπονδία</p>
+        <p class="footer-text">&copy; 2025 Το Ιστολόγιο του Δημήτρη</p>
         <ul class="footer-links">
           <li><a href="#" class="footer-link">Πολιτικές απορύτου</a></li>
           <li><a href="#" class="footer-link">Όροι χρήσης</a></li>
@@ -19,24 +19,24 @@ import Container from './Container.vue';
 
 <style scoped>
 .footer {
-  background-color: #f8f9fa; /* A light gray background */
-  margin-top: 2rem; /* Add space above the footer */
-  padding: 0.5rem 0; /* Make footer a lot smaller */
-  border-top: 1px solid #e9ecef; /* A slightly darker border */
+  background-color: #f8f9fa; 
+  margin-top: 2rem; 
+  padding: 0.5rem 0; 
+  border-top: 1px solid #e9ecef; 
 }
 
 .footer-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* Allow content to wrap on smaller screens */
-  gap: 0.5rem; /* Reduce gap */
+  flex-wrap: wrap; 
+  gap: 0.5rem; 
 }
 
 .footer-text {
-  color: #54595d; /* A dark gray for text */
+  color: #54595d; 
   font-family: sans-serif;
-  font-size: 0.75em; /* Make text a lot smaller */
+  font-size: 0.75em; 
 }
 
 .footer-links {
@@ -44,15 +44,15 @@ import Container from './Container.vue';
   padding: 0;
   margin: 0;
   display: flex;
-  flex-wrap: wrap; /* Allow links to wrap */
-  gap: 1rem; /* Reduce gap */
+  flex-wrap: wrap; 
+  gap: 1rem; 
 }
 
 .footer-link {
-  color: #36c; /* A standard blue for links */
+  color: #36c;
   text-decoration: none;
   font-family: sans-serif;
-  font-size: 0.75em; /* Make text a lot smaller */
+  font-size: 0.75em;
 }
 
 .footer-link:hover {
