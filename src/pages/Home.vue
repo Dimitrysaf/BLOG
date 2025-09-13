@@ -1,26 +1,13 @@
 <template>
-  <div>
     <div class="blue-banner">
       <Container>
-        <img src="/src/assets/Coat_of_arms_of_Greece.svg" alt="Coat of Arms of Greece" class="banner-logo" />
-        <h1 class="banner-title">Η Ομοσ­πονδιακή Πύλη για την <span class="highlight">Ελλάδα</span></h1>
-        <HomeSearch />
+        <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
       </Container>
     </div>
-    <NowOnGov />
-    <div id="federation">
-      <Federation />
-    </div>
-    <Regions />
-  </div>
 </template>
 
 <script setup lang="ts">
 import Container from '../components/Container.vue';
-import HomeSearch from '../components/HomeSearch.vue';
-import NowOnGov from '../components/NowOnGov.vue';
-import Federation from '../components/Federation.vue';
-import Regions from '../components/Regions.vue';
 </script>
 
 <style scoped>

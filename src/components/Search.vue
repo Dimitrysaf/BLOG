@@ -32,16 +32,6 @@
 
       <div v-else class="recommended-searches">
         <p>Προτινόμενα:</p>
-        <Card
-          v-for="recommendation in recommended"
-          :key="recommendation.label"
-          :icon="recommendation.icon"
-          :url="'javascript:void(0);'"
-          @click="search(recommendation.label)"
-        >
-          <template #title>{{ recommendation.label }}</template>
-          <template #description>{{ recommendation.description }}</template>
-        </Card>
       </div>
     </cdx-dialog>
   </div>
@@ -62,14 +52,10 @@ import {
   cdxIconArticle,
   cdxIconInfoFilled
 } from '@wikimedia/codex-icons';
-import { SearchData } from '../composables/SearchData.js';
-import { recommended } from '../composables/Recommended';
-import Card from './Card.vue';
 
 const open = ref(false);
 
 const currentSearchTerm = ref('');
-const { searchResults, hasSearched } = SearchData(currentSearchTerm);
 
 watch(open, (isOpen) => {
   if (!isOpen) {

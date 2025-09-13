@@ -2,9 +2,7 @@
   <nav class="navbar">
     <Container>
       <div class="navbar-content">
-        <a href="/" class="logo">
-          <img src="/src/assets/Coat_of_arms_of_Greece.svg" alt="Coat of Arms of Greece" class="navbar-logo" />Gov<span class="blue">gr</span>
-        </a>
+        <a href="/" class="logo">Ιστολόγιο</a>
         <div class="navbar-actions">
           <Search />
           <AccountMenu :is-logged-in="isLoggedIn" />
