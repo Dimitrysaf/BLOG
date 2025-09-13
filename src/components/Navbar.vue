@@ -2,7 +2,7 @@
   <nav class="navbar">
     <Container>
       <div class="navbar-content">
-        <a href="/" class="logo">Ιστολόγιο</a>
+        <a href="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></a>
         <div class="navbar-actions">
           <Search />
           <AccountMenu :is-logged-in="isLoggedIn" />
@@ -43,9 +43,17 @@ const isLoggedIn = ref(false);
   font-weight: bold;
   text-decoration: none;
   color: #333;
-  display: flex; 
-  align-items: center; 
-  gap: 4px;
+  display: inline-block;
+  line-height: 0.6;
+}
+
+.sublogo {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 1.0rem;
+  font-weight: lighter;
+  font-style: italic;
+  text-decoration: none;
+  color: #333;
 }
 
 .navbar-logo {

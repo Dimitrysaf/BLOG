@@ -1,10 +1,8 @@
 <template>
   <div>
-    <div class="search-buttons-container">
-      <cdx-button weight="quiet" @click="open = true" aria-label="Αναζήτηση">
-        <cdx-icon :icon="cdxIconSearch"></cdx-icon>
-      </cdx-button>
-    </div>
+    <cdx-button weight="quiet" @click="open = true" aria-label="Αναζήτηση">
+      <cdx-icon :icon="cdxIconSearch"></cdx-icon>
+    </cdx-button>
 
     <cdx-dialog
         v-model:open="open"
@@ -16,23 +14,6 @@
           aria-label="Αναζήτηση..."
           placeholder="Αναζήτηση..."
       />
-
-      <ul v-if="searchResults.length > 0" class="search-results">
-        <li v-for="result in searchResults" :key="result.value" class="search-result-item">
-            <a :href="result.url" target="_blank" rel="noopener noreferrer">
-              <span class="search-result-label">{{ result.label }}</span>
-              <span v-if="result.description" class="search-result-description">{{ result.description }}</span>
-            </a>
-        </li>
-      </ul>
-
-      <div v-else-if="hasSearched" class="search-status">
-        Κανένα αποτέλεσμα για "{{ currentSearchTerm }}"
-      </div>
-
-      <div v-else class="recommended-searches">
-        <p>Προτινόμενα:</p>
-      </div>
     </cdx-dialog>
   </div>
 </template>
@@ -45,103 +26,18 @@ import {
   CdxIcon,
   CdxSearchInput
 } from '@wikimedia/codex';
-import {
-  cdxIconSearch,
-  cdxIconBook,
-  cdxIconCode,
-  cdxIconArticle,
-  cdxIconInfoFilled
-} from '@wikimedia/codex-icons';
+import { cdxIconSearch } from '@wikimedia/codex-icons';
 
 const open = ref(false);
-
 const currentSearchTerm = ref('');
 
 watch(open, (isOpen) => {
   if (!isOpen) {
-    // Reset state when dialog closes
     currentSearchTerm.value = '';
   }
 });
-
-const search = (searchTerm) => {
-  currentSearchTerm.value = searchTerm;
-};
-
 </script>
 
 <style scoped>
-.recommended-searches {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.recommended-searches p {
-    grid-column: 1 / -1; /* Span full width */
-    margin: 0 0 8px 0;
-}
-
-.search-status {
-  padding: 24px;
-  text-align: center;
-  color: #54595d;
-}
-
-.search-results {
-  list-style: none;
-  padding: 0;
-  margin: 16px 0 0 0;
-}
-
-.search-result-item a {
-  display: block;
-  padding: 12px 24px;
-  text-decoration: none;
-  color: #333;
-  border-radius: 4px;
-}
-
-.search-result-item a:hover {
-  background-color: #f0f0f0;
-}
-
-.search-result-label {
-  font-weight: bold;
-  display: block;
-}
-
-.search-result-description {
-  font-size: 0.9em;
-  color: #54595d;
-}
-
-.search-buttons-container {
-  display: flex;
-  gap: 10px; /* Space between buttons */
-  align-items: center;
-}
-
-.search-field-button {
-  flex-grow: 1; /* Allows the button to take up available space */
-  padding: 8px 15px;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1em;
-  color: #333;
-  text-align: left; /* Align text to the left within the button */
-}
-
-.search-field-button:hover {
-  background-color: #e0e0e0;
-}
-
-@media screen and (max-width: 600px) {
-  .recommended-searches {
-    grid-template-columns: 1fr;
-  }
-}
+/* Styles removed for clarity as they were related to deleted elements. */
 </style>

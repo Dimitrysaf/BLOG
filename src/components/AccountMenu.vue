@@ -3,29 +3,45 @@
     <cdx-menu-button
       v-model:selected="selection"
       :menu-items="currentMenuItems"
-      :footer="footer"
       aria-label="Account menu"
       :menu-config="{ renderInPlace: true }"
       @update:selected="onSelect"
     >
       <cdx-icon :icon="cdxIconUserAvatar" />
     </cdx-menu-button>
+
+    <login-dialog
+      v-model="isLoginDialogVisible"
+      @login="handleLogin"
+    />
+
+    <sign-in-dialog
+      v-model="isSignInDialogVisible"
+      @signin="handleSignIn"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { CdxMenuButton, CdxIcon } from '@wikimedia/codex';
+import {
+  CdxMenuButton,
+  CdxIcon,
+} from '@wikimedia/codex';
 import { cdxIconUserAvatar, cdxIconLogIn, cdxIconLogOut, cdxIconUserAdd, cdxIconSettings, cdxIconUserAvatarOutline, cdxIconMoon, cdxIconHelp } from '@wikimedia/codex-icons';
+import LoginDialog from './LoginDialog.vue';
+import SignInDialog from './SignInDialog.vue';
 
-const props = defineProps( {
+const props = defineProps({
   isLoggedIn: {
     type: Boolean,
-    default: false
-  }
-} );
+    default: false,
+  },
+});
 
-const selection = ref( null );
+const selection = ref(null);
+const isLoginDialogVisible = ref(false);
+const isSignInDialogVisible = ref(false);
 
 /* MENU */
 
@@ -36,8 +52,8 @@ const loggedInMenuItems = [
       { label: 'Ο λογαγιαριασμός μου', value: 'account', icon: cdxIconUserAvatarOutline },
       { label: 'Ρυθμίσεις', value: 'settings', icon: cdxIconSettings },
       { label: 'Αποσύνδεση', value: 'logout', icon: cdxIconLogOut, action: 'destructive' },
-    ]
-  }
+    ],
+  },
 ];
 
 const notLoggedInMenuItems = [
@@ -46,32 +62,26 @@ const notLoggedInMenuItems = [
     items: [
       { label: 'Σύνδεση', value: 'login', icon: cdxIconLogIn },
       { label: 'Εγγραφή', value: 'signup', icon: cdxIconUserAdd },
-    ]
-  }
+    ],
+  },
 ];
 
-const currentMenuItems = computed( () => {
+const currentMenuItems = computed(() => {
   return props.isLoggedIn ? loggedInMenuItems : notLoggedInMenuItems;
-} );
-
-const footer = {
-  label: 'Βοήθεια',
-  value: 'help',
-  icon: cdxIconHelp
-};
+});
 
 /* FUNCTIONS */
 
 function login() {
-  console.log('Triggered login action');
+  isLoginDialogVisible.value = true;
+}
+
+function signup() {
+  isSignInDialogVisible.value = true;
 }
 
 function logout() {
   console.log('Triggered logout action');
-}
-
-function signup() {
-  console.log('Triggered signup action');
 }
 
 function openSettings() {
@@ -82,11 +92,15 @@ function viewAccount() {
   console.log('Triggered view account action');
 }
 
-function getHelp() {
-  console.log('Triggered get help action');
+function handleLogin(credentials) {
+  console.log('Handling login with credentials:', credentials);
 }
 
-function onSelect( newSelection ) {
+function handleSignIn(credentials) {
+  console.log('Handling sign in with credentials:', credentials);
+}
+
+function onSelect(newSelection) {
   switch (newSelection) {
     case 'login':
       login();
@@ -102,9 +116,6 @@ function onSelect( newSelection ) {
       break;
     case 'account':
       viewAccount();
-      break;
-    case 'help':
-      getHelp();
       break;
     default:
       console.log(`Unknown selection: ${newSelection}`);
