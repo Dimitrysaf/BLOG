@@ -17,6 +17,7 @@
       v-if="errorMessage"
       type="error" 
       allow-user-dismiss
+      inline
       @user-dismissed="errorMessage = null"
     >
       {{ errorMessage }}
