@@ -11,16 +11,17 @@
     @close="onClose"
   >
     <cdx-field
-      :status="usernameStatus"
-      :messages="{ error: usernameValidationMessage }"
-      :label-icon="cdxIconUserAvatarOutline"
+      :status="emailStatus"
+      :messages="{ error: emailValidationMessage }"
+      :label-icon="cdxIconMessage"
     >
       <template #label>
-        Όνομα χρήστη
+        Email
       </template>
       <cdx-text-input
-        v-model="username"
-        @update:model-value="usernameStatus = 'default'"
+        v-model="email"
+        type="email"
+        @update:model-value="emailStatus = 'default'"
       />
     </cdx-field>
     <cdx-field
@@ -49,7 +50,7 @@ import {
 } from '@wikimedia/codex';
 import {
   cdxIconLogIn,
-  cdxIconUserAvatarOutline,
+  cdxIconMessage,
   cdxIconLock
 } from '@wikimedia/codex-icons';
 
@@ -62,37 +63,39 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'login']);
 
-const username = ref('');
+const email = ref('');
 const password = ref('');
-const usernameStatus = ref('default');
+const emailStatus = ref('default');
 const passwordStatus = ref('default');
-const usernameValidationMessage = ref('Το όνομα χρήστη είναι υποχρεωτικό.');
+const emailValidationMessage = ref('Πρέπει να δώσετε μια έγκυρη διεύθυνση email.');
 const passwordValidationMessage = ref('Ο κωδικός πρόσβασης είναι υποχρεωτικός.');
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {
-    username.value = '';
+    email.value = '';
     password.value = '';
-    usernameStatus.value = 'default';
+    emailStatus.value = 'default';
     passwordStatus.value = 'default';
   }
 });
 
 function onLogin() {
-  const isUsernameValid = username.value.length > 0;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const isEmailValid = email.value.length > 0 && emailRegex.test(email.value);
   const isPasswordValid = password.value.length > 0;
 
-  usernameStatus.value = isUsernameValid ? 'success' : 'error';
+  emailStatus.value = isEmailValid ? 'success' : 'error';
   passwordStatus.value = isPasswordValid ? 'success' : 'error';
 
-  if (isUsernameValid && isPasswordValid) {
-    if (username.value !== 'admin' || password.value !== 'password') {
-      usernameStatus.value = 'error';
+  if (isEmailValid && isPasswordValid) {
+    // Replace this with your actual authentication logic
+    if (email.value !== 'admin@example.com' || password.value !== 'password') {
+      emailStatus.value = 'error';
       passwordStatus.value = 'error';
-      usernameValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
+      emailValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
       passwordValidationMessage.value = 'Μη έγκυρα διαπιστευτήρια.';
     } else {
-      emit('login', { username: username.value, password: password.value });
+      emit('login', { email: email.value, password: password.value });
       onClose();
     }
   }

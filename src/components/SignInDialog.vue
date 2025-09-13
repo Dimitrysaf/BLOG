@@ -24,6 +24,20 @@
       />
     </cdx-field>
     <cdx-field
+      :status="emailStatus"
+      :messages="{ error: emailValidationMessage }"
+      :label-icon="cdxIconMessage"
+    >
+      <template #label>
+        Email
+      </template>
+      <cdx-text-input
+        v-model="email"
+        type="email"
+        @update:model-value="validateEmail"
+      />
+    </cdx-field>
+    <cdx-field
       :status="passwordStatus"
       :messages="{ error: passwordValidationMessage }"
       :label-icon="cdxIconLock"
@@ -64,7 +78,8 @@ import {
 import {
   cdxIconUserAdd,
   cdxIconUserAvatarOutline,
-  cdxIconLock
+  cdxIconLock,
+  cdxIconMessage
 } from '@wikimedia/codex-icons';
 
 const props = defineProps({
@@ -77,23 +92,28 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'signin']);
 
 const username = ref('');
+const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
 const usernameStatus = ref('default');
+const emailStatus = ref('default');
 const passwordStatus = ref('default');
 const confirmPasswordStatus = ref('default');
 
 const usernameValidationMessage = ref('Το όνομα χρήστη είναι υποχρεωτικό.');
+const emailValidationMessage = ref('Πρέπει να δώσετε μια έγκυρη διεύθυνση email.');
 const passwordValidationMessage = ref('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες.');
 const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασης δεν ταιριάζουν.');
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {
     username.value = '';
+    email.value = '';
     password.value = '';
     confirmPassword.value = '';
     usernameStatus.value = 'default';
+    emailStatus.value = 'default';
     passwordStatus.value = 'default';
     confirmPasswordStatus.value = 'default';
   }
@@ -104,6 +124,15 @@ function validateUsername() {
     usernameStatus.value = 'error';
   } else {
     usernameStatus.value = 'success';
+  }
+}
+
+function validateEmail() {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (email.value.length === 0 || !emailRegex.test(email.value)) {
+    emailStatus.value = 'error';
+  } else {
+    emailStatus.value = 'success';
   }
 }
 
@@ -126,15 +155,17 @@ function validateConfirmPassword() {
 
 function onSignIn() {
   validateUsername();
+  validateEmail();
   validatePassword();
   validateConfirmPassword();
 
   if (
     usernameStatus.value === 'success' &&
+    emailStatus.value === 'success' &&
     passwordStatus.value === 'success' &&
     confirmPasswordStatus.value === 'success'
   ) {
-    emit('signin', { username: username.value, password: password.value });
+    emit('signin', { username: username.value, email: email.value, password: password.value });
     onClose();
   }
 }
