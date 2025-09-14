@@ -1,57 +1,56 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from './pages/Home.vue';
 import NotFound from './pages/NotFound.vue';
+import User from './pages/User.vue';
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home,
-    meta: {
-      title: 'Αρχική - Ιστολόγιο',
-      favicon: ''
-    }
+  },
+  {
+    path: '/u/:username',
+    name: 'User',
+    component: User,
+    props: route => ({ user: route.meta.userData }),
+    async beforeEnter(to, from, next) {
+      try {
+        const username = to.params.username;
+        // This fetch call is to a simple, unauthenticated endpoint to check for user existence.
+        const response = await fetch(`/api/user/${username}`);
+
+        if (response.status === 404) {
+          // User not found, redirect to the NotFound page.
+          next({ name: 'NotFound' });
+        } else if (!response.ok) {
+          // Another server error occurred.
+          throw new Error('Failed to fetch user data');
+        } else {
+          // User was found. Get the data...
+          const userData = await response.json();
+          // ...and store it in the route's meta field.
+          to.meta.userData = userData;
+          // The `props` function above will pass this data to the User.vue component.
+          next();
+        }
+      } catch (error) {
+        console.error(error);
+        // On any exception, redirect to the NotFound page for safety.
+        next({ name: 'NotFound' });
+      }
+    },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
-    meta: {
-      title: 'Σελίδα δεν βρέθηκε - Ιστολόγιο',
-      favicon: ''
-    }
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition;
-    }
-
-    if (to.hash) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({ el: to.hash, behavior: 'smooth' });
-        }, 300);
-      });
-    }
-
-    return { top: 0 };
-  },
-});
-
-router.afterEach((to) => {
-  if (to.meta.title) {
-    document.title = to.meta.title;
-  }
-
-  const favicon = document.querySelector('link[rel="icon"]');
-  if (favicon && to.meta.favicon) {
-    favicon.setAttribute('href', to.meta.favicon);
-  }
 });
 
 export default router;

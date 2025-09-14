@@ -132,7 +132,6 @@ async function onLogin() {
       throw new Error(data.message || 'Η σύνδεση απέτυχε. Ελέγξτε τα διαπιστευτήριά σας.');
     }
 
-    // Update the shared authentication state
     auth.setLoggedIn(data.user, data.token);
 
     onClose();

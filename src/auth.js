@@ -7,17 +7,22 @@ const state = reactive({
   user: null
 });
 
-// Check for a token in local storage to initialize the state
+// CORRECTED: On startup, retrieve the user data from localStorage, not just the token.
 const token = localStorage.getItem('authToken');
-if (token) {
+const storedUser = localStorage.getItem('user');
+
+if (token && storedUser) {
   state.isLoggedIn = true;
+  // Parse the stored user data and restore it to the application state.
+  state.user = JSON.parse(storedUser);
 }
 
 const setLoggedIn = (user, token) => {
   state.isLoggedIn = true;
   state.user = user;
   localStorage.setItem('authToken', token);
-  // The type has been removed to allow the cdx-message to use its default 'notice' type
+  // CORRECTED: Store the user object in localStorage to persist it across page loads.
+  localStorage.setItem('user', JSON.stringify(user));
   notificationService.push(`Έχετε συνδεθεί ως χρήστης: ${user.username}`);
 };
 
@@ -25,7 +30,8 @@ const setLoggedOut = () => {
   state.isLoggedIn = false;
   state.user = null;
   localStorage.removeItem('authToken');
-  // The type has been removed to allow the cdx-message to use its default 'notice' type
+  // CORRECTED: Remove the user object from localStorage on logout.
+  localStorage.removeItem('user');
   notificationService.push('Έχετε αποσυνδεθεί.');
 };
 
