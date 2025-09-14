@@ -5,7 +5,7 @@
         <a href="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></a>
         <div class="navbar-actions">
           <Search />
-          <AccountMenu :is-logged-in="isLoggedIn" />
+          <AccountMenu />
         </div>
       </div>
     </Container>
@@ -13,13 +13,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
 import Container from './Container.vue';
 import AccountMenu from './AccountMenu.vue';
 import Search from './Search.vue';
-
-const isLoggedIn = ref(false);
-
 </script>
 
 <style scoped>

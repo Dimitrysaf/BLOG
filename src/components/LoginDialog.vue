@@ -4,7 +4,7 @@
     :title-icon="cdxIconLogIn"
     title="Σύνδεση"
     subtitle="Σύνδεση στον λογαριασμό σας"
-    :primary-action="{ label: 'Σύνδεση', action: 'progressive' }"
+    :primary-action="{ label: 'Σύνδεση', actionType: 'progressive' }"
     :default-action="{ label: 'Ακύρωση' }"
     :primary-action-disabled="isLoading"
     :default-action-disabled="isLoading"
@@ -12,7 +12,7 @@
     @default="onClose"
     @close="onClose"
   >
-    <cdx-progress-bar v-if="isLoading" inline aria-label="Logging in..." />
+    <cdx-progress-bar v-if="isLoading" inline aria-label="Γίνεται σύνδεση..." />
     <cdx-message 
       v-if="errorMessage"
       type="error" 
@@ -33,7 +33,7 @@
       </template>
       <cdx-text-input
         v-model="email"
-        type="email"
+        input-type="email"
         :disabled="isLoading"
         @update:model-value="emailStatus = 'default'"
       />
@@ -48,7 +48,7 @@
       </template>
       <cdx-text-input
         v-model="password"
-        type="password"
+        input-type="password"
         :disabled="isLoading"
         @update:model-value="passwordStatus = 'default'"
       />
@@ -70,6 +70,7 @@ import {
   cdxIconMessage,
   cdxIconLock
 } from '@wikimedia/codex-icons';
+import auth from '../auth'; // Import the shared auth state
 
 const props = defineProps({
   modelValue: {
@@ -78,7 +79,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:modelValue', 'login']);
+const emit = defineEmits(['update:modelValue']);
 
 const isLoading = ref(false);
 const errorMessage = ref(null);
@@ -128,12 +129,12 @@ async function onLogin() {
 
     if (!response.ok) {
       // Use the error message from the API, or a default one
-      throw new Error(data.message || 'Login failed. Please check your credentials.');
+      throw new Error(data.message || 'Η σύνδεση απέτυχε. Ελέγξτε τα διαπιστευτήριά σας.');
     }
 
-    localStorage.setItem('authToken', data.token);
+    // Update the shared authentication state
+    auth.setLoggedIn(data.user, data.token);
 
-    emit('login', data.user);
     onClose();
 
   } catch (error) {

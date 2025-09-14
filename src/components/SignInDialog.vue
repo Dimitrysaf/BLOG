@@ -4,7 +4,7 @@
     :title-icon="cdxIconUserAdd"
     title="Εγγραφή"
     subtitle="Δημιουργίστε έναν λογαριασμό"
-    :primary-action="{ label: 'Εγγραφή', action: 'progressive' }"
+    :primary-action="{ label: 'Εγγραφή', actionType: 'progressive' }"
     :default-action="{ label: 'Ακύρωση' }"
     :primary-action-disabled="isLoading"
     :default-action-disabled="isLoading"
@@ -12,7 +12,7 @@
     @default="onClose"
     @close="onClose"
   >
-    <cdx-progress-bar v-if="isLoading" inline aria-label="Registering..." />
+    <cdx-progress-bar v-if="isLoading" inline aria-label="Γίνεται εγγραφή..." />
     <cdx-message 
       v-if="errorMessage"
       type="error" 
@@ -47,7 +47,7 @@
       </template>
       <cdx-text-input
         v-model="email"
-        type="email"
+        input-type="email"
         :disabled="isLoading"
         @update:model-value="validateEmail"
       />
@@ -62,7 +62,7 @@
       </template>
       <cdx-text-input
         v-model="password"
-        type="password"
+        input-type="password"
         :disabled="isLoading"
         @update:model-value="validatePassword"
       />
@@ -77,7 +77,7 @@
       </template>
       <cdx-text-input
         v-model="confirmPassword"
-        type="password"
+        input-type="password"
         :disabled="isLoading"
         @update:model-value="validateConfirmPassword"
       />
@@ -100,6 +100,7 @@ import {
   cdxIconLock,
   cdxIconMessage
 } from '@wikimedia/codex-icons';
+import auth from '../auth'; // Import the shared auth state
 
 const props = defineProps({
   modelValue: {
@@ -108,7 +109,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:modelValue', 'signin']);
+const emit = defineEmits(['update:modelValue']); // Removed 'signin' from emits
 
 const isLoading = ref(false);
 const errorMessage = ref(null);
@@ -144,8 +145,10 @@ watch(() => props.modelValue, (isOpen) => {
 function validateUsername() {
   if (username.value.length === 0) {
     usernameStatus.value = 'error';
+    return false;
   } else {
     usernameStatus.value = 'success';
+    return true;
   }
 }
 
@@ -153,41 +156,41 @@ function validateEmail() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (email.value.length === 0 || !emailRegex.test(email.value)) {
     emailStatus.value = 'error';
+    return false;
   } else {
     emailStatus.value = 'success';
+    return true;
   }
 }
 
 function validatePassword() {
   if (password.value.length < 8) {
     passwordStatus.value = 'error';
+    return false;
   } else {
     passwordStatus.value = 'success';
+    return true;
   }
-  validateConfirmPassword();
 }
 
 function validateConfirmPassword() {
-  if (password.value !== confirmPassword.value) {
+  if (password.value !== confirmPassword.value || confirmPassword.value.length === 0) {
     confirmPasswordStatus.value = 'error';
+    return false;
   } else {
     confirmPasswordStatus.value = 'success';
+    return true;
   }
 }
 
 async function onSignIn() {
   errorMessage.value = null; // Clear previous error
-  validateUsername();
-  validateEmail();
-  validatePassword();
-  validateConfirmPassword();
+  const isUsernameValid = validateUsername();
+  const isEmailValid = validateEmail();
+  const isPasswordValid = validatePassword();
+  const isConfirmPasswordValid = validateConfirmPassword();
 
-  if (
-    usernameStatus.value !== 'success' ||
-    emailStatus.value !== 'success' ||
-    passwordStatus.value !== 'success' ||
-    confirmPasswordStatus.value !== 'success'
-  ) {
+  if (!isUsernameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
     return;
   }
 
@@ -208,14 +211,28 @@ async function onSignIn() {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || 'Sign-up failed. Please try again.');
+      throw new Error(data.message || 'Η εγγραφή απέτυχε. Παρακαλώ δοκιμάστε ξανά.');
     }
 
-    emit('signin', data.user);
-    onClose();
+    // If signup is successful, log the user in automatically
+    if (data.user && data.token) {
+      auth.setLoggedIn(data.user, data.token);
+      onClose();
+    } else {
+      // This case should not happen if the API is working correctly
+      throw new Error('Η εγγραφή πέτυχε, αλλά δεν επεστράφησαν δεδομένα σύνδεσης.');
+    }
 
   } catch (error) {
     errorMessage.value = error.message;
+    // Handle specific API errors for a better UX
+    if (error.message.includes('Το email υπάρχει ήδη')) {
+      emailStatus.value = 'error';
+      emailValidationMessage.value = error.message;
+    } else if (error.message.includes('Το όνομα χρήστη υπάρχει ήδη')) {
+      usernameStatus.value = 'error';
+      usernameValidationMessage.value = error.message;
+    }
   } finally {
     isLoading.value = false;
   }

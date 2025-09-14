@@ -3,22 +3,16 @@
     <cdx-menu-button
       v-model:selected="selection"
       :menu-items="currentMenuItems"
-      aria-label="Account menu"
+      aria-label="Μενού λογαριασμού"
       :menu-config="{ renderInPlace: true }"
       @update:selected="onSelect"
     >
       <cdx-icon :icon="cdxIconUserAvatar" />
     </cdx-menu-button>
 
-    <login-dialog
-      v-model="isLoginDialogVisible"
-      @login="handleLogin"
-    />
+    <login-dialog v-model="isLoginDialogVisible" />
 
-    <sign-in-dialog
-      v-model="isSignInDialogVisible"
-      @signin="handleSignIn"
-    />
+    <sign-in-dialog v-model="isSignInDialogVisible" />
   </div>
 </template>
 
@@ -28,34 +22,33 @@ import {
   CdxMenuButton,
   CdxIcon,
 } from '@wikimedia/codex';
-import { cdxIconUserAvatar, cdxIconLogIn, cdxIconLogOut, cdxIconUserAdd, cdxIconSettings, cdxIconUserAvatarOutline, cdxIconMoon, cdxIconHelp } from '@wikimedia/codex-icons';
+import {
+  cdxIconUserAvatar,
+  cdxIconLogIn,
+  cdxIconLogOut,
+  cdxIconUserAdd,
+  cdxIconUserAvatarOutline,
+} from '@wikimedia/codex-icons';
 import LoginDialog from './LoginDialog.vue';
 import SignInDialog from './SignInDialog.vue';
-
-const props = defineProps({
-  isLoggedIn: {
-    type: Boolean,
-    default: false,
-  },
-});
+import auth from '../auth'; // Import the shared auth state
 
 const selection = ref(null);
 const isLoginDialogVisible = ref(false);
 const isSignInDialogVisible = ref(false);
 
-/* MENU */
-
-const loggedInMenuItems = [
+// Menu items for a logged-in user, dynamically showing the username
+const loggedInMenuItems = computed(() => [
   {
-    label: 'Λογαριασμός',
+    label: auth.state.user ? auth.state.user.username : 'Λογαριασμός',
     items: [
-      { label: 'Ο λογαγιαριασμός μου', value: 'account', icon: cdxIconUserAvatarOutline },
-      { label: 'Ρυθμίσεις', value: 'settings', icon: cdxIconSettings },
+      { label: 'Ο λογαριασμός μου', value: 'account', icon: cdxIconUserAvatarOutline },
       { label: 'Αποσύνδεση', value: 'logout', icon: cdxIconLogOut, action: 'destructive' },
     ],
   },
-];
+]);
 
+// Menu items for a logged-out user
 const notLoggedInMenuItems = [
   {
     label: 'Λογαριασμός',
@@ -66,11 +59,12 @@ const notLoggedInMenuItems = [
   },
 ];
 
+// Dynamically switch between menu items based on the authentication state
 const currentMenuItems = computed(() => {
-  return props.isLoggedIn ? loggedInMenuItems : notLoggedInMenuItems;
+  return auth.state.isLoggedIn ? loggedInMenuItems.value : notLoggedInMenuItems;
 });
 
-/* FUNCTIONS */
+// --- Functions to handle menu actions ---
 
 function login() {
   isLoginDialogVisible.value = true;
@@ -81,25 +75,14 @@ function signup() {
 }
 
 function logout() {
-  console.log('Triggered logout action');
-}
-
-function openSettings() {
-  console.log('Triggered open settings action');
+  auth.setLoggedOut();
 }
 
 function viewAccount() {
   console.log('Triggered view account action');
 }
 
-function handleLogin(credentials) {
-  console.log('Handling login with credentials:', credentials);
-}
-
-function handleSignIn(credentials) {
-  console.log('Handling sign in with credentials:', credentials);
-}
-
+// Handles the selection of a menu item
 function onSelect(newSelection) {
   switch (newSelection) {
     case 'login':
@@ -111,14 +94,12 @@ function onSelect(newSelection) {
     case 'signup':
       signup();
       break;
-    case 'settings':
-      openSettings();
-      break;
     case 'account':
       viewAccount();
       break;
     default:
-      console.log(`Unknown selection: ${newSelection}`);
+      // It's good practice to handle unknown selections
+      break;
   }
 
   // Reset selection to allow the same item to be selected again
