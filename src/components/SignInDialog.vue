@@ -100,7 +100,8 @@ import {
   cdxIconLock,
   cdxIconMessage
 } from '@wikimedia/codex-icons';
-import auth from '../auth'; // Import the shared auth state
+import auth from '../auth';
+import loadingService from '../loading';
 
 const props = defineProps({
   modelValue: {
@@ -109,7 +110,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['update:modelValue']); // Removed 'signin' from emits
+const emit = defineEmits(['update:modelValue']);
 
 const isLoading = ref(false);
 const errorMessage = ref(null);
@@ -130,7 +131,7 @@ const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασ
 
 watch(() => props.modelValue, (isOpen) => {
   if (!isOpen) {
-    errorMessage.value = null; // Clear error on close
+    errorMessage.value = null;
     username.value = '';
     email.value = '';
     password.value = '';
@@ -184,7 +185,7 @@ function validateConfirmPassword() {
 }
 
 async function onSignIn() {
-  errorMessage.value = null; // Clear previous error
+  errorMessage.value = null;
   const isUsernameValid = validateUsername();
   const isEmailValid = validateEmail();
   const isPasswordValid = validatePassword();
@@ -195,6 +196,7 @@ async function onSignIn() {
   }
 
   isLoading.value = true;
+  loadingService.show();
   try {
     const response = await fetch('/api/signup', {
       method: 'POST',
@@ -214,18 +216,15 @@ async function onSignIn() {
       throw new Error(data.message || 'Η εγγραφή απέτυχε. Παρακαλώ δοκιμάστε ξανά.');
     }
 
-    // If signup is successful, log the user in automatically
     if (data.user && data.token) {
       auth.setLoggedIn(data.user, data.token);
       onClose();
     } else {
-      // This case should not happen if the API is working correctly
       throw new Error('Η εγγραφή πέτυχε, αλλά δεν επεστράφησαν δεδομένα σύνδεσης.');
     }
 
   } catch (error) {
     errorMessage.value = error.message;
-    // Handle specific API errors for a better UX
     if (error.message.includes('Το email υπάρχει ήδη')) {
       emailStatus.value = 'error';
       emailValidationMessage.value = error.message;
@@ -235,6 +234,7 @@ async function onSignIn() {
     }
   } finally {
     isLoading.value = false;
+    loadingService.hide();
   }
 }
 

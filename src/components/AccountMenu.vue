@@ -33,6 +33,7 @@ import {
 import LoginDialog from './LoginDialog.vue';
 import SignInDialog from './SignInDialog.vue';
 import auth from '../auth';
+import loadingService from '../loading';
 
 const router = useRouter();
 const selection = ref(null);
@@ -102,13 +103,12 @@ async function onSelect(newSelection) {
       break;
     case 'account':
       if (auth.state.user && auth.state.user.username) {
-        setTimeout(() => {
-          // DIAGNOSTIC: Added a .catch() to router.push() to expose any silent errors
-          // that may be occurring during navigation attempts.
-          router.push(`/u/${auth.state.user.username}`).catch(err => {
-            console.error('Vue Router Navigation Error:', err);
-          });
-        }, 0);
+        loadingService.show();
+        try {
+          await router.push(`/u/${auth.state.user.username}`);
+        } finally {
+          loadingService.hide();
+        }
       }
       break;
     default:

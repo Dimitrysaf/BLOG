@@ -9,6 +9,9 @@
         </div>
       </div>
     </Container>
+    <transition name="fade">
+      <cdx-progress-bar v-if="loadingState.isVisible" class="navbar-progress-bar" inline aria-label="Loading..."></cdx-progress-bar>
+    </transition>
   </nav>
 </template>
 
@@ -16,6 +19,10 @@
 import Container from './Container.vue';
 import AccountMenu from './AccountMenu.vue';
 import Search from './Search.vue';
+import { CdxProgressBar } from '@wikimedia/codex';
+import loadingService from '../loading';
+
+const loadingState = loadingService.state;
 </script>
 
 <style scoped>
@@ -25,6 +32,26 @@ import Search from './Search.vue';
   border-bottom: 1px solid #e7e7e7;
   width: 100%;
   border-bottom: solid 2px #c8ccd1;
+  position: relative; /* Needed for positioning the progress bar */
+}
+
+.navbar-progress-bar {
+  position: absolute;
+  bottom: -2px; /* Position it on top of the bottom border */
+  left: 0;
+  width: 100%;
+  height: 2px; /* Match the border thickness */
+}
+
+/* Vue transition classes for the fade effect */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .navbar-content {

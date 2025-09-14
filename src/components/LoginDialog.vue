@@ -70,7 +70,8 @@ import {
   cdxIconMessage,
   cdxIconLock
 } from '@wikimedia/codex-icons';
-import auth from '../auth'; // Import the shared auth state
+import auth from '../auth';
+import loadingService from '../loading';
 
 const props = defineProps({
   modelValue: {
@@ -101,7 +102,7 @@ watch(() => props.modelValue, (isOpen) => {
 });
 
 async function onLogin() {
-  errorMessage.value = null; // Clear previous error
+  errorMessage.value = null;
   const isEmailValid = email.value.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
   const isPasswordValid = password.value.length > 0;
 
@@ -113,6 +114,7 @@ async function onLogin() {
   }
 
   isLoading.value = true;
+  loadingService.show();
   try {
     const response = await fetch('/api/login', {
       method: 'POST',
@@ -128,7 +130,6 @@ async function onLogin() {
     const data = await response.json();
 
     if (!response.ok) {
-      // Use the error message from the API, or a default one
       throw new Error(data.message || 'Η σύνδεση απέτυχε. Ελέγξτε τα διαπιστευτήριά σας.');
     }
 
@@ -138,11 +139,11 @@ async function onLogin() {
 
   } catch (error) {
     errorMessage.value = error.message;
-    // We can also reset the field statuses if we want them to re-validate
     emailStatus.value = 'error';
     passwordStatus.value = 'error';
   } finally {
     isLoading.value = false;
+    loadingService.hide();
   }
 }
 
