@@ -18,7 +18,7 @@
           {{ post.body }}
         </template>
         <template #supporting-text>
-          By {{ post.author_username }} on {{ formatDate(post.created_at) }}
+          Από {{ post.author_username }} στις {{ formatDate(post.created_at) }}
         </template>
       </cdx-card>
     </div>
