@@ -8,7 +8,10 @@
       />
     </div>
     <Navbar/>
-    <router-view />
+    <div class="main-content">
+      <!-- By adding the key, we tell Vue to re-create the component when the route changes -->
+      <router-view :key="$route.fullPath" />
+    </div>
     <Footer />
   </div>
 </template>
@@ -21,6 +24,16 @@ import notificationService from './notification';
 </script>
 
 <style scoped>
+#app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+}
+
 .notification-container {
   position: fixed;
   top: 16px;

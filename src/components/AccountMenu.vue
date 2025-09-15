@@ -18,7 +18,6 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
 import {
   CdxMenuButton,
   CdxIcon,
@@ -33,9 +32,7 @@ import {
 import LoginDialog from './LoginDialog.vue';
 import SignInDialog from './SignInDialog.vue';
 import auth from '../auth';
-import loadingService from '../loading';
 
-const router = useRouter();
 const selection = ref(null);
 const isLoginDialogVisible = ref(false);
 const isSignInDialogVisible = ref(false);
@@ -88,27 +85,25 @@ async function logout() {
     console.error('Logout request failed', e);
   }
   auth.setLoggedOut();
+  // Force a reload on logout to clear all state
+  window.location.reload();
 }
 
-async function onSelect(newSelection) {
+function onSelect(newSelection) {
   switch (newSelection) {
     case 'login':
       login();
       break;
     case 'logout':
-      await logout();
+      logout();
       break;
     case 'signup':
       signup();
       break;
     case 'account':
       if (auth.state.user && auth.state.user.username) {
-        loadingService.show();
-        try {
-          await router.push(`/u/${auth.state.user.username}`);
-        } finally {
-          loadingService.hide();
-        }
+        // Use window.location.href to force a full page reload
+        window.location.href = `/u/${auth.state.user.username}`;
       }
       break;
     default:

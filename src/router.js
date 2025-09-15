@@ -19,6 +19,7 @@ const routes = [
       loadingService.show();
       try {
         const username = to.params.username;
+        // Reverted to the original, correct API endpoint.
         const response = await fetch(`/api/user/${username}`);
 
         if (response.status === 404) {
