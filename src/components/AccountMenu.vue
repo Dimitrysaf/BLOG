@@ -84,7 +84,7 @@ async function logout() {
   } catch (e) {
     console.error('Logout request failed', e);
   }
-  auth.setLoggedOut();
+  await auth.setLoggedOut();
   // Force a reload on logout to clear all state
   window.location.reload();
 }
