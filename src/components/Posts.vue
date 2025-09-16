@@ -77,8 +77,8 @@ onMounted(fetchPosts);
 watch(() => props.username, fetchPosts);
 
 function formatDate(dateString) {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(dateString).toLocaleDateString(undefined, options);
+  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('el-GR', options);
 }
 </script>
 
