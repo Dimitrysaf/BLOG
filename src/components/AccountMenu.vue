@@ -13,6 +13,8 @@
     <login-dialog v-model="isLoginDialogVisible" />
 
     <sign-in-dialog v-model="isSignInDialogVisible" />
+
+    <settings-dialog v-model="isSettingsDialogVisible" />
   </div>
 </template>
 
@@ -28,14 +30,17 @@ import {
   cdxIconLogOut,
   cdxIconUserAdd,
   cdxIconUserAvatarOutline,
+  cdxIconSettings,
 } from '@wikimedia/codex-icons';
 import LoginDialog from './LoginDialog.vue';
 import SignInDialog from './SignInDialog.vue';
+import SettingsDialog from './SettingsDialog.vue';
 import auth from '../auth';
 
 const selection = ref(null);
 const isLoginDialogVisible = ref(false);
 const isSignInDialogVisible = ref(false);
+const isSettingsDialogVisible = ref(false);
 
 const loggedInMenuItems = computed(() => [
   {
@@ -45,6 +50,11 @@ const loggedInMenuItems = computed(() => [
         label: 'Ο λογαριασμός μου',
         value: 'account',
         icon: cdxIconUserAvatarOutline
+      },
+      {
+        label: 'Ρυθμίσεις',
+        value: 'settings',
+        icon: cdxIconSettings
       },
       {
         label: 'Αποσύνδεση',
@@ -105,6 +115,9 @@ function onSelect(newSelection) {
         // Use window.location.href to force a full page reload
         window.location.href = `/u/${auth.state.user.username}`;
       }
+      break;
+    case 'settings':
+      isSettingsDialogVisible.value = true;
       break;
     default:
       break;
