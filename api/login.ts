@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { Pool } from 'pg';
+import pool from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -12,9 +12,9 @@ export default async function handler(
     return response.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { DATABASE_URL, JWT_SECRET } = process.env;
+  const { JWT_SECRET } = process.env;
 
-  if (!DATABASE_URL || !JWT_SECRET) {
+  if (!JWT_SECRET) {
     return response.status(500).json({ message: 'Server is not configured for authentication.' });
   }
 
@@ -23,13 +23,6 @@ export default async function handler(
   if (!email || !password) {
     return response.status(400).json({ message: 'Email and password are required.' });
   }
-
-  const pool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
 
   try {
     const { rows } = await pool.query(
@@ -58,15 +51,15 @@ export default async function handler(
         { expiresIn: '1h' } // Token expires in 1 hour
     );
 
+    // Set the token in an HttpOnly cookie for security
+    response.setHeader('Set-Cookie', `token=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=3600`);
+
     return response.status(200).json({
         message: "Login successful",
-        token,
         user: userWithoutPassword
     });
   } catch (error: any) {
     console.error('Database Error:', error);
     return response.status(500).json({ message: 'Internal Server Error', error: error.message });
-  } finally {
-    await pool.end();
   }
 }

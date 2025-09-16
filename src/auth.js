@@ -39,8 +39,17 @@ const setLoggedOut = async () => {
   notificationService.push('Έχετε αποσυνδεθεί.');
 };
 
+const updateUser = (user) => {
+  if (state.isLoggedIn) {
+    state.user = { ...state.user, ...user };
+    localStorage.setItem('user', JSON.stringify(state.user));
+    notificationService.push('Το προφίλ σας ενημερώθηκε.');
+  }
+};
+
 export default {
   state: readonly(state),
   setLoggedIn,
-  setLoggedOut
+  setLoggedOut,
+  updateUser
 };

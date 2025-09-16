@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { Pool } from 'pg';
+import pool from './db.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 
@@ -15,9 +15,9 @@ export default async function handler(
   }
 
   // Destructure JWT_SECRET from environment variables
-  const { DATABASE_URL, JWT_SECRET } = process.env;
+  const { JWT_SECRET } = process.env;
 
-  if (!DATABASE_URL || !JWT_SECRET) {
+  if (!JWT_SECRET) {
     return response.status(500).json({ message: 'Server is not configured for authentication.' });
   }
 
@@ -26,13 +26,6 @@ export default async function handler(
   if (!username || !email || !password) {
     return response.status(400).json({ message: 'Username, email, and password are required.' });
   }
-
-  const pool = new Pool({
-    connectionString: DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-    },
-  });
 
   try {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -72,7 +65,5 @@ export default async function handler(
     }
 
     return response.status(500).json({ message: 'Internal Server Error', error: error.message });
-  } finally {
-    await pool.end();
   }
 }
