@@ -88,6 +88,7 @@ function handlePostsLoaded() {
   font-style: italic;
   text-decoration: underline;
   padding: 0 8px;
+  word-break: break-all;
 }
 
 .user-meta {
