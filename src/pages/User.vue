@@ -5,10 +5,18 @@
       <Container>
         <div class="user-details">
           <h1>{{ user.username }}</h1>
-          <p>Ρόλος: {{ user.role }}</p>
-          <p>Μέλος από: {{ new Date(user.created_at).toLocaleDateString() }}</p>
         </div>
       </Container>
+      <div class="user-meta">
+        <span class="meta-item">
+          <cdx-icon :icon="cdxIconUserAvatarOutline" />
+          <span>{{ translatedRole }}</span>
+        </span>
+        <span class="meta-item">
+          <cdx-icon :icon="cdxIconCalendar" />
+          <span>{{ new Date(user.created_at).toLocaleDateString() }}</span>
+        </span>
+      </div>
     </div>
     <!-- Only show the posts section if the user is not a subscriber -->
     <Container class="posts-section" v-if="user.role !== 'subscriber'">
@@ -19,7 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { CdxIcon } from '@wikimedia/codex';
+import { cdxIconUserAvatarOutline, cdxIconCalendar } from '@wikimedia/codex-icons';
 import Container from '../components/Container.vue';
 import Posts from '../components/Posts.vue';
 import loadingService from '../loading.js';
@@ -31,8 +41,17 @@ interface User {
   created_at: string; // ISO date string
 }
 
-// Reverted to accept 'user' as a prop from the router
-defineProps<{ user: User }>();
+const props = defineProps<{ user: User }>();
+
+const translatedRole = computed(() => {
+  if (!props.user) return '';
+  const roles: { [key: string]: string } = {
+    admin: 'Διαχειριστής',
+    subscriber: 'Συνδρομιτής',
+    author: 'Συγγραφέας'
+  };
+  return roles[props.user.role] || props.user.role;
+});
 
 const postsLoaded = ref(false);
 
@@ -71,10 +90,25 @@ function handlePostsLoaded() {
   padding: 0 8px;
 }
 
-.user-details p {
-  color: #ccc;
-  font-size: 1.0rem;
-  margin: 5px 0;
+.user-meta {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 24px;
+  color: white;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.meta-item .cdx-icon {
+  color: white;
 }
 
 .posts-section {
