@@ -14,7 +14,7 @@
         </span>
         <span class="meta-item">
           <cdx-icon :icon="cdxIconCalendar" />
-          <span>{{ new Date(user.created_at).toLocaleDateString() }}</span>
+          <span>{{ new Date(user.created_at).toLocaleDateString('en-GB') }}</span>
         </span>
       </div>
     </div>

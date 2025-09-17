@@ -1,6 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import pool from './db.js';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const getUserIdFromRequest = (req: VercelRequest): number | null => {
   const { token } = req.cookies;
@@ -39,9 +40,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       return res.status(200).json(user);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Get User Error:', error);
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof Error) {
+          return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+      }
+      return res.status(500).json({ message: 'Internal Server Error', error: 'An unknown error occurred' });
     }
   }
 
@@ -76,23 +80,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // Return the updated user object
       return res.status(200).json(updatedUser[0]);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Update User Error:', error);
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof Error) {
+        return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+      }
+      return res.status(500).json({ message: 'Internal Server Error', error: 'An unknown error occurred' });
     }
   }
 
   // Handle account deletion
   if (req.method === 'DELETE') {
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required for account deletion.' });
+    }
+
     try {
+      // First, get the user's stored password hash
+      const { rows } = await pool.query('SELECT password FROM users WHERE user_id = $1', [userId]);
+      const user = rows[0];
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+
+      // Verify the password
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        return res.status(401).json({ message: 'Incorrect password.' });
+      }
+
+      // If password is correct, delete the user
       await pool.query('DELETE FROM users WHERE user_id = $1', [userId]);
       
       // Clear the authentication cookie
       res.setHeader('Set-Cookie', 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict');
       return res.status(200).json({ message: 'Account deleted successfully.' });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Delete User Error:', error);
-      return res.status(500).json({ message: 'Internal Server Error' });
+      if (error instanceof Error) {
+        return res.status(500).json({ message: 'Internal Server Error', error: error.message });
+      }
+      return res.status(500).json({ message: 'Internal Server Error', error: 'An unknown error occurred' });
     }
   }
 
