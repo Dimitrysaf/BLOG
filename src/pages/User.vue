@@ -18,17 +18,25 @@
         </span>
       </div>
     </div>
-    <!-- Only show the posts section if the user is not a subscriber -->
-    <Container class="posts-section" v-if="user.role !== 'subscriber'">
-      <h2 v-if="postsLoaded">Αναρτίσεις από {{ user.username }}</h2>
-      <Posts :username="user.username" @loaded="handlePostsLoaded" />
-    </Container>
+
+    <cdx-tabs v-model="activeTab" framed class="user-profile-tabs">
+      <cdx-tab
+        name="posts"
+        label="Αναρτήσεις"
+        :disabled="user.role === 'subscriber'"
+      >
+        <Posts :username="user.username" @loaded="handlePostsLoaded" />
+      </cdx-tab>
+      <cdx-tab name="comments" label="Σχόλια">
+        <p>Τα σχόλια θα εμφανιστούν εδώ.</p>
+      </cdx-tab>
+    </cdx-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { CdxIcon } from '@wikimedia/codex';
+import { ref, computed, watch } from 'vue';
+import { CdxIcon, CdxTabs, CdxTab } from '@wikimedia/codex';
 import { cdxIconUserAvatarOutline, cdxIconCalendar } from '@wikimedia/codex-icons';
 import Container from '../components/Container.vue';
 import Posts from '../components/Posts.vue';
@@ -43,6 +51,9 @@ interface User {
 
 const props = defineProps<{ user: User }>();
 
+// Set the active tab based on the user's role
+const activeTab = ref(props.user.role === 'subscriber' ? 'comments' : 'posts');
+
 const translatedRole = computed(() => {
   if (!props.user) return '';
   const roles: { [key: string]: string } = {
@@ -53,12 +64,16 @@ const translatedRole = computed(() => {
   return roles[props.user.role] || props.user.role;
 });
 
-const postsLoaded = ref(false);
+// Show the loading bar when the posts tab is selected.
+// The router already shows it on initial load, but this handles tab switching.
+watch(activeTab, (newTab) => {
+  if (newTab === 'posts') {
+    loadingService.show();
+  }
+});
 
 function handlePostsLoaded() {
-  postsLoaded.value = true;
-  // The main page loader is controlled by the router guard, but we can
-  // ensure it's hidden when posts are done.
+  // Hide the loading bar once the posts component has finished loading.
   loadingService.hide();
 }
 </script>
@@ -112,31 +127,22 @@ function handlePostsLoaded() {
   color: white;
 }
 
-.posts-section {
-  padding-top: 24px;
-  padding-bottom: 24px;
+/* The container for the tabs will stick to the banner and be full-width */
+.user-profile-tabs {
+  border-top: 0;
 }
 
-.posts-section h2 {
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: #54595d;
+/* Center the tab links within the full-width header */
+:deep(.user-profile-tabs .cdx-tabs__list) {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
 }
 
-.posts-section h2::before,
-.posts-section h2::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid #c8ccd1;
-}
-
-.posts-section h2:not(:empty)::before {
-  margin-right: 1em;
-}
-
-.posts-section h2:not(:empty)::after {
-  margin-left: 1em;
+/* Center the tab content and provide padding */
+:deep(.user-profile-tabs .cdx-tabs__content) {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
 </style>
