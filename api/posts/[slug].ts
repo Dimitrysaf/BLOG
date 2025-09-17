@@ -1,51 +1,42 @@
-import pool from './db.js';
+
+import pool from '../db.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// This is your Vercel Serverless Function
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Ensure we are only handling GET requests
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  // Extract username from query parameters
-  const { username } = req.query;
+  const { slug } = req.query;
+
+  if (!slug || typeof slug !== 'string') {
+    return res.status(400).json({ message: 'Slug is required' });
+  }
 
   try {
-    let query = `
+    const query = `
       SELECT 
         p.post_id, 
         p.title, 
         p.body, 
-        p.slug, 
-        p.created_at,
+        p.created_at, 
         u.username AS author_username
       FROM 
         posts p
       JOIN 
         users u ON p.user_id = u.user_id
-      WHERE
-        p.status = 'published'
+      WHERE 
+        p.slug = $1;
     `;
-    const params: string[] = [];
+    
+    const { rows } = await pool.query(query, [slug]);
 
-    // If a username is provided, filter by it
-    if (typeof username === 'string' && username) {
-        query += ' AND u.username = $1';
-        params.push(username);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Post not found' });
     }
-    
-    query += `
-      ORDER BY 
-        p.created_at DESC
-      LIMIT 20;
-    `;
-    
-    const { rows: posts } = await pool.query(query, params);
 
-    // Return the posts as a JSON response
-    return res.status(200).json(posts);
+    return res.status(200).json(rows[0]);
 
   } catch (error) {
     console.error('Database query failed:', error);

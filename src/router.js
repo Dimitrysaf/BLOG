@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Home from './pages/Home.vue';
 import NotFound from './pages/NotFound.vue';
 import User from './pages/User.vue';
+import Post from './pages/Post.vue';
 import loadingService from './loading';
 
 const routes = [
@@ -19,7 +20,6 @@ const routes = [
       loadingService.show();
       try {
         const username = to.params.username;
-        // Reverted to the original, correct API endpoint.
         const response = await fetch(`/api/user/${username}`);
 
         if (response.status === 404) {
@@ -38,6 +38,11 @@ const routes = [
         loadingService.hide();
       }
     },
+  },
+  {
+    path: '/p/:slug',
+    name: 'Post',
+    component: Post,
   },
   {
     path: '/:pathMatch(.*)*',

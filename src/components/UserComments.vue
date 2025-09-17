@@ -1,35 +1,36 @@
 <template>
-  <div class="posts-container">
+  <div class="comments-container">
     <div v-if="!hasLoaded" class="loading-container">
-      <cdx-progress-indicator aria-label="Loading posts" />
+      <cdx-progress-indicator aria-label="Loading comments" />
     </div>
 
     <cdx-message v-if="error" type="error" inline>
       {{ error }}
     </cdx-message>
-    
-    <div v-if="hasLoaded && posts.length" class="posts-grid">
+
+    <div v-if="hasLoaded && comments.length" class="comments-list">
       <cdx-card 
-        v-for="post in posts" 
-        :key="post.post_id" 
-        class="post-card"
-        :url="`/p/${post.slug}`"
+        v-for="comment in comments" 
+        :key="comment.comment_id" 
+        class="comment-card"
       >
         <template #title>
-          {{ post.title }}
+          {{ username }}
         </template>
         <template #description>
-          {{ post.body }}
+          {{ comment.comment_body }}
         </template>
         <template #supporting-text>
-          Από {{ post.author_username }} στις {{ formatDate(post.created_at) }}
+          <span>Σχόλιο στο </span>
+          <router-link :to="`/p/${comment.post_slug}`">{{ comment.post_title }}</router-link>
+          <span> στις {{ formatDate(comment.created_at) }}</span>
         </template>
       </cdx-card>
     </div>
 
-    <div v-else-if="hasLoaded && !posts.length" class="no-posts-container">
-      <cdx-icon :icon="cdxIconArticleNotFound" />
-      <p>No posts yet.</p>
+    <div v-else-if="hasLoaded && !comments.length" class="no-comments-container">
+      <cdx-icon :icon="cdxIconSpeechBubble" />
+      <p>No comments yet.</p>
     </div>
   </div>
 </template>
@@ -37,40 +38,32 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { CdxCard, CdxMessage, CdxIcon, CdxProgressIndicator } from '@wikimedia/codex';
-import { cdxIconArticleNotFound } from '@wikimedia/codex-icons';
+import { cdxIconSpeechBubble } from '@wikimedia/codex-icons';
 
 const props = defineProps({
   username: {
     type: String,
-    default: null
+    required: true
   }
 });
 
 const emit = defineEmits(['loaded']);
 
-const posts = ref([]);
+const comments = ref([]);
 const error = ref(null);
 const hasLoaded = ref(false);
 
-const fetchPosts = async () => {
+const fetchComments = async () => {
   hasLoaded.value = false;
   error.value = null;
-  // Don't reset posts, so the old content remains while new content loads,
-  // which can be better than a blank screen.
-  // posts.value = []; 
-
-  let apiUrl = '/api/posts';
-  if (props.username) {
-    apiUrl = `${apiUrl}?username=${props.username}`;
-  }
 
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(`/api/comments?username=${props.username}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch posts.');
+      throw new Error('Failed to fetch comments.');
     }
     const data = await response.json();
-    posts.value = data;
+    comments.value = data;
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -79,9 +72,9 @@ const fetchPosts = async () => {
   }
 };
 
-onMounted(fetchPosts);
+onMounted(fetchComments);
 
-watch(() => props.username, fetchPosts);
+watch(() => props.username, fetchComments);
 
 function formatDate(dateString) {
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -97,17 +90,22 @@ function formatDate(dateString) {
   min-height: 200px;
 }
 
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+.comments-list {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.post-card {
+.comment-card {
   max-width: 100%;
 }
 
-.no-posts-container {
+.comment-meta {
+  font-size: 0.875em;
+  color: #54595d;
+}
+
+.no-comments-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -117,13 +115,13 @@ function formatDate(dateString) {
   text-align: center;
 }
 
-.no-posts-container .cdx-icon {
+.no-comments-container .cdx-icon {
   width: 96px;
   height: 96px;
   margin-bottom: 16px;
 }
 
-.no-posts-container p {
+.no-comments-container p {
   font-size: 1.2em;
 }
 </style>

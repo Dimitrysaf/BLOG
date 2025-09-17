@@ -28,7 +28,7 @@
         <Posts :username="user.username" @loaded="handlePostsLoaded" />
       </cdx-tab>
       <cdx-tab name="comments" label="Σχόλια">
-        <p>Τα σχόλια θα εμφανιστούν εδώ.</p>
+        <UserComments :username="user.username" @loaded="handleCommentsLoaded" />
       </cdx-tab>
     </cdx-tabs>
   </div>
@@ -40,6 +40,7 @@ import { CdxIcon, CdxTabs, CdxTab } from '@wikimedia/codex';
 import { cdxIconUserAvatarOutline, cdxIconCalendar } from '@wikimedia/codex-icons';
 import Container from '../components/Container.vue';
 import Posts from '../components/Posts.vue';
+import UserComments from '../components/UserComments.vue';
 import loadingService from '../loading.js';
 
 interface User {
@@ -65,15 +66,23 @@ const translatedRole = computed(() => {
 });
 
 // Show the loading bar when the posts tab is selected.
-// The router already shows it on initial load, but this handles tab switching.
+// The other tabs have their own internal loaders, so we can hide the main one.
 watch(activeTab, (newTab) => {
   if (newTab === 'posts') {
     loadingService.show();
+  } else {
+    loadingService.hide();
   }
 });
 
 function handlePostsLoaded() {
   // Hide the loading bar once the posts component has finished loading.
+  loadingService.hide();
+}
+
+function handleCommentsLoaded() {
+  // The comments component has its own loader, but we still want to ensure
+  // the main app loader is hidden, just in case.
   loadingService.hide();
 }
 </script>
