@@ -2,7 +2,7 @@
   <nav class="navbar">
     <Container>
       <div class="navbar-content">
-        <a href="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></a>
+        <router-link to="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></router-link>
         <div class="navbar-actions">
           <Search />
           <AccountMenu />

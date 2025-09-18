@@ -1,23 +1,55 @@
 <template>
-  <div v-if="loading">Loading...</div>
   <div v-if="error">{{ error }}</div>
   <div v-if="post">
-    <h1>{{ post.title }}</h1>
-    <p>{{ post.body }}</p>
-    <p>By {{ post.author_username }} on {{ formatDate(post.created_at) }}</p>
+    <div class="blue-banner">
+      <Container>
+        <div class="post-details">
+          <h1>{{ post.title }}</h1>
+        </div>
+      </Container>
+      <div class="post-meta">
+        <span class="meta-item">
+          <cdx-icon :icon="cdxIconUserAvatarOutline" />
+          <span>By {{ post.author_username }}</span>
+        </span>
+        <span class="meta-item">
+          <cdx-icon :icon="cdxIconCalendar" />
+          <span>{{ formatDate(post.created_at) }}</span>
+        </span>
+      </div>
+    </div>
+
+    <Container class="post-body-container">
+      <p class="post-body">{{ post.body }}</p>
+    </Container>
+
+    <Container>
+      <DoComment :post-slug="route.params.slug" @comment-posted="handleCommentPosted" />
+      <CommentsList :post-slug="route.params.slug" ref="commentsList" />
+    </Container>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import Container from '../components/Container.vue';
+import CommentsList from '../components/CommentsList.vue';
+import DoComment from '../components/DoComment.vue';
+import { CdxIcon } from '@wikimedia/codex';
+import {
+  cdxIconUserAvatarOutline,
+  cdxIconCalendar
+} from '@wikimedia/codex-icons';
+import loadingService from '../loading.js';
 
 const route = useRoute();
 const post = ref(null);
-const loading = ref(true);
 const error = ref(null);
+const commentsList = ref(null);
 
 const fetchPost = async () => {
+  loadingService.show();
   try {
     const response = await fetch(`/api/posts/${route.params.slug}`);
     if (!response.ok) {
@@ -27,7 +59,7 @@ const fetchPost = async () => {
   } catch (e) {
     error.value = e.message;
   } finally {
-    loading.value = false;
+    loadingService.hide();
   }
 };
 
@@ -37,4 +69,74 @@ function formatDate(dateString) {
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
   return new Date(dateString).toLocaleDateString('el-GR', options);
 }
+
+function handleCommentPosted() {
+  if (commentsList.value) {
+    commentsList.value.refresh();
+  }
+}
 </script>
+
+<style scoped>
+.blue-banner {
+  background-color: #36c;
+  border-bottom: 4px solid rgba(0, 0, 0, 0.096);
+  height: 300px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.post-details h1 {
+  font-size: xxx-large;
+  font-weight: normal;
+  line-height: xxx-large;
+  margin-bottom: 20px;
+  font-family: 'Times New Roman', Times, serif;
+  background-color: white;
+  color: #36c;
+  font-style: italic;
+  text-decoration: underline;
+  padding: 0 8px;
+  word-break: break-word;
+}
+
+.post-meta {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 24px;
+  color: white;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+}
+
+.meta-item .cdx-icon {
+  color: white;
+}
+
+.post-body-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.post-body {
+  white-space: pre-wrap;
+  font-size: 1.1em;
+  line-height: 1.6;
+  text-align: left;
+}
+</style>

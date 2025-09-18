@@ -22,6 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const userId = getUserIdFromRequest(req);
 
   if (!userId) {
+    // Don't cache authentication failures
     return res.status(401).json({ message: 'Authentication required.' });
   }
 
@@ -39,6 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ message: 'User not found.' });
       }
 
+      // Cache the successful response
+      res.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');
       return res.status(200).json(user);
     } catch (error) {
       console.error('Get User Error:', error);

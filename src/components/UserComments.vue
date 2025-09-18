@@ -21,24 +21,22 @@
           {{ comment.comment_body }}
         </template>
         <template #supporting-text>
-          <span>Σχόλιο στο </span>
+          <span>Commented on </span>
           <router-link :to="`/p/${comment.post_slug}`">{{ comment.post_title }}</router-link>
-          <span> στις {{ formatDate(comment.created_at) }}</span>
+          <span> on {{ formatDate(comment.created_at) }}</span>
         </template>
       </cdx-card>
     </div>
 
-    <div v-else-if="hasLoaded && !comments.length" class="no-comments-container">
-      <cdx-icon :icon="cdxIconSpeechBubble" />
-      <p>No comments yet.</p>
-    </div>
+    <cdx-message v-else-if="hasLoaded && !comments.length" type="notice" inline>
+      This user has not made any comments yet.
+    </cdx-message>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { CdxCard, CdxMessage, CdxIcon, CdxProgressIndicator } from '@wikimedia/codex';
-import { cdxIconSpeechBubble } from '@wikimedia/codex-icons';
+import { CdxCard, CdxMessage, CdxProgressIndicator } from '@wikimedia/codex';
 
 const props = defineProps({
   username: {
@@ -103,25 +101,5 @@ function formatDate(dateString) {
 .comment-meta {
   font-size: 0.875em;
   color: #54595d;
-}
-
-.no-comments-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  color: #54595d;
-  text-align: center;
-}
-
-.no-comments-container .cdx-icon {
-  width: 96px;
-  height: 96px;
-  margin-bottom: 16px;
-}
-
-.no-comments-container p {
-  font-size: 1.2em;
 }
 </style>

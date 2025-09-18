@@ -20,6 +20,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   CdxMenuButton,
   CdxIcon,
@@ -37,6 +38,7 @@ import SignInDialog from './SignInDialog.vue';
 import SettingsDialog from './SettingsDialog.vue';
 import auth from '../auth';
 
+const router = useRouter();
 const selection = ref(null);
 const isLoginDialogVisible = ref(false);
 const isSignInDialogVisible = ref(false);
@@ -89,14 +91,9 @@ function signup() {
 }
 
 async function logout() {
-  try {
-    await fetch('/api/sessionLogout', { method: 'POST' });
-  } catch (e) {
-    console.error('Logout request failed', e);
-  }
   await auth.setLoggedOut();
-  // Force a reload on logout to clear all state
-  window.location.reload();
+  // Redirect to home page for a smoother experience
+  router.push('/');
 }
 
 function onSelect(newSelection) {
@@ -112,8 +109,7 @@ function onSelect(newSelection) {
       break;
     case 'account':
       if (auth.state.user && auth.state.user.username) {
-        // Use window.location.href to force a full page reload
-        window.location.href = `/u/${auth.state.user.username}`;
+        router.push(`/u/${auth.state.user.username}`);
       }
       break;
     case 'settings':

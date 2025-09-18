@@ -1,9 +1,5 @@
 <template>
   <div class="posts-container">
-    <div v-if="!hasLoaded" class="loading-container">
-      <cdx-progress-indicator aria-label="Loading posts" />
-    </div>
-
     <cdx-message v-if="error" type="error" inline>
       {{ error }}
     </cdx-message>
@@ -13,7 +9,7 @@
         v-for="post in posts" 
         :key="post.post_id" 
         class="post-card"
-        :url="`/p/${post.slug}`"
+        @click="goToPost(post.slug)"
       >
         <template #title>
           {{ post.title }}
@@ -36,8 +32,12 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { CdxCard, CdxMessage, CdxIcon, CdxProgressIndicator } from '@wikimedia/codex';
+import { useRouter } from 'vue-router';
+import { CdxCard, CdxMessage, CdxIcon } from '@wikimedia/codex';
 import { cdxIconArticleNotFound } from '@wikimedia/codex-icons';
+import loadingService from '../loading';
+
+const router = useRouter();
 
 const props = defineProps({
   username: {
@@ -52,12 +52,14 @@ const posts = ref([]);
 const error = ref(null);
 const hasLoaded = ref(false);
 
+const goToPost = (slug) => {
+  router.push(`/p/${slug}`);
+};
+
 const fetchPosts = async () => {
+  loadingService.show();
   hasLoaded.value = false;
   error.value = null;
-  // Don't reset posts, so the old content remains while new content loads,
-  // which can be better than a blank screen.
-  // posts.value = []; 
 
   let apiUrl = '/api/posts';
   if (props.username) {
@@ -75,6 +77,7 @@ const fetchPosts = async () => {
     error.value = e.message;
   } finally {
     hasLoaded.value = true;
+    loadingService.hide();
     emit('loaded');
   }
 };
@@ -90,13 +93,6 @@ function formatDate(dateString) {
 </script>
 
 <style scoped>
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-}
-
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -105,6 +101,7 @@ function formatDate(dateString) {
 
 .post-card {
   max-width: 100%;
+  cursor: pointer;
 }
 
 .no-posts-container {

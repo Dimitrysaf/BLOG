@@ -52,11 +52,12 @@ export default async function handler(
     );
 
     // Set the token in an HttpOnly cookie for security
-    response.setHeader('Set-Cookie', `token=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=3600`);
+    response.setHeader('Set-Cookie', `auth_token=${token}; HttpOnly; Path=/; SameSite=Strict; Max-Age=3600`);
 
     return response.status(200).json({
         message: "Login successful",
-        user: userWithoutPassword
+        user: userWithoutPassword,
+        token: token
     });
   } catch (error: any) {
     console.error('Database Error:', error);
