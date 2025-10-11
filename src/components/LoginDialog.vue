@@ -6,13 +6,10 @@
       subtitle="Σύνδεση στον λογαριασμό σας"
       :primary-action="{ label: 'Σύνδεση', actionType: 'progressive' }"
       :default-action="{ label: 'Ακύρωση' }"
-      :primary-action-disabled="isLoading"
-      :default-action-disabled="isLoading"
       @primary="onLogin"
       @default="onClose"
       @close="onClose"
     >
-      <cdx-progress-bar v-if="isLoading" inline aria-label="Γίνεται σύνδεση..." />
       <cdx-message 
         v-if="errorMessage"
         type="error" 
@@ -34,7 +31,6 @@
         <cdx-text-input
           v-model="email"
           input-type="email"
-          :disabled="isLoading"
           @update:model-value="emailStatus = 'default'"
         />
       </cdx-field>
@@ -49,7 +45,6 @@
         <cdx-text-input
           v-model="password"
           input-type="password"
-          :disabled="isLoading"
           @update:model-value="passwordStatus = 'default'"
         />
       </cdx-field>
@@ -62,7 +57,6 @@
     CdxDialog,
     CdxField,
     CdxTextInput,
-    CdxProgressBar,
     CdxMessage,
   } from '@wikimedia/codex';
   import {
@@ -73,7 +67,6 @@
   import { authDialogsState, closeAuthDialog, signInWithPassword } from '../auth';
   import loadingService from '../loading';
   
-  const isLoading = ref(false);
   const errorMessage = ref(null);
   const email = ref('');
   const password = ref('');
@@ -104,7 +97,6 @@
       return;
     }
   
-    isLoading.value = true;
     loadingService.show();
     try {
       await signInWithPassword(email.value, password.value);
@@ -114,7 +106,6 @@
       emailStatus.value = 'error';
       passwordStatus.value = 'error';
     } finally {
-      isLoading.value = false;
       loadingService.hide();
     }
   }

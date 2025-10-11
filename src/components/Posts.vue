@@ -1,12 +1,7 @@
 
 <template>
   <div>
-    <div v-if="loading" class="loading-container">
-      <CdxProgressIndicator />
-      <p>Φόρτωση αναρτήσεων...</p>
-    </div>
-
-    <div v-else-if="error" class="error-container">
+    <div v-if="error" class="error-container">
       <CdxMessage type="error">
         Η φόρτωση των αναρτήσεων απέτυχε. Παρακαλώ δοκιμάστε ξανά αργότερα.
       </CdxMessage>
@@ -37,16 +32,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { supabase } from '../supabase'; 
-import { CdxCard, CdxProgressIndicator, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
+import { CdxCard, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
 import { cdxIconArticle } from '@wikimedia/codex-icons';
+import loadingService from '../loading.js';
 
 const posts = ref([]);
-const loading = ref(true);
 const error = ref(null);
 
 async function fetchPosts() {
+  loadingService.show();
   try {
-    loading.value = true;
     const { data, error: fetchError } = await supabase
       .from('posts')
       .select('id, title, slug, content, image_url')
@@ -60,7 +55,7 @@ async function fetchPosts() {
     error.value = err.message;
     console.error('Error fetching posts:', err);
   } finally {
-    loading.value = false;
+    loadingService.hide();
   }
 }
 
@@ -70,7 +65,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.loading-container,
 .error-container,
 .no-posts-container {
   display: flex;

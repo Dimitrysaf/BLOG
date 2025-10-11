@@ -1,18 +1,15 @@
 <template>
     <cdx-dialog
-      :open="isRegisterDialogOpen"
+      :open="authDialogsState.isRegisterOpen"
       :title-icon="cdxIconUserAdd"
       title="Εγγραφή"
       subtitle="Δημιουργίστε έναν λογαριασμό"
       :primary-action="{ label: 'Εγγραφή', actionType: 'progressive' }"
       :default-action="{ label: 'Ακύρωση' }"
-      :primary-action-disabled="isLoading"
-      :default-action-disabled="isLoading"
       @primary="onSignIn"
       @default="onClose"
       @close="onClose"
     >
-      <cdx-progress-bar v-if="isLoading" inline aria-label="Γίνεται εγγραφή..." />
       <cdx-message 
         v-if="errorMessage"
         type="error" 
@@ -33,7 +30,6 @@
         </template>
         <cdx-text-input
           v-model="username"
-          :disabled="isLoading"
           @update:model-value="validateUsername"
         />
       </cdx-field>
@@ -48,7 +44,6 @@
         <cdx-text-input
           v-model="email"
           input-type="email"
-          :disabled="isLoading"
           @update:model-value="validateEmail"
         />
       </cdx-field>
@@ -63,7 +58,6 @@
         <cdx-text-input
           v-model="password"
           input-type="password"
-          :disabled="isLoading"
           @update:model-value="validatePassword"
         />
       </cdx-field>
@@ -78,7 +72,6 @@
         <cdx-text-input
           v-model="confirmPassword"
           input-type="password"
-          :disabled="isLoading"
           @update:model-value="validateConfirmPassword"
         />
       </cdx-field>
@@ -91,7 +84,6 @@
     CdxDialog,
     CdxField,
     CdxTextInput,
-    CdxProgressBar,
     CdxMessage,
   } from '@wikimedia/codex';
   import {
@@ -100,10 +92,9 @@
     cdxIconLock,
     cdxIconMessage
   } from '@wikimedia/codex-icons';
-  import { isRegisterDialogOpen, closeRegisterDialog, signUp } from '../auth';
+  import { authDialogsState, closeRegisterDialog, signUp } from '../auth';
   import loadingService from '../loading';
   
-  const isLoading = ref(false);
   const errorMessage = ref(null);
   const username = ref('');
   const email = ref('');
@@ -120,7 +111,7 @@
   const passwordValidationMessage = ref('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες.');
   const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασης δεν ταιριάζουν.');
   
-  watch(isRegisterDialogOpen, (isOpen) => {
+  watch(authDialogsState.isRegisterOpen, (isOpen) => {
     if (!isOpen) {
       errorMessage.value = null;
       username.value = '';
@@ -186,10 +177,17 @@
       return;
     }
   
-    isLoading.value = true;
     loadingService.show();
     try {
-        await signUp(email.value, password.value, username.value);
+        await signUp({
+            email: email.value,
+            password: password.value,
+            options: {
+                data: {
+                    username: username.value
+                }
+            }
+        });
         onClose(); // Close dialog on successful signup
     } catch (error) {
       errorMessage.value = error.message;
@@ -201,7 +199,6 @@
         usernameValidationMessage.value = 'Το όνομα χρήστη υπάρχει ήδη';
       }
     } finally {
-      isLoading.value = false;
       loadingService.hide();
     }
   }

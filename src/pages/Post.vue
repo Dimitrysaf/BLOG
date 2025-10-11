@@ -10,7 +10,7 @@
       <div class="post-meta">
         <span class="meta-item">
           <cdx-icon :icon="cdxIconUserAvatarOutline" />
-          <span>By {{ post.author_username }}</span>
+          <span>By {{ post.author.username }}</span>
         </span>
         <span class="meta-item">
           <cdx-icon :icon="cdxIconCalendar" />
@@ -62,12 +62,7 @@ const fetchPost = async () => {
       throw fetchError;
     }
     
-    // Manually construct the post object to match the template's expectations
-    post.value = {
-        ...data,
-        author_username: data.author.username,
-        body: data.content
-    };
+    post.value = data;
 
   } catch (e) {
     error.value = e.message;
