@@ -5,8 +5,7 @@
         <router-link to="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></router-link>
         <div class="navbar-actions">
           <Search />
-          <AccountMenu />
-        </div>
+          </div>
       </div>
     </Container>
     <transition name="fade">
@@ -17,7 +16,7 @@
 
 <script setup>
 import Container from './Container.vue';
-import AccountMenu from './AccountMenu.vue';
+// AccountMenu import αφαιρέθηκε
 import Search from './Search.vue';
 import { CdxProgressBar } from '@wikimedia/codex';
 import loadingService from '../loading';
@@ -26,6 +25,7 @@ const loadingState = loadingService.state;
 </script>
 
 <style scoped>
+/* Τα styles παραμένουν ίδια */
 .navbar {
   height: 60px;
   background-color: #f8f8f8;

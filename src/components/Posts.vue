@@ -1,126 +1,91 @@
 <template>
-  <div class="posts-container">
-    <cdx-message v-if="error" type="error" inline>
-      {{ error }}
-    </cdx-message>
-    
-    <div v-if="hasLoaded && posts.length" class="posts-grid">
-      <cdx-card 
-        v-for="post in posts" 
-        :key="post.post_id" 
-        class="post-card"
-        @click="goToPost(post.slug)"
-      >
-        <template #title>
-          {{ post.title }}
-        </template>
-        <template #description>
-          {{ post.body }}
-        </template>
-        <template #supporting-text>
-          Από {{ post.author_username }} στις {{ formatDate(post.created_at) }}
-        </template>
-      </cdx-card>
+  <div>
+    <div v-if="loading" class="loading-container">
+      <CdxProgressIndicator />
+      <p>Loading posts...</p>
     </div>
 
-    <div v-else-if="hasLoaded && !posts.length" class="no-posts-container">
-      <cdx-icon :icon="cdxIconArticleNotFound" />
-      <p>No posts yet.</p>
+    <div v-else-if="error" class="error-container">
+      <CdxMessage type="error">
+        Failed to load posts. Please try again later.
+      </CdxMessage>
+    </div>
+    
+    <div v-else-if="posts.length > 0" class="posts-grid">
+      <CdxCard
+        v-for="post in posts"
+        :key="post.id"
+        class="post-card"
+        :url="`/p/${post.slug}`"
+      >
+        <template #image>
+          <img v-if="post.image_url" :src="post.image_url" :alt="post.title" />
+        </template>
+        <template #title>{{ post.title }}</template>
+        <template #description>{{ post.content.substring(0, 150) }}...</template>
+      </CdxCard>
+    </div>
+
+    <div v-else class="no-posts-container">
+         <CdxIcon :icon="cdxIconInfo" />
+        <p>No posts found.</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { CdxCard, CdxMessage, CdxIcon } from '@wikimedia/codex';
-import { cdxIconArticleNotFound } from '@wikimedia/codex-icons';
-import loadingService from '../loading';
-
-const router = useRouter();
-
-const props = defineProps({
-  username: {
-    type: String,
-    default: null
-  }
-});
-
-const emit = defineEmits(['loaded']);
+import { ref, onMounted } from 'vue';
+import { supabase } from '../supabase'; 
+// ΔΙΟΡΘΩΣΗ: Εισάγουμε το σωστό component από τη βιβλιοθήκη
+import { CdxCard, CdxProgressIndicator, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
+import { cdxIconInfo } from '@wikimedia/codex-icons';
 
 const posts = ref([]);
+const loading = ref(true);
 const error = ref(null);
-const hasLoaded = ref(false);
 
-const goToPost = (slug) => {
-  router.push(`/p/${slug}`);
-};
-
-const fetchPosts = async () => {
-  loadingService.show();
-  hasLoaded.value = false;
-  error.value = null;
-
-  let apiUrl = '/api/posts';
-  if (props.username) {
-    apiUrl = `${apiUrl}?username=${props.username}`;
-  }
-
+async function fetchPosts() {
   try {
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error('Failed to fetch posts.');
-    }
-    const data = await response.json();
+    loading.value = true;
+    const { data, error: fetchError } = await supabase
+      .from('posts')
+      .select('id, title, slug, content, image_url')
+      .order('created_at', { ascending: false });
+
+    if (fetchError) throw fetchError;
+    
     posts.value = data;
-  } catch (e) {
-    error.value = e.message;
+  } catch (err) {
+    console.error('Error fetching posts:', err);
+    error.value = err;
   } finally {
-    hasLoaded.value = true;
-    loadingService.hide();
-    emit('loaded');
+    loading.value = false;
   }
-};
-
-onMounted(fetchPosts);
-
-watch(() => props.username, fetchPosts);
-
-function formatDate(dateString) {
-  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-  return new Date(dateString).toLocaleDateString('el-GR', options);
 }
+
+onMounted(() => {
+  fetchPosts();
+});
 </script>
 
 <style scoped>
 .posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 16px;
+  gap: 24px;
 }
 
 .post-card {
-  max-width: 100%;
-  cursor: pointer;
+  text-decoration: none;
 }
 
-.no-posts-container {
+.loading-container, .error-container, .no-posts-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  min-height: 300px;
-  color: #54595d;
-  text-align: center;
-}
-
-.no-posts-container .cdx-icon {
-  width: 96px;
-  height: 96px;
-  margin-bottom: 16px;
-}
-
-.no-posts-container p {
-  font-size: 1.2em;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 16px;
+  color: var(--color-subtle-text);
 }
 </style>
