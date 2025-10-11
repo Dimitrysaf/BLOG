@@ -1,5 +1,5 @@
 <template>
-  <div v-if="error">{{ error }}</div>
+  <div v-if="error"></div>
   <div v-if="post">
     <div class="blue-banner">
       <Container>
@@ -20,7 +20,7 @@
     </div>
 
     <Container class="post-body-container">
-      <p class="post-body">{{ post.body }}</p>
+      <p class="post-body">{{ post.content }}</p>
     </Container>
 
     <Container>
@@ -33,6 +33,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { supabase } from '../supabase';
 import Container from '../components/Container.vue';
 import CommentsList from '../components/CommentsList.vue';
 import DoComment from '../components/DoComment.vue';
@@ -51,11 +52,23 @@ const commentsList = ref(null);
 const fetchPost = async () => {
   loadingService.show();
   try {
-    const response = await fetch(`/api/posts/${route.params.slug}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch post.');
+    const { data, error: fetchError } = await supabase
+      .from('posts')
+      .select('*, author:profiles(username)')
+      .eq('slug', route.params.slug)
+      .single();
+
+    if (fetchError) {
+      throw fetchError;
     }
-    post.value = await response.json();
+    
+    // Manually construct the post object to match the template's expectations
+    post.value = {
+        ...data,
+        author_username: data.author.username,
+        body: data.content
+    };
+
   } catch (e) {
     error.value = e.message;
   } finally {

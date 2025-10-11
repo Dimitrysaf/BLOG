@@ -9,7 +9,6 @@
     </div>
     <Navbar/>
     <div class="main-content">
-      <!-- By adding the key, we tell Vue to re-create the component when the route changes -->
       <router-view :key="$route.fullPath" />
     </div>
     <Footer />

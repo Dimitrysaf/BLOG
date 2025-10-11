@@ -48,6 +48,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { supabase } from '../supabase';
 import {
   CdxMenuItem,
   CdxProgressBar,
@@ -87,14 +88,46 @@ const fetchComments = async () => {
   loading.value = true;
   error.value = '';
   try {
-    const response = await fetch(`/api/posts/${props.postSlug}/comments`);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Αποτυχία φόρτωσης σχολίων.');
+    const { data, error: fetchError } = await supabase
+      .from('comments')
+      .select('comment_id, body, created_at, parent_comment_id, author:profiles(username)')
+      .eq('post_slug', props.postSlug)
+      .order('created_at', { ascending: true });
+
+    if (fetchError) {
+      throw fetchError;
     }
-    comments.value = data;
+
+    const commentsById = {};
+    const processedData = data.map(comment => ({
+        comment_id: comment.comment_id,
+        comment_body: comment.body,
+        created_at: comment.created_at,
+        parent_comment_id: comment.parent_comment_id,
+        author_username: comment.author ? comment.author.username : 'Anonymous',
+        replies: []
+    }));
+
+    processedData.forEach(comment => {
+        commentsById[comment.comment_id] = comment;
+    });
+
+    const rootComments = [];
+    processedData.forEach(comment => {
+      if (comment.parent_comment_id) {
+        const parent = commentsById[comment.parent_comment_id];
+        if (parent) {
+          parent.replies.push(comment);
+        }
+      } else {
+        rootComments.push(comment);
+      }
+    });
+
+    comments.value = rootComments.reverse();
+
   } catch (e) {
-    error.value = e.message;
+    error.value = e.message || 'Failed to load comments.';
   } finally {
     loading.value = false;
   }

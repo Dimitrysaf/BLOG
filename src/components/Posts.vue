@@ -1,13 +1,14 @@
+
 <template>
   <div>
     <div v-if="loading" class="loading-container">
       <CdxProgressIndicator />
-      <p>Loading posts...</p>
+      <p>Φόρτωση αναρτήσεων...</p>
     </div>
 
     <div v-else-if="error" class="error-container">
       <CdxMessage type="error">
-        Failed to load posts. Please try again later.
+        Η φόρτωση των αναρτήσεων απέτυχε. Παρακαλώ δοκιμάστε ξανά αργότερα.
       </CdxMessage>
     </div>
     
@@ -27,8 +28,8 @@
     </div>
 
     <div v-else class="no-posts-container">
-         <CdxIcon :icon="cdxIconInfo" />
-        <p>No posts found.</p>
+         <CdxIcon :icon="cdxIconArticle" />
+         <p>Δεν βρέθηκαν αναρτήσεις.</p>
     </div>
   </div>
 </template>
@@ -36,9 +37,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { supabase } from '../supabase'; 
-// ΔΙΟΡΘΩΣΗ: Εισάγουμε το σωστό component από τη βιβλιοθήκη
 import { CdxCard, CdxProgressIndicator, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
-import { cdxIconInfo } from '@wikimedia/codex-icons';
+import { cdxIconArticle } from '@wikimedia/codex-icons';
 
 const posts = ref([]);
 const loading = ref(true);
@@ -52,12 +52,13 @@ async function fetchPosts() {
       .select('id, title, slug, content, image_url')
       .order('created_at', { ascending: false });
 
-    if (fetchError) throw fetchError;
-    
+    if (fetchError) {
+      throw fetchError;
+    }
     posts.value = data;
   } catch (err) {
+    error.value = err.message;
     console.error('Error fetching posts:', err);
-    error.value = err;
   } finally {
     loading.value = false;
   }
@@ -69,23 +70,37 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
-}
-
-.post-card {
-  text-decoration: none;
-}
-
-.loading-container, .error-container, .no-posts-container {
+.loading-container,
+.error-container,
+.no-posts-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 40vh;
+  padding: 80px 40px;
+  text-align: center;
+  color: #72777d; 
+}
+
+.no-posts-container .cdx-icon {
+  width: 128px;  
+  height: 128px; 
+  margin-bottom: 16px;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-  color: var(--color-subtle-text);
+}
+
+.post-card {
+  max-width: 100%;
+}
+
+.post-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }
 </style>
