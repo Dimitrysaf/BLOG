@@ -4,12 +4,13 @@
     :open="modelValue"
     :title-icon="cdxIconSettings"
     title="Ρυθμίσεις"
-    :primary-action="{ label: 'Αποθήκευση', actionType: 'progressive' }"
+    :primary-action="{ label: 'Αποθήκευση', actionType: 'progressive', disabled: isLoading }"
     :default-action="{ label: 'Ακύρωση' }"
     @primary="onSave"
     @default="onClose"
     @close="onClose"
   >
+    <cdx-progress-bar v-if="isLoading" inline />
     <cdx-field :status="fieldStatus" :messages="fieldMessages">
       <template #label>
         Αλλαγή ονόματος χρήστη
@@ -17,12 +18,13 @@
       <div class="username-input-container">
         <cdx-text-input
           v-model="username"
-          :disabled="!isEditingUsername"
+          :disabled="!isEditingUsername || isLoading"
           aria-label="Όνομα χρήστη"
         />
         <cdx-button
           weight="quiet"
           aria-label="Επεξεργασία ονόματος χρήστη"
+          :disabled="isLoading"
           @click="toggleEditMode"
         >
           <cdx-icon :icon="editIcon" />
@@ -34,6 +36,7 @@
       <p>Η διαγραφή του λογαριασμού σας είναι οριστική και μη αναστρέψιμη.</p>
       <cdx-button
         :action-type="'destructive'"
+        :disabled="isLoading"
         @click="onOpenConfirmDialog"
       >
         Διαγραφή λογαριασμού
@@ -45,7 +48,7 @@
     :open="isConfirmingDeletion"
     :title-icon="cdxIconAlert"
     title="Επιβεβαίωση διαγραφής"
-    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive' }"
+    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting }"
     :default-action="{ label: 'Ακύρωση' }"
     @primary="onDeleteAccount"
     @default="onCloseConfirmDialog"
@@ -61,9 +64,11 @@
       <cdx-text-input
         v-model="password"
         input-type="password"
+        :disabled="isDeleting"
         aria-label="Κωδικός πρόσβασης"
       />
     </cdx-field>
+    <cdx-progress-bar v-if="isDeleting" inline />
   </cdx-dialog>
 </template>
 
@@ -75,6 +80,7 @@ import {
   CdxTextInput,
   CdxButton,
   CdxIcon,
+  CdxProgressBar, // Θα το χρειαστούμε πάλι
   CdxMessage
 } from '@wikimedia/codex';
 import {
@@ -83,7 +89,8 @@ import {
   cdxIconCheck,
   cdxIconAlert
 } from '@wikimedia/codex-icons';
-import { user, updateUser, signOut } from '../auth';
+// Διορθωμένο import
+import { user, updateUser, signOut } from '../auth'; 
 import loadingService from '../loading';
 
 const props = defineProps({
@@ -95,11 +102,13 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
+const isLoading = ref(false); // Θα το χρησιμοποιήσουμε για την τοπική πρόοδο
 const isEditingUsername = ref(false);
 const username = ref('');
 const error = ref('');
 
 const isConfirmingDeletion = ref(false);
+const isDeleting = ref(false);
 const password = ref('');
 const deleteError = ref('');
 
@@ -109,46 +118,34 @@ const editIcon = computed(() => isEditingUsername.value ? cdxIconCheck : cdxIcon
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    // Reset state when dialog opens
     username.value = user.value?.user_metadata?.username || '';
     isEditingUsername.value = false;
     error.value = '';
+    isLoading.value = false;
     isConfirmingDeletion.value = false;
+    isDeleting.value = false;
     password.value = '';
     deleteError.value = '';
   }
 });
 
 async function handleUpdateUsername() {
-  error.value = '';
   if (username.value === user.value?.user_metadata?.username) {
     isEditingUsername.value = false;
     return;
   }
 
-  loadingService.show();
+  isLoading.value = true;
+  error.value = '';
 
   try {
-    const response = await fetch('/api/user', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: username.value })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Αποτυχία ενημέρωσης ονόματος χρήστη.');
-    }
-
-    // Update the auth state with the new user data from the response
-    updateUser(data);
+    // Καλούμε απευθείας τη νέα updateUser function
+    await updateUser({ username: username.value });
     isEditingUsername.value = false;
-
   } catch (e) {
-    error.value = e.message;
+    error.value = e.message || 'Αποτυχία ενημέρωσης ονόματος χρήστη.';
   } finally {
-    loadingService.hide();
+    isLoading.value = false;
   }
 }
 
@@ -172,9 +169,10 @@ function onCloseConfirmDialog() {
 
 async function onDeleteAccount() {
   deleteError.value = '';
-  loadingService.show();
+  isDeleting.value = true;
 
   try {
+    // Αυτή η λογική παραμένει η ίδια, καθώς απαιτεί ξεχωριστό API call
     const response = await fetch('/api/user', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -182,10 +180,7 @@ async function onDeleteAccount() {
     });
 
     const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Η διαγραφή του λογαριασμού απέτυχε.');
-    }
+    if (!response.ok) throw new Error(data.message || 'Η διαγραφή απέτυχε.');
 
     await signOut();
     onCloseConfirmDialog();
@@ -195,7 +190,7 @@ async function onDeleteAccount() {
   } catch (e) {
     deleteError.value = e.message;
   } finally {
-    loadingService.hide();
+    isDeleting.value = false;
   }
 }
 
@@ -212,7 +207,9 @@ function onSave() {
 }
 
 function onClose() {
-  emit('update:modelValue', false);
+  if (!isLoading.value && !isDeleting.value) {
+    emit('update:modelValue', false);
+  }
 }
 </script>
 

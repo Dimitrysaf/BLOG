@@ -97,6 +97,21 @@ export async function signOut() {
   }
 }
 
+/**
+ * Updates the current user's metadata.
+ * @param {object} metadata - The user metadata to update.
+ * @returns {Promise<object>}
+ */
+export async function updateUser(metadata) {
+  const { data, error } = await supabase.auth.updateUser({
+    data: metadata
+  });
+  if (error) throw error;
+  // Manually update the local user ref after a successful update
+  user.value = data.user;
+  return data;
+}
+
 // --- Auth State Management ---
 
 supabase.auth.getSession().then(({ data }) => {
