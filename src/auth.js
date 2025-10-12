@@ -1,5 +1,6 @@
 import { ref, reactive } from 'vue';
 import { supabase } from './supabase';
+import notificationService from './notification';
 
 // Reactive state for the session and user
 export const session = ref(null);
@@ -119,10 +120,19 @@ supabase.auth.getSession().then(({ data }) => {
   user.value = data.session?.user ?? null;
 });
 
-supabase.auth.onAuthStateChange((_event, newSession) => {
+supabase.auth.onAuthStateChange((event, newSession) => {
+  const wasLoggedIn = !!user.value;
   session.value = newSession;
   user.value = newSession?.user ?? null;
-  
+  const isLoggedIn = !!user.value;
+
+  if (event === 'SIGNED_IN' && isLoggedIn && !wasLoggedIn) {
+    const username = user.value.user_metadata?.username || user.value.email;
+    notificationService.push(`Συνδεθήκατε ως ${username}`);
+  } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
+    notificationService.push('Αποσυνδεθήκατε.');
+  }
+
   // Automatically close all auth dialogs on successful login/logout/signup
   closeAuthDialog();
   closeRegisterDialog();

@@ -7,37 +7,20 @@
     <cdx-message v-if="error" type="error" inline>
       {{ error }}
     </cdx-message>
-    <div v-if="flattenedComments.length > 0" class="comments-list">
+    <div v-if="comments.length > 0" class="comments-list">
       <div
-        v-for="comment in flattenedComments"
-        :key="comment.comment_id"
+        v-for="comment in comments"
+        :key="comment.id"
         class="comment-wrapper"
-        :style="{ 'margin-left': comment.level * 40 + 'px' }"
       >
         <cdx-menu-item
-          :id="`comment-${comment.comment_id}`"
-          :value="comment.comment_id"
-          :label="comment.author_username"
-          :description="comment.comment_body"
+          :id="`comment-${comment.id}`"
+          :value="comment.id"
+          :label="comment.author_full_name"
+          :description="comment.content"
           :supporting-text="formatDate(comment.created_at)"
         >
         </cdx-menu-item>
-        <div class="comment-actions">
-          <cdx-button
-            weight="quiet"
-            @click="replyingTo = (replyingTo === comment.comment_id ? null : comment.comment_id)"
-          >
-            Απάντηση
-          </cdx-button>
-        </div>
-
-        <div v-if="replyingTo === comment.comment_id" class="reply-form">
-          <DoComment
-            :post-slug="postSlug"
-            :parent-comment-id="comment.comment_id"
-            @comment-posted="handleReplyPosted"
-          />
-        </div>
       </div>
     </div>
     <div v-else-if="!loading" class="no-comments">
@@ -47,15 +30,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { supabase } from '../supabase';
 import {
   CdxMenuItem,
   CdxProgressBar,
-  CdxMessage,
-  CdxButton
+  CdxMessage
 } from '@wikimedia/codex';
-import DoComment from './DoComment.vue';
 
 const props = defineProps({
   postSlug: {
@@ -67,64 +48,43 @@ const props = defineProps({
 const comments = ref([]);
 const loading = ref(false);
 const error = ref('');
-const replyingTo = ref(null);
+const postId = ref(null);
 
-const flattenedComments = computed(() => {
-  const flatten = (comments, level = 0) => {
-    let result = [];
-    for (const comment of comments) {
-      result.push({ ...comment, level });
-      if (comment.replies && comment.replies.length > 0) {
-        const reversedReplies = [...comment.replies].reverse();
-        result = result.concat(flatten(reversedReplies, level + 1));
-      }
+async function fetchPostId() {
+    if (!props.postSlug) return;
+    const { data, error: postError } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('slug', props.postSlug)
+        .single();
+    if (postError) {
+        throw new Error('Could not fetch post ID: ' + postError.message);
     }
-    return result;
-  };
-  return flatten(comments.value);
-});
+    postId.value = data.id;
+}
 
 const fetchComments = async () => {
+  if (!postId.value) return;
+
   loading.value = true;
   error.value = '';
   try {
     const { data, error: fetchError } = await supabase
       .from('comments')
-      .select('comment_id, body, created_at, parent_comment_id, author:profiles(username)')
-      .eq('post_slug', props.postSlug)
-      .order('created_at', { ascending: true });
+      .select('id, content, created_at, author:profiles(full_name)')
+      .eq('post_id', postId.value)
+      .order('created_at', { ascending: false });
 
     if (fetchError) {
       throw fetchError;
     }
 
-    const commentsById = {};
-    const processedData = data.map(comment => ({
-        comment_id: comment.comment_id,
-        comment_body: comment.body,
+    comments.value = data.map(comment => ({
+        id: comment.id,
+        content: comment.content,
         created_at: comment.created_at,
-        parent_comment_id: comment.parent_comment_id,
-        author_username: comment.author ? comment.author.username : 'Anonymous',
-        replies: []
+        author_full_name: comment.author ? comment.author.full_name : 'Anonymous',
     }));
-
-    processedData.forEach(comment => {
-        commentsById[comment.comment_id] = comment;
-    });
-
-    const rootComments = [];
-    processedData.forEach(comment => {
-      if (comment.parent_comment_id) {
-        const parent = commentsById[comment.parent_comment_id];
-        if (parent) {
-          parent.replies.push(comment);
-        }
-      } else {
-        rootComments.push(comment);
-      }
-    });
-
-    comments.value = rootComments.reverse();
 
   } catch (e) {
     error.value = e.message || 'Failed to load comments.';
@@ -133,12 +93,29 @@ const fetchComments = async () => {
   }
 };
 
-async function handleReplyPosted() {
-  replyingTo.value = null; // Hide the form
-  await fetchComments(); // Refresh the entire comment list
-}
+// Watch for changes in postSlug and fetch the post ID, then fetch comments
+watch(() => props.postSlug, async (newSlug) => {
+    if (newSlug) {
+        try {
+            await fetchPostId();
+            await fetchComments();
+        } catch (e) {
+            error.value = e.message;
+        }
+    }
+}, { immediate: true });
 
-onMounted(fetchComments);
+
+onMounted(async () => {
+    if (props.postSlug) {
+        try {
+            await fetchPostId();
+            await fetchComments();
+        } catch (e) {
+            error.value = e.message;
+        }
+    }
+});
 
 defineExpose({
   refresh: fetchComments

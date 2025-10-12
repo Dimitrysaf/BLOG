@@ -111,7 +111,7 @@
   const passwordValidationMessage = ref('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες.');
   const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασης δεν ταιριάζουν.');
   
-  watch(authDialogsState.isRegisterOpen, (isOpen) => {
+  watch(() => authDialogsState.isRegisterOpen, (isOpen) => {
     if (!isOpen) {
       errorMessage.value = null;
       username.value = '';

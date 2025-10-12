@@ -11,25 +11,15 @@
     @close="onClose"
   >
     <cdx-progress-bar v-if="isLoading" inline />
-    <cdx-field :status="fieldStatus" :messages="fieldMessages">
+    <cdx-field :status="error ? 'error' : null" :messages="error ? { error: error } : {}">
       <template #label>
-        Αλλαγή ονόματος χρήστη
+        Ονοματεπώνυμο
       </template>
-      <div class="username-input-container">
-        <cdx-text-input
-          v-model="username"
-          :disabled="!isEditingUsername || isLoading"
-          aria-label="Όνομα χρήστη"
-        />
-        <cdx-button
-          weight="quiet"
-          aria-label="Επεξεργασία ονόματος χρήστη"
-          :disabled="isLoading"
-          @click="toggleEditMode"
-        >
-          <cdx-icon :icon="editIcon" />
-        </cdx-button>
-      </div>
+      <cdx-text-input
+        v-model="fullName"
+        :disabled="isLoading"
+        aria-label="Ονοματεπώνυμο"
+      />
     </cdx-field>
 
     <div class="delete-section">
@@ -73,25 +63,22 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import {
   CdxDialog,
   CdxField,
   CdxTextInput,
   CdxButton,
-  CdxIcon,
-  CdxProgressBar, // Θα το χρειαστούμε πάλι
+  CdxProgressBar,
   CdxMessage
 } from '@wikimedia/codex';
 import {
   cdxIconSettings,
-  cdxIconEdit,
-  cdxIconCheck,
   cdxIconAlert
 } from '@wikimedia/codex-icons';
-// Διορθωμένο import
-import { user, updateUser, signOut } from '../auth'; 
-import loadingService from '../loading';
+import { user, signOut } from '../auth';
+import { supabase } from '../supabase';
+import notificationService from '../notification';
 
 const props = defineProps({
   modelValue: {
@@ -102,9 +89,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
-const isLoading = ref(false); // Θα το χρησιμοποιήσουμε για την τοπική πρόοδο
-const isEditingUsername = ref(false);
-const username = ref('');
+const isLoading = ref(false);
+const fullName = ref('');
 const error = ref('');
 
 const isConfirmingDeletion = ref(false);
@@ -112,48 +98,77 @@ const isDeleting = ref(false);
 const password = ref('');
 const deleteError = ref('');
 
-const fieldStatus = computed(() => error.value ? 'error' : null);
-const fieldMessages = computed(() => error.value ? { error: error.value } : {});
-const editIcon = computed(() => isEditingUsername.value ? cdxIconCheck : cdxIconEdit);
-
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen) {
-    username.value = user.value?.user_metadata?.username || '';
-    isEditingUsername.value = false;
-    error.value = '';
-    isLoading.value = false;
-    isConfirmingDeletion.value = false;
-    isDeleting.value = false;
-    password.value = '';
-    deleteError.value = '';
-  }
-});
-
-async function handleUpdateUsername() {
-  if (username.value === user.value?.user_metadata?.username) {
-    isEditingUsername.value = false;
-    return;
-  }
+async function fetchProfile() {
+  if (!user.value) return;
 
   isLoading.value = true;
   error.value = '';
 
   try {
-    // Καλούμε απευθείας τη νέα updateUser function
-    await updateUser({ username: username.value });
-    isEditingUsername.value = false;
+    const { data, error: fetchError } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.value.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    if (data) {
+      fullName.value = data.full_name || '';
+    }
   } catch (e) {
-    error.value = e.message || 'Αποτυχία ενημέρωσης ονόματος χρήστη.';
+    notificationService.push('Αποτυχία φόρτωσης προφίλ.', 'error');
+    console.error('Error fetching profile:', e.message);
   } finally {
     isLoading.value = false;
   }
 }
 
-function toggleEditMode() {
-  if (isEditingUsername.value) {
-    handleUpdateUsername();
-  } else {
-    isEditingUsername.value = true;
+watch([() => props.modelValue, user], ([isOpen, currentUser], [wasOpen, wasUser]) => {
+  const dialogJustOpened = isOpen && !wasOpen;
+
+  // Reset transient dialog state whenever it opens
+  if (dialogJustOpened) {
+    error.value = '';
+    isConfirmingDeletion.value = false;
+    password.value = '';
+    deleteError.value = '';
+    // Clear fullName to prevent showing stale data from another user
+    fullName.value = '';
+  }
+
+  // Fetch profile if the dialog is open and we have a user.
+  // This covers the case where the dialog opens before the user info is ready.
+  if (isOpen && currentUser) {
+    fetchProfile();
+  }
+});
+
+async function onSave() {
+  if (!fullName.value) {
+      error.value = 'Το ονοματεπώνυμο δεν μπορεί να είναι κενό.';
+      return;
+  }
+  isLoading.value = true;
+  error.value = '';
+
+  try {
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: user.value.id,
+      full_name: fullName.value
+    });
+
+    if (profileError) throw profileError;
+
+    notificationService.push('Οι ρυθμίσεις αποθηκεύτηκαν με επιτυχία.', 'success');
+    emit('update:modelValue', false);
+
+  } catch (e) {
+    error.value = e.message || 'Η αποθήκευση απέτυχε.';
+    notificationService.push('Η αποθήκευση απέτυχε.', 'error');
+    console.error('Error saving settings:', e.message);
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -172,7 +187,6 @@ async function onDeleteAccount() {
   isDeleting.value = true;
 
   try {
-    // Αυτή η λογική παραμένει η ίδια, καθώς απαιτεί ξεχωριστό API call
     const response = await fetch('/api/user', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -194,18 +208,6 @@ async function onDeleteAccount() {
   }
 }
 
-function onSave() {
-  if (isEditingUsername.value) {
-    handleUpdateUsername().then(() => {
-      if (!error.value) {
-        emit('update:modelValue', false);
-      }
-    });
-  } else {
-    emit('update:modelValue', false);
-  }
-}
-
 function onClose() {
   if (!isLoading.value && !isDeleting.value) {
     emit('update:modelValue', false);
@@ -214,16 +216,6 @@ function onClose() {
 </script>
 
 <style scoped>
-.username-input-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.username-input-container .cdx-text-input {
-  flex-grow: 1;
-}
-
 .delete-section {
   margin-top: 24px;
   padding-top: 16px;
