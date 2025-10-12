@@ -3,7 +3,7 @@
       :open="authDialogsState.isRegisterOpen"
       :title-icon="cdxIconUserAdd"
       title="Εγγραφή"
-      subtitle="Δημιουργίστε έναν λογαριασμό"
+      subtitle="Δημιουργήστε έναν λογαριασμό"
       :primary-action="{ label: 'Εγγραφή', actionType: 'progressive', disabled: isLoading }"
       :default-action="{ label: 'Ακύρωση' }"
       @primary="onSignUp"
@@ -66,6 +66,17 @@
           @update:model-value="validateConfirmPassword"
         />
       </cdx-field>
+      
+      <div class="divider">ή</div>
+
+      <div class="google-button-container">
+        <cdx-button
+          @click="handleGoogleSignIn"
+          :disabled="isLoading"
+        >
+          Συνεχίστε μέσω Google
+        </cdx-button>
+      </div>
     </cdx-dialog>
   </template>
   
@@ -77,13 +88,14 @@
     CdxTextInput,
     CdxMessage,
     CdxProgressBar,
+    CdxButton
   } from '@wikimedia/codex';
   import {
     cdxIconUserAdd,
     cdxIconLock,
     cdxIconMessage
   } from '@wikimedia/codex-icons';
-  import { authDialogsState, closeRegisterDialog, signUp } from '../auth';
+  import { authDialogsState, closeRegisterDialog, signUp, signInWithGoogle } from '../auth';
   import notificationService from '../notification';
   
   const isLoading = ref(false);
@@ -111,6 +123,19 @@
       confirmPasswordStatus.value = 'default';
     }
   });
+
+  async function handleGoogleSignIn() {
+    isLoading.value = true;
+    errorMessage.value = null;
+    try {
+      await signInWithGoogle();
+      // No need to close dialog here, auth state change will trigger it
+    } catch (error) {
+      errorMessage.value = error.message;
+    } finally {
+      // Don't set isLoading to false here, because the page will redirect
+    }
+  }
     
   function validateEmail() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -176,3 +201,23 @@
     closeRegisterDialog();
   }
   </script>
+
+<style scoped>
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  border-bottom: 1px solid #ccc;
+  line-height: 0.1em;
+}
+
+.divider span {
+  background: #fff;
+  padding: 0 10px;
+}
+
+.google-button-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 10px;
+}
+</style>
