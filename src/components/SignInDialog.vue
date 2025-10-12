@@ -4,12 +4,13 @@
       :title-icon="cdxIconUserAdd"
       title="Εγγραφή"
       subtitle="Δημιουργίστε έναν λογαριασμό"
-      :primary-action="{ label: 'Εγγραφή', actionType: 'progressive' }"
+      :primary-action="{ label: 'Εγγραφή', actionType: 'progressive', disabled: isLoading }"
       :default-action="{ label: 'Ακύρωση' }"
-      @primary="onSignIn"
+      @primary="onSignUp"
       @default="onClose"
       @close="onClose"
     >
+      <cdx-progress-bar v-if="isLoading" inline />
       <cdx-message 
         v-if="errorMessage"
         type="error" 
@@ -21,19 +22,6 @@
       </cdx-message>
   
       <cdx-field
-        :status="usernameStatus"
-        :messages="{ error: usernameValidationMessage }"
-        :label-icon="cdxIconUserAvatarOutline"
-      >
-        <template #label>
-          Όνομα χρήστη
-        </template>
-        <cdx-text-input
-          v-model="username"
-          @update:model-value="validateUsername"
-        />
-      </cdx-field>
-      <cdx-field
         :status="emailStatus"
         :messages="{ error: emailValidationMessage }"
         :label-icon="cdxIconMessage"
@@ -44,6 +32,7 @@
         <cdx-text-input
           v-model="email"
           input-type="email"
+          :disabled="isLoading"
           @update:model-value="validateEmail"
         />
       </cdx-field>
@@ -58,6 +47,7 @@
         <cdx-text-input
           v-model="password"
           input-type="password"
+          :disabled="isLoading"
           @update:model-value="validatePassword"
         />
       </cdx-field>
@@ -72,6 +62,7 @@
         <cdx-text-input
           v-model="confirmPassword"
           input-type="password"
+          :disabled="isLoading"
           @update:model-value="validateConfirmPassword"
         />
       </cdx-field>
@@ -85,28 +76,26 @@
     CdxField,
     CdxTextInput,
     CdxMessage,
+    CdxProgressBar,
   } from '@wikimedia/codex';
   import {
     cdxIconUserAdd,
-    cdxIconUserAvatarOutline,
     cdxIconLock,
     cdxIconMessage
   } from '@wikimedia/codex-icons';
   import { authDialogsState, closeRegisterDialog, signUp } from '../auth';
-  import loadingService from '../loading';
+  import notificationService from '../notification';
   
+  const isLoading = ref(false);
   const errorMessage = ref(null);
-  const username = ref('');
   const email = ref('');
   const password = ref('');
   const confirmPassword = ref('');
   
-  const usernameStatus = ref('default');
   const emailStatus = ref('default');
   const passwordStatus = ref('default');
   const confirmPasswordStatus = ref('default');
   
-  const usernameValidationMessage = ref('Το όνομα χρήστη είναι υποχρεωτικό.');
   const emailValidationMessage = ref('Πρέπει να δώσετε μια έγκυρη διεύθυνση email.');
   const passwordValidationMessage = ref('Ο κωδικός πρόσβασης πρέπει να περιέχει τουλάχιστον 8 χαρακτήρες.');
   const confirmPasswordValidationMessage = ref('Οι κωδικοί πρόσβασης δεν ταιριάζουν.');
@@ -114,27 +103,15 @@
   watch(() => authDialogsState.isRegisterOpen, (isOpen) => {
     if (!isOpen) {
       errorMessage.value = null;
-      username.value = '';
       email.value = '';
       password.value = '';
       confirmPassword.value = '';
-      usernameStatus.value = 'default';
       emailStatus.value = 'default';
       passwordStatus.value = 'default';
       confirmPasswordStatus.value = 'default';
     }
   });
-  
-  function validateUsername() {
-    if (username.value.length === 0) {
-      usernameStatus.value = 'error';
-      return false;
-    } else {
-      usernameStatus.value = 'success';
-      return true;
-    }
-  }
-  
+    
   function validateEmail() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email.value.length === 0 || !emailRegex.test(email.value)) {
@@ -166,40 +143,32 @@
     }
   }
   
-  async function onSignIn() {
+  async function onSignUp() {
     errorMessage.value = null;
-    const isUsernameValid = validateUsername();
     const isEmailValid = validateEmail();
     const isPasswordValid = validatePassword();
     const isConfirmPasswordValid = validateConfirmPassword();
   
-    if (!isUsernameValid || !isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
+    if (!isEmailValid || !isPasswordValid || !isConfirmPasswordValid) {
       return;
     }
   
-    loadingService.show();
+    isLoading.value = true;
     try {
         await signUp({
             email: email.value,
             password: password.value,
-            options: {
-                data: {
-                    username: username.value
-                }
-            }
         });
         onClose(); // Close dialog on successful signup
+        notificationService.push('Επιτυχής εγγραφή! Παρακαλώ ελέγξτε το email σας για να επιβεβαιώσετε τον λογαριασμό σας.', 'success');
     } catch (error) {
       errorMessage.value = error.message;
       if (error.message.includes('email address is already taken')) {
         emailStatus.value = 'error';
         emailValidationMessage.value = 'Το email υπάρχει ήδη';
-      } else if (error.message.includes('Username is already taken')) {
-        usernameStatus.value = 'error';
-        usernameValidationMessage.value = 'Το όνομα χρήστη υπάρχει ήδη';
       }
     } finally {
-      loadingService.hide();
+      isLoading.value = false;
     }
   }
   

@@ -11,6 +11,15 @@
     @close="onClose"
   >
     <cdx-progress-bar v-if="isLoading" inline />
+
+    <cdx-field>
+      <template #label>Εικόνα Προφίλ</template>
+      <div class="avatar-wrapper" :class="{ 'is-loading': isLoading }">
+        <img v-if="avatarUrl" :src="avatarUrl" alt="Εικόνα προφίλ" class="avatar-image" />
+        <p v-else>Δεν έχει οριστεί εικόνα προφίλ.</p>
+      </div>
+    </cdx-field>
+
     <cdx-field :status="error ? 'error' : null" :messages="error ? { error: error } : {}">
       <template #label>
         Ονοματεπώνυμο
@@ -102,6 +111,7 @@ const emit = defineEmits(['update:modelValue']);
 
 const isLoading = ref(false);
 const fullName = ref('');
+const avatarUrl = ref('');
 const error = ref('');
 
 const isConfirmingDeletion = ref(false);
@@ -118,7 +128,7 @@ async function fetchProfile() {
   try {
     const { data, error: fetchError } = await supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, avatar_url')
       .eq('id', user.value.id)
       .single();
 
@@ -126,6 +136,7 @@ async function fetchProfile() {
 
     if (data) {
       fullName.value = data.full_name || '';
+      avatarUrl.value = data.avatar_url || '';
     }
   } catch (e) {
     notificationService.push('Αποτυχία φόρτωσης προφίλ.', 'error');
@@ -138,18 +149,18 @@ async function fetchProfile() {
 watch([() => props.modelValue, user], ([isOpen, currentUser], [wasOpen, wasUser]) => {
   const dialogJustOpened = isOpen && !wasOpen;
 
-  // Reset transient dialog state whenever it opens
   if (dialogJustOpened) {
     error.value = '';
     isConfirmingDeletion.value = false;
     password.value = '';
     deleteError.value = '';
-    // Clear fullName to prevent showing stale data from another user
-    fullName.value = '';
   }
 
-  // Fetch profile if the dialog is open and we have a user.
-  // This covers the case where the dialog opens before the user info is ready.
+  if (isOpen && currentUser && wasUser && currentUser.id !== wasUser.id) {
+    fullName.value = '';
+    avatarUrl.value = '';
+  }
+
   if (isOpen && currentUser) {
     fetchProfile();
   }
@@ -166,7 +177,9 @@ async function onSave() {
   try {
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ full_name: fullName.value })
+      .update({ 
+        full_name: fullName.value
+      })
       .eq('id', user.value.id);
 
     if (profileError) throw profileError;
@@ -198,14 +211,13 @@ async function onDeleteAccount() {
   isDeleting.value = true;
 
   try {
-    const response = await fetch('/api/user', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: password.value })
+    const { error: functionError } = await supabase.functions.invoke('delete-user', {
+      body: { password: password.value },
     });
 
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Η διαγραφή απέτυχε.');
+    if (functionError) {
+      throw new Error('Η διαγραφή απέτυχε. Ελέγξτε τον κωδικό σας ή δοκιμάστε ξανά.');
+    }
 
     await signOut();
     onCloseConfirmDialog();
@@ -227,6 +239,18 @@ function onClose() {
 </script>
 
 <style scoped>
+.avatar-wrapper.is-loading .avatar-image {
+  opacity: 0.5;
+  filter: grayscale(80%);
+}
+
+.avatar-image {
+  max-width: 100px;
+  max-height: 100px;
+  border: 1px solid #c8ccd1;
+  display: block;
+}
+
 .delete-section {
   margin-top: 24px;
   padding-top: 16px;
