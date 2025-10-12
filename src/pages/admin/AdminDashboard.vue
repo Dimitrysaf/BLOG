@@ -1,18 +1,65 @@
 <template>
-  <div>
-    <h1>Πίνακας Ελέγχου</h1>
-    <p>Καλώς ήρθατε, διαχειριστή!</p>
-    <p>Αυτή η σελίδα είναι προσβάσιμη μόνο από χρήστες με ρόλο διαχειριστή.</p>
-  </div>
+  <Container>
+    <div class="admin-dashboard">
+      <h1>Πίνακας Ελέγχου</h1>
+      <cdx-tabs :framed="true">
+        <cdx-tab
+          v-for="(tab, index) in tabsData"
+          :key="index"
+          :name="tab.name"
+          :label="tab.label"
+          :disabled="tab.disabled"
+        >
+          <!-- This is where the content for each tab will go -->
+          <!-- For now, we'll just show a placeholder -->
+          <div class="tab-content">
+            <h2>{{ tab.label }}</h2>
+            <p>Περιεχόμενο για τη σελίδα "{{ tab.label }}".</p>
+          </div>
+        </cdx-tab>
+      </cdx-tabs>
+    </div>
+  </Container>
 </template>
 
 <script setup>
-// This component is currently simple, but will be expanded with admin-specific features.
+import { ref } from 'vue';
+import { CdxTabs, CdxTab } from '@wikimedia/codex';
+import Container from '../../components/Container.vue';
+
+const tabsData = ref([
+  {
+    name: 'dashboard',
+    label: 'Dashboard',
+  },
+  {
+    name: 'users',
+    label: 'Διαχείριση Χρηστών',
+  },
+  {
+    name: 'posts',
+    label: 'Διαχείριση Άρθρων',
+  },
+  {
+    name: 'settings',
+    label: 'Ρυθμίσεις',
+    disabled: true,
+  },
+]);
+
 </script>
 
 <style scoped>
+.admin-dashboard {
+  /* The main container now provides the horizontal padding */
+}
+
 h1 {
-  border-bottom: 2px solid #ccc;
-  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.tab-content {
+  padding: 20px;
+  /* The border is now handled by the framed tab-panel */
 }
 </style>
