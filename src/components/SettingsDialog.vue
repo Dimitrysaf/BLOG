@@ -22,6 +22,17 @@
       />
     </cdx-field>
 
+    <cdx-field>
+      <template #label>
+        User ID
+      </template>
+      <cdx-text-input
+        :model-value="user ? user.id : 'Δεν υπάρχει συνδεδεμένος χρήστης'"
+        disabled
+        aria-label="User ID"
+      />
+    </cdx-field>
+
     <div class="delete-section">
       <p>Η διαγραφή του λογαριασμού σας είναι οριστική και μη αναστρέψιμη.</p>
       <cdx-button
@@ -153,10 +164,10 @@ async function onSave() {
   error.value = '';
 
   try {
-    const { error: profileError } = await supabase.from('profiles').upsert({
-      id: user.value.id,
-      full_name: fullName.value
-    });
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName.value })
+      .eq('id', user.value.id);
 
     if (profileError) throw profileError;
 
