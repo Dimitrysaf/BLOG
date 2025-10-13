@@ -19,7 +19,7 @@
         <cdx-icon v-else :icon="cdxIconImage" />
       </div>
 
-      <cdx-field class="dialog-field url-input-field">
+      <cdx-field class="url-input-field">
         <template #label>URL Εικόνας (Προαιρετικό)</template>
         <cdx-text-input
           v-model="imageUrl"
@@ -227,9 +227,17 @@ const onClose = () => {
 }
 .url-input-field {
   flex-grow: 1;
-  margin-bottom: 0;
 }
 .dialog-field {
   margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+  .image-url-field {
+    flex-direction: column;
+  }
+  .image-url-field .url-input-field {
+    margin-bottom: -20px;
+  }
 }
 </style>

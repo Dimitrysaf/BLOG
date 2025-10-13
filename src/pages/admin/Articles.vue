@@ -10,7 +10,7 @@
       </cdx-button>
     </div>
 
-    <cdx-progress-bar v-if="isLoading" aria-label="Φόρτωση άρθρων..." />
+    <cdx-progress-bar v-if="isLoading" inline aria-label="Φόρτωση άρθρων..." />
 
     <cdx-table
       v-else
@@ -32,7 +32,7 @@
             weight="quiet"
             action="destructive"
             aria-label="Διαγραφή"
-            @click="deletePost(row.id)"
+            @click="promptDelete(row.id)"
           >
             <cdx-icon :icon="cdxIconTrash" />
           </cdx-button>
@@ -52,6 +52,19 @@
       @create="handleCreate"
     />
 
+    <cdx-dialog
+      :open="isDeleteDialogOpen"
+      title="Επιβεβαίωση Διαγραφής"
+      :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting }"
+      :default-action="{ label: 'Άκυρο' }"
+      @primary="confirmDelete"
+      @default="cancelDelete"
+      @close="cancelDelete"
+    >
+      <p>Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά αυτό το άρθρο; Αυτή η ενέργεια είναι μη αναστρέψιμη.</p>
+      <cdx-progress-bar v-if="isDeleting" inline />
+    </cdx-dialog>
+
   </div>
 </template>
 
@@ -61,7 +74,8 @@ import {
   CdxTable,
   CdxButton,
   CdxIcon,
-  CdxProgressBar
+  CdxProgressBar,
+  CdxDialog
 } from '@wikimedia/codex';
 import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
@@ -78,6 +92,9 @@ const columns = [
 const posts = ref([]);
 const isLoading = ref(true);
 const isCreateDialogOpen = ref(false);
+const isDeleteDialogOpen = ref(false);
+const isDeleting = ref(false);
+const postToDeleteId = ref(null);
 
 function openNewArticleDialog() {
   isCreateDialogOpen.value = true;
@@ -90,21 +107,30 @@ async function handleCreate(newArticleData) {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw userError || new Error('User not found.');
 
-    const { error: profileError } = await supabase
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .update({ full_name: newArticleData.author })
-      .eq('id', user.id);
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
 
     if (profileError) throw profileError;
+
+    if (profileData.full_name !== newArticleData.author) {
+        const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({ full_name: newArticleData.author })
+            .eq('id', user.id);
+        if (updateProfileError) throw updateProfileError;
+    }
 
     const { error: postError } = await supabase
       .from('posts')
       .insert({
         title: newArticleData.title,
         slug: newArticleData.slug,
-        author_id: user.id,
+        author_id: user.id, // Corrected back from user_id
         image_url: newArticleData.image_url,
-        is_published: !newArticleData.isDraft,
+        is_published: newArticleData.is_published,
         content: ''
       });
 
@@ -145,11 +171,41 @@ async function fetchPosts() {
 }
 
 function editPost(postId) {
+  // Placeholder for edit functionality
   notificationService.push(`Επεξεργασία άρθρου ${postId} (δεν έχει υλοποιηθεί ακόμα).`);
 }
 
-function deletePost(postId) {
-  notificationService.push(`Διαγραφή άρθρου ${postId} (δεν έχει υλοποιηθεί ακόμα).`);
+function promptDelete(postId) {
+  postToDeleteId.value = postId;
+  isDeleteDialogOpen.value = true;
+}
+
+function cancelDelete() {
+  isDeleteDialogOpen.value = false;
+  postToDeleteId.value = null;
+}
+
+async function confirmDelete() {
+  if (!postToDeleteId.value) return;
+  isDeleting.value = true;
+  try {
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', postToDeleteId.value);
+
+    if (error) throw error;
+
+    posts.value = posts.value.filter(p => p.id !== postToDeleteId.value);
+    notificationService.push('Το άρθρο διαγράφηκε με επιτυχία.');
+
+  } catch (err) {
+    notificationService.push('Η διαγραφή του άρθρου απέτυχε.', 'error');
+    console.error('Error deleting post:', err);
+  } finally {
+    isDeleting.value = false;
+    cancelDelete();
+  }
 }
 
 onMounted(() => {

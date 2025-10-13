@@ -45,6 +45,7 @@ async function fetchPosts() {
     const { data, error: fetchError } = await supabase
       .from('posts')
       .select('id, title, slug, content, image_url')
+      .eq('is_published', true)
       .order('created_at', { ascending: false });
 
     if (fetchError) {

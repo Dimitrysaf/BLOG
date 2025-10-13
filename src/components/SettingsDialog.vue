@@ -394,4 +394,10 @@ function onClose() {
 .warning-message {
   margin-bottom: 16px;
 }
+
+@media (max-width: 600px) {
+  .image-url-field {
+    flex-direction: column;
+  }
+}
 </style>
