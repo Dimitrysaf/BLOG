@@ -60,6 +60,38 @@
           </cdx-field>
         </div>
         
+        <bubble-menu
+          v-if="editor"
+          :editor="editor"
+          :tippy-options="{ duration: 100 }"
+          :should-show="({ editor }) => editor.isActive('table')"
+          class="bubble-menu"
+        >
+          <div class="editor-button-group">
+             <cdx-button @click="editor.chain().focus().addColumnBefore().run()" weight="quiet" aria-label="Add Column Before">
+                <cdx-icon :icon="cdxIconTableAddColumnBefore" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().addColumnAfter().run()" weight="quiet" aria-label="Add Column After">
+                <cdx-icon :icon="cdxIconTableAddColumnAfter" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().deleteColumn().run()" weight="quiet" aria-label="Delete Column">
+                <cdx-icon :icon="cdxIconSubtract" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().addRowBefore().run()" weight="quiet" aria-label="Add Row Before">
+                <cdx-icon :icon="cdxIconTableAddRowBefore" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().addRowAfter().run()" weight="quiet" aria-label="Add Row After">
+                <cdx-icon :icon="cdxIconTableAddRowAfter" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().deleteRow().run()" weight="quiet" aria-label="Delete Row">
+                <cdx-icon :icon="cdxIconSubtract" />
+             </cdx-button>
+             <cdx-button @click="editor.chain().focus().deleteTable().run()" weight="quiet" aria-label="Delete Table" action="destructive">
+                <cdx-icon :icon="cdxIconTrash" />
+             </cdx-button>
+          </div>
+        </bubble-menu>
+
         <div v-if="editor" class="editor-toolbar">
           <div class="editor-button-group">
             <cdx-button
@@ -217,6 +249,7 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
+import BubbleMenu from '@tiptap/extension-bubble-menu';
 import StarterKit from '@tiptap/starter-kit';
 import { Image } from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
@@ -243,7 +276,13 @@ import {
   cdxIconQuotes,
   cdxIconCode,
   cdxIconUndo,
-  cdxIconRedo
+  cdxIconRedo,
+  cdxIconTrash,
+  cdxIconTableAddColumnBefore,
+  cdxIconTableAddColumnAfter,
+  cdxIconTableAddRowBefore,
+  cdxIconTableAddRowAfter,
+  cdxIconSubtract
 } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
@@ -284,6 +323,10 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
+    BubbleMenu.configure({
+        pluginKey: 'tableBubbleMenu',
+        shouldShow: ({ editor }) => editor.isActive('table'),
+    }),
   ],
   editorProps: {
     attributes: {
@@ -503,6 +546,7 @@ onBeforeUnmount(() => {
   width: 100%;
   margin: 1rem 0;
   overflow: hidden;
+  table-layout: fixed; /* Added for better resizing */
 }
 :deep(td), :deep(th) {
   border: 1px solid #c8ccd1;
@@ -511,16 +555,22 @@ onBeforeUnmount(() => {
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
+  word-wrap: break-word; /* Added for long words */
 }
 :deep(th) {
   font-weight: bold;
   text-align: left;
   background-color: #f8f9fa;
 }
+
 :deep(img) {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+:deep(.ProseMirror .resize-cursor) {
+    cursor: col-resize;
 }
 
 /* Στυλ για το Code Block */
@@ -536,5 +586,14 @@ onBeforeUnmount(() => {
   padding: 0;
   background: none;
   font-size: 0.8rem;
+}
+
+.bubble-menu {
+  display: flex;
+  background-color: #f8f9fa;
+  padding: 0.2rem;
+  border-radius: 4px;
+  border: 1px solid #c8ccd1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 </style>
