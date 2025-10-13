@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="articles-container">
     <div class="page-header" v-if="!isLoading">
       <cdx-button
         weight="primary"
@@ -87,11 +87,9 @@ async function handleCreate(newArticleData) {
   isCreateDialogOpen.value = false;
   
   try {
-    // Get the current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) throw userError || new Error('User not found.');
 
-    // Update the user's profile with the author name from the dialog
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ full_name: newArticleData.author })
@@ -99,7 +97,6 @@ async function handleCreate(newArticleData) {
 
     if (profileError) throw profileError;
 
-    // Create the new post
     const { error: postError } = await supabase
       .from('posts')
       .insert({
@@ -107,14 +104,14 @@ async function handleCreate(newArticleData) {
         slug: newArticleData.slug,
         author_id: user.id,
         image_url: newArticleData.image_url,
-        is_published: newArticleData.is_published,
-        content: '' // Empty content as requested and fixed column name
+        is_published: !newArticleData.isDraft,
+        content: ''
       });
 
     if (postError) throw postError;
 
     notificationService.push(`Το άρθρο "${newArticleData.title}" δημιουργήθηκε με επιτυχία.`);
-    await fetchPosts(); // Refresh the posts list
+    await fetchPosts();
 
   } catch (err) {
     notificationService.push('Αποτυχία δημιουργίας άρθρου. Παρακαλώ δοκιμάστε ξανά.', 'error');
@@ -127,12 +124,7 @@ async function fetchPosts() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select(`
-        id,
-        title,
-        created_at,
-        profiles ( full_name )
-      `)
+      .select(`id, title, created_at, profiles ( full_name )`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -145,7 +137,7 @@ async function fetchPosts() {
     }));
 
   } catch (err) {
-    notificationService.push('Αποτυχία φόρτωσης άρθρων. Βεβαιωθείτε ότι ο πίνακας "posts" υπάρχει.', 'error');
+    notificationService.push('Αποτυχία φόρτωσης άρθρων.', 'error');
     console.error('Error fetching posts:', err);
   } finally {
     isLoading.value = false;
@@ -167,10 +159,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.articles-container {
+  margin: -20px;
+}
+
 .page-header {
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-end;
+  padding: 20px 20px 0 20px;
 }
 
 .action-buttons {
