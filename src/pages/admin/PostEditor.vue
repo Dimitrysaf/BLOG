@@ -3,23 +3,6 @@
     <div class="post-editor-page">
       <div class="page-header">
         <h1>Επεξεργασία Άρθρου</h1>
-        <div class="header-actions" v-if="post">
-          <cdx-button
-            weight="primary"
-            action="progressive"
-            @click="saveContent"
-            :disabled="isSaving || isLoading"
-          >
-            Αποθήκευση
-          </cdx-button>
-          <cdx-button
-            :icon="cdxIconArrowPrevious"
-            aria-label="Πίσω στη λίστα"
-            @click="goBack"
-            weight="quiet"
-            :disabled="isSaving"
-          ></cdx-button>
-        </div>
       </div>
 
       <div v-if="isLoading" class="loading-indicator">
@@ -57,6 +40,24 @@
             <template #label>Συγγραφέας</template>
             <cdx-text-input :model-value="post.profiles?.full_name" disabled />
           </cdx-field>
+          
+          <div class="button-container">
+            <cdx-button
+              weight="primary"
+              action="progressive"
+              @click="saveContent"
+              :disabled="isSaving || isLoading"
+            >
+              Αποθήκευση
+            </cdx-button>
+            <cdx-button
+              action="destructive"
+              @click="goBack"
+              :disabled="isSaving"
+            >
+              Ακύρωση
+            </cdx-button>
+          </div>
         </div>
         
         <div v-if="editor" class="editor-toolbar">
@@ -156,7 +157,6 @@ import {
   CdxTextInput
 } from '@wikimedia/codex';
 import {
-  cdxIconArrowPrevious, 
   cdxIconBold, 
   cdxIconItalic, 
   cdxIconStrikethrough,
@@ -278,19 +278,11 @@ onBeforeUnmount(() => {
 
 <style>
 .page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
 }
 
 .page-header h1 {
   margin: 0;
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
 }
 
 .loading-indicator, .error-indicator {
@@ -307,10 +299,20 @@ onBeforeUnmount(() => {
   align-items: baseline;
 }
 
+.button-container {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
 /* Media query for larger screens */
 @media (min-width: 768px) {
   .post-metadata-grid {
     grid-template-columns: repeat(2, 1fr); /* 2 columns for wider screens */
+  }
+  .post-metadata-grid .button-container {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
   }
 }
 
