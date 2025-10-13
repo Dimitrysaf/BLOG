@@ -66,23 +66,26 @@
               @click="editor.chain().focus().toggleBold().run()"
               :class="{ 'is-active': editor.isActive('bold') }"
               aria-label="Bold"
-              :icon="cdxIconBold"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconBold" />
+            </cdx-button>
             <cdx-button
               @click="editor.chain().focus().toggleItalic().run()"
               :class="{ 'is-active': editor.isActive('italic') }"
               aria-label="Italic"
-              :icon="cdxIconItalic"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconItalic" />
+            </cdx-button>
             <cdx-button
               @click="editor.chain().focus().toggleStrike().run()"
               :class="{ 'is-active': editor.isActive('strike') }"
               aria-label="Strikethrough"
-              :icon="cdxIconStrikethrough"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconStrikethrough" />
+            </cdx-button>
           </div>
 
           <div class="editor-button-group">
@@ -90,9 +93,10 @@
               @click="editor.chain().focus().setParagraph().run()"
               :class="{ 'is-active': editor.isActive('paragraph') }"
               aria-label="Paragraph"
-              :icon="cdxIconTextStyle"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconTextStyle" />
+            </cdx-button>
             <cdx-button
               @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
               :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
@@ -118,16 +122,18 @@
               @click="editor.chain().focus().toggleBulletList().run()"
               :class="{ 'is-active': editor.isActive('bulletList') }"
               aria-label="Bullet List"
-              :icon="cdxIconListBullet"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconListBullet" />
+            </cdx-button>
             <cdx-button
               @click="editor.chain().focus().toggleOrderedList().run()"
               :class="{ 'is-active': editor.isActive('orderedList') }"
               aria-label="Ordered List"
-              :icon="cdxIconListNumbered"
               weight="quiet"
-            ></cdx-button>
+            >
+              <cdx-icon :icon="cdxIconListNumbered" />
+            </cdx-button>
           </div>
         </div>
 
@@ -149,6 +155,13 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
+import {
+  CdxButton,
+  CdxIcon,
+  CdxProgressBar,
+  CdxField,
+  CdxTextInput
+} from '@wikimedia/codex';
 import {
   cdxIconBold, 
   cdxIconItalic, 
