@@ -92,6 +92,20 @@
           </div>
         </bubble-menu>
 
+        <bubble-menu
+          v-if="editor"
+          :editor="editor"
+          :tippy-options="{ duration: 100, placement: 'bottom' }"
+          :should-show="({ editor }) => editor.isActive('image')"
+          class="bubble-menu"
+        >
+          <div class="editor-button-group">
+            <cdx-button @click="editor.chain().focus().deleteSelection().run()" weight="quiet" action="destructive" aria-label="Delete Image">
+                <cdx-icon :icon="cdxIconTrash" />
+            </cdx-button>
+          </div>
+        </bubble-menu>
+
         <div v-if="editor" class="editor-toolbar">
           <div class="editor-button-group">
             <cdx-button
@@ -130,12 +144,47 @@
               <cdx-icon :icon="cdxIconItalic" />
             </cdx-button>
             <cdx-button
+              @click="editor.chain().focus().toggleUnderline().run()"
+              :class="{ 'is-active': editor.isActive('underline') }"
+              aria-label="Underline"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconUnderline" />
+            </cdx-button>
+            <cdx-button
               @click="editor.chain().focus().toggleStrike().run()"
               :class="{ 'is-active': editor.isActive('strike') }"
               aria-label="Strikethrough"
               weight="quiet"
             >
               <cdx-icon :icon="cdxIconStrikethrough" />
+            </cdx-button>
+          </div>
+
+          <div class="editor-button-group">
+            <cdx-button
+              @click="editor.chain().focus().setTextAlign('left').run()"
+              :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }"
+              aria-label="Align Left"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconAlignLeft" />
+            </cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().setTextAlign('center').run()"
+              :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }"
+              aria-label="Align Center"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconAlignCenter" />
+            </cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().setTextAlign('right').run()"
+              :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }"
+              aria-label="Align Right"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconAlignRight" />
             </cdx-button>
           </div>
 
@@ -215,7 +264,7 @@
 
           <div class="editor-button-group">
             <cdx-button
-              @click="addImage"
+              @click="showImageDialog"
               aria-label="Add Image"
               weight="quiet"
             >
@@ -241,6 +290,12 @@
       <div v-if="errorLoading" class="error-indicator">
         <p>Αποτυχία φόρτωσης του άρθρου. <a href="/admin">Επιστροφή στη λίστα</a>.</p>
       </div>
+
+      <ImageInsertDialog
+        :open="isImageDialogVisible"
+        @insert="handleImageInsert"
+        @close="hideImageDialog"
+      />
     </div>
   </Container>
 </template>
@@ -256,6 +311,8 @@ import { Table } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
 
 import {
   CdxButton,
@@ -282,11 +339,16 @@ import {
   cdxIconTableAddColumnAfter,
   cdxIconTableAddRowBefore,
   cdxIconTableAddRowAfter,
-  cdxIconSubtract
+  cdxIconSubtract,
+  cdxIconUnderline,
+  cdxIconAlignLeft,
+  cdxIconAlignCenter,
+  cdxIconAlignRight
 } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import Container from '../../components/Container.vue';
+import ImageInsertDialog from '../../components/ImageInsertDialog.vue';
 
 const props = defineProps({
   id: {
@@ -300,6 +362,7 @@ const post = ref(null);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const errorLoading = ref(false);
+const isImageDialogVisible = ref(false);
 
 const formattedCreatedAt = computed(() => {
   if (post.value && post.value.created_at) {
@@ -323,6 +386,10 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
+    Underline,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
   ],
   editorProps: {
     attributes: {
@@ -331,11 +398,19 @@ const editor = useEditor({
   },
 });
 
-function addImage() {
-  const url = window.prompt('Εισάγετε το URL της εικόνας:');
+function showImageDialog() {
+  isImageDialogVisible.value = true;
+}
+
+function hideImageDialog() {
+  isImageDialogVisible.value = false;
+}
+
+function handleImageInsert(url) {
   if (url && editor.value) {
     editor.value.chain().focus().setImage({ src: url }).run();
   }
+  hideImageDialog();
 }
 
 function addTable() {
@@ -520,6 +595,18 @@ onBeforeUnmount(() => {
   line-height: 1.2;
 }
 
+:deep([data-text-align="center"]) {
+  text-align: center;
+}
+
+:deep([data-text-align="right"]) {
+  text-align: right;
+}
+
+:deep([data-text-align="left"]) {
+  text-align: left;
+}
+
 :deep(.ProseMirror ul),
 :deep(.ProseMirror ol) {
   padding-inline-start: 1.5rem;
@@ -543,7 +630,7 @@ onBeforeUnmount(() => {
   width: 100%;
   margin: 1rem 0;
   overflow: hidden;
-  table-layout: fixed; /* Added for better resizing */
+  table-layout: fixed;
 }
 :deep(td), :deep(th) {
   border: 1px solid #c8ccd1;
@@ -552,7 +639,7 @@ onBeforeUnmount(() => {
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
-  word-wrap: break-word; /* Added for long words */
+  word-wrap: break-word;
 }
 :deep(th) {
   font-weight: bold;
@@ -563,8 +650,10 @@ onBeforeUnmount(() => {
 :deep(img) {
   max-width: 100%;
   height: auto;
-  display: block;
+  display: block; 
+  cursor: pointer;
 }
+
 
 :deep(.ProseMirror .resize-cursor) {
     cursor: col-resize;
