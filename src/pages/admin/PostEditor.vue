@@ -3,6 +3,24 @@
     <div class="post-editor-page">
       <div class="page-header">
         <h1>Επεξεργασία Άρθρου</h1>
+        <div class="header-actions" v-if="post">
+          <cdx-button
+            weight="primary"
+            action="progressive"
+            @click="saveContent"
+            :disabled="isSaving || isLoading"
+          >
+            Αποθήκευση
+          </cdx-button>
+          <cdx-button
+            @click="goBack"
+            :disabled="isSaving"
+            weight="quiet"
+            class="cancel-button"
+          >
+            Ακύρωση
+          </cdx-button>
+        </div>
       </div>
 
       <div v-if="isLoading" class="loading-indicator">
@@ -40,24 +58,6 @@
             <template #label>Συγγραφέας</template>
             <cdx-text-input :model-value="post.profiles?.full_name" disabled />
           </cdx-field>
-          
-          <div class="button-container">
-            <cdx-button
-              weight="primary"
-              action="progressive"
-              @click="saveContent"
-              :disabled="isSaving || isLoading"
-            >
-              Αποθήκευση
-            </cdx-button>
-            <cdx-button
-              action="destructive"
-              @click="goBack"
-              :disabled="isSaving"
-            >
-              Ακύρωση
-            </cdx-button>
-          </div>
         </div>
         
         <div v-if="editor" class="editor-toolbar">
@@ -261,7 +261,10 @@ function goBack() {
 
 watch(post, (newPost) => {
   if (editor.value && newPost) {
-    editor.value.commands.setContent(newPost.content || '');
+    const isSameContent = editor.value.getHTML() === (newPost.content || '');
+    if (!isSameContent) {
+      editor.value.commands.setContent(newPost.content || '');
+    }
   }
 });
 
@@ -290,7 +293,8 @@ onBeforeUnmount(() => {
 
 .header-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
+  align-items: center;
 }
 
 .loading-indicator, .error-indicator {
@@ -301,20 +305,18 @@ onBeforeUnmount(() => {
 
 .post-metadata-grid {
   display: grid;
-  grid-template-columns: 1fr; /* Default to 1 column for small screens */
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-bottom: 2rem;
   align-items: baseline;
 }
 
-/* Media query for larger screens */
 @media (min-width: 768px) {
   .post-metadata-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider screens */
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Override default CdxField margins for a clean grid */
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
@@ -323,17 +325,16 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding: 0.5rem 0;
-  border-top: 1px solid var(--border-color-base);
-  border-bottom: 1px solid var(--border-color-base);
-  background-color: var(--background-color-interactive-subtle);
-  margin: 1rem 0;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
+  border: 1px solid #c8ccd1;
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  background-color: #f8f9fa;
 }
 
 .editor-toolbar .cdx-button.is-active {
-  background-color: var(--background-color-interactive-default);
-  color: var(--color-interactive);
+  background-color: #eaf3ff;
+  color: #36c;
 }
 
 .editor-content-wrapper {
@@ -341,68 +342,46 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
-:deep(.ProseMirror) {
-  outline: none;
-  color: var(--color-base);
-  line-height: 1.6;
-  min-height: 400px; /* Ensure editor has a minimum height */
-  border: 1px solid #a2a9b1;
-  padding: 8px;
-  border-radius: 2px;
+:deep(.tiptap) {
+  border: 1px solid #c8ccd1;
+  border-radius: 0 0 2px 2px;
+  padding: 0.5rem 0.75rem;
+  min-height: 400px;
 }
 
-:deep(.ProseMirror:focus-visible) {
+:deep(.tiptap:focus),
+:deep(.ProseMirror:focus) {
   outline: none;
   border-color: #36c;
   box-shadow: 0 0 0 1px #36c;
 }
 
-
 :deep(.ProseMirror p) {
-  margin-block-start: 0;
-  margin-block-end: var(--spacing-400);
+  margin-block: 0 1em;
 }
 
 :deep(.ProseMirror h1),
 :deep(.ProseMirror h2),
 :deep(.ProseMirror h3) {
-  margin-block-start: var(--spacing-600);
-  margin-block-end: var(--spacing-200);
+  margin-block: 1.5em 0.5em;
   line-height: 1.2;
-  font-weight: bold;
-  border-bottom: none;
-}
-
-:deep(.ProseMirror h1) {
-  font-size: var(--font-size-xx-large);
-}
-
-:deep(.ProseMirror h2) {
-  font-size: var(--font-size-x-large);
-}
-
-:deep(.ProseMirror h3) {
-  font-size: var(--font-size-large);
 }
 
 :deep(.ProseMirror ul),
 :deep(.ProseMirror ol) {
   padding-inline-start: 1.5rem;
-  margin-block-end: var(--spacing-400);
 }
 
 :deep(.ProseMirror blockquote) {
-  border-inline-start: 3px solid var(--border-color-base);
+  border-inline-start: 3px solid #c8ccd1;
   padding-inline-start: 1rem;
-  margin-inline-start: 0;
-  font-style: italic;
-  color: var(--color-subtle);
+  margin-inline: 0;
+  color: #54595d;
 }
 
 :deep(.ProseMirror hr) {
   border: none;
-  border-top: 1px solid var(--border-color-base);
+  border-top: 1px solid #c8ccd1;
   margin-block: 2rem;
 }
-
 </style>
