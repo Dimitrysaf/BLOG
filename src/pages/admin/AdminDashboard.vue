@@ -10,9 +10,10 @@
           :label="tab.label"
           :disabled="tab.disabled"
         >
-          <!-- This is where the content for each tab will go -->
-          <!-- For now, we'll just show a placeholder -->
-          <div class="tab-content">
+          <div v-if="tab.name === 'posts'" class="tab-content">
+            <Articles />
+          </div>
+          <div v-else class="tab-content">
             <h2>{{ tab.label }}</h2>
             <p>Περιεχόμενο για τη σελίδα "{{ tab.label }}".</p>
           </div>
@@ -26,6 +27,7 @@
 import { ref } from 'vue';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
+import Articles from './Articles.vue';
 
 const tabsData = ref([
   {

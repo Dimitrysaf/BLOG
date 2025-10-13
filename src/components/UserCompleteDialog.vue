@@ -18,6 +18,7 @@
       <cdx-text-input 
         v-model="fullName"
         :disabled="isLoading"
+        maxlength="35"
         @update:model-value="validateFullName"
       />
     </cdx-field>
@@ -41,12 +42,26 @@ const fullNameStatus = ref('default');
 const fullNameError = ref('');
 
 function validateFullName() {
-  if (fullName.value.trim().length === 0) {
+  if (!fullName.value || fullName.value.trim().length === 0) {
     fullNameStatus.value = 'error';
     fullNameError.value = 'Το ονοματεπώνυμο δεν μπορεί να είναι κενό.';
     return false;
   }
-  fullNameStatus.value = 'success';
+
+  if (fullName.value.length > 35) {
+    fullNameStatus.value = 'error';
+    fullNameError.value = 'Το ονοματεπώνυμο δεν πρέπει να υπερβαίνει τους 35 χαρακτήρες.';
+    return false;
+  }
+
+  const nameRegex = /^[A-Za-zΑ-Ωα-ωίϊΐόάέύϋΰήώ\s_-]+$/;
+  if (!nameRegex.test(fullName.value)) {
+    fullNameStatus.value = 'error';
+    fullNameError.value = 'Επιτρέπονται μόνο ελληνικοί/αγγλικοί χαρακτήρες, παύλες και κενά.';
+    return false;
+  }
+
+  fullNameStatus.value = 'default';
   fullNameError.value = '';
   return true;
 }
@@ -63,7 +78,6 @@ async function updateProfile(name) {
 
     if (error) throw error;
 
-    // Manually update the user object's metadata
     if (user.value && user.value.user_metadata) {
       user.value.user_metadata.full_name = name;
     }

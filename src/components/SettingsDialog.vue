@@ -4,7 +4,7 @@
     :open="modelValue"
     :title-icon="cdxIconSettings"
     title="Ρυθμίσεις"
-    :primary-action="{ label: 'Αποθήκευση', actionType: 'progressive', disabled: isLoading }"
+    :primary-action="{ label: 'Αποθήκευση', actionType: 'progressive', disabled: isLoading || isImageLoading }"
     :default-action="{ label: 'Ακύρωση' }"
     @primary="onSave"
     @default="onClose"
@@ -12,32 +12,31 @@
   >
     <cdx-progress-bar v-if="isLoading" inline />
 
-    <cdx-field>
-      <template #label>Εικόνα Προφίλ</template>
-      <div class="avatar-wrapper" :class="{ 'is-loading': isLoading }">
+    <div class="image-url-field">
+      <div class="avatar-preview">
+        <cdx-progress-indicator v-if="isImageLoading" />
         <img
-            v-if="avatarUrl && !imageError"
-            :src="avatarUrl"
-            alt="Εικόνα προφίλ"
-            class="avatar-image"
-            @error="onImageError"
+          v-else-if="avatarUrl && !imageError"
+          :src="avatarUrl"
+          alt="Εικόνα προφίλ"
+          class="avatar-image"
         />
         <CdxIcon v-else :icon="cdxIconUserAvatar" class="fallback-icon" />
       </div>
-    </cdx-field>
 
-    <cdx-field>
+      <cdx-field class="url-input-field">
         <template #label>
-            URL Εικόνας Προφίλ
+          URL Εικόνας Προφίλ
         </template>
         <cdx-text-input
-            v-model="avatarUrl"
-            :disabled="isLoading"
-            aria-label="URL Εικόνας Προφίλ"
+          v-model="avatarUrl"
+          :disabled="isLoading"
+          aria-label="URL Εικόνας Προφίλ"
         />
-    </cdx-field>
+      </cdx-field>
+    </div>
 
-    <cdx-field :status="error ? 'error' : null" :messages="error ? { error: error } : {}">
+    <cdx-field :status="fullNameStatus" :messages="{ error: fullNameValidationMessage }">
       <template #label>
         Ονοματεπώνυμο
       </template>
@@ -45,6 +44,8 @@
         v-model="fullName"
         :disabled="isLoading"
         aria-label="Ονοματεπώνυμο"
+        maxlength="35"
+        @update:model-value="validateFullName"
       />
     </cdx-field>
 
@@ -85,7 +86,6 @@
       Η ενέργεια αυτή είναι μη αναστρέψιμη. Ο λογαριασμός σας θα διαγραφεί οριστικά.
     </cdx-message>
 
-    <!-- Dialog for users WITHOUT a password (e.g. Google Sign in) -->
     <cdx-field v-if="!hasPassword" :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
         <template #label>
             Για επιβεβαίωση, πληκτρολογήστε το email σας: <strong>{{ user.email }}</strong>
@@ -97,10 +97,9 @@
         />
     </cdx-field>
 
-    <!-- Dialog for users WITH a password -->
     <cdx-field v-else :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
       <template #label>
-        Εισαγάγετε τον κωδικό πρόσβασής σας για επιβεβαίωση
+        Εισαγάγετε τον κωδικό πρόσβασης σας για επιβεβαίωση
       </template>
       <cdx-text-input
         v-model="confirmationText"
@@ -122,7 +121,8 @@ import {
   CdxButton,
   CdxProgressBar,
   CdxMessage,
-  CdxIcon
+  CdxIcon,
+  CdxProgressIndicator
 } from '@wikimedia/codex';
 import {
   cdxIconSettings,
@@ -147,10 +147,10 @@ const fullName = ref('');
 const avatarUrl = ref('');
 const error = ref('');
 const imageError = ref(false);
+const isImageLoading = ref(false);
 
-const onImageError = () => {
-    imageError.value = true;
-};
+const fullNameStatus = ref('default');
+const fullNameValidationMessage = ref('');
 
 const isConfirmingDeletion = ref(false);
 const isDeleting = ref(false);
@@ -170,6 +170,31 @@ const isConfirmationValid = computed(() => {
     }
     return confirmationText.value.length > 0;
 });
+
+function validateFullName() {
+  if (!fullName.value) {
+    fullNameStatus.value = 'error';
+    fullNameValidationMessage.value = 'Το ονοματεπώνυμο δεν μπορεί να είναι κενό.';
+    return false;
+  }
+
+  if (fullName.value.length > 35) {
+    fullNameStatus.value = 'error';
+    fullNameValidationMessage.value = 'Το όνομα δεν πρέπει να υπερβαίνει τους 35 χαρακτήρες.';
+    return false;
+  }
+  
+  const nameRegex = /^[A-Za-zΑ-Ωα-ωίϊΐόάέύϋΰήώ\s_-]+$/;
+  if (!nameRegex.test(fullName.value)) {
+    fullNameStatus.value = 'error';
+    fullNameValidationMessage.value = 'Επιτρέπονται μόνο ελληνικοί/αγγλικοί χαρακτήρες, παύλες και κενά.';
+    return false;
+  }
+  
+  fullNameStatus.value = 'default';
+  fullNameValidationMessage.value = '';
+  return true;
+}
 
 async function fetchProfile() {
   if (!user.value) return;
@@ -198,10 +223,26 @@ async function fetchProfile() {
   }
 }
 
-watch(avatarUrl, (newUrl, oldUrl) => {
-    if (newUrl !== oldUrl) {
-        imageError.value = false;
-    }
+watch(avatarUrl, (newUrl) => {
+  if (newUrl) {
+    isImageLoading.value = true;
+    imageError.value = false;
+
+    const img = new Image();
+    img.onload = () => {
+      isImageLoading.value = false;
+      imageError.value = false;
+    };
+    img.onerror = () => {
+      isImageLoading.value = false;
+      imageError.value = true;
+    };
+    img.src = newUrl;
+
+  } else {
+    isImageLoading.value = false;
+    imageError.value = false;
+  }
 });
 
 watch([() => props.modelValue, user], ([isOpen, currentUser]) => {
@@ -214,6 +255,9 @@ watch([() => props.modelValue, user], ([isOpen, currentUser]) => {
       confirmationText.value = '';
       deleteError.value = '';
       imageError.value = false;
+      isImageLoading.value = false;
+      fullNameStatus.value = 'default';
+      fullNameValidationMessage.value = '';
     }
     
     if (currentUser) {
@@ -223,8 +267,7 @@ watch([() => props.modelValue, user], ([isOpen, currentUser]) => {
 }, { immediate: true });
 
 async function onSave() {
-  if (!fullName.value) {
-      error.value = 'Το ονοματεπώνυμο δεν μπορεί να είναι κενό.';
+  if (!validateFullName()) {
       return;
   }
   isLoading.value = true;
@@ -235,7 +278,7 @@ async function onSave() {
       .from('profiles')
       .update({ 
         full_name: fullName.value,
-        avatar_url: avatarUrl.value
+        avatar_url: avatarUrl.value && !imageError.value ? avatarUrl.value : ''
       })
       .eq('id', user.value.id);
 
@@ -303,23 +346,23 @@ function onClose() {
 </script>
 
 <style scoped>
-.avatar-wrapper {
-  width: 80px;
-  height: 80px;
+.image-url-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.avatar-preview {
+  width: 82px;
+  height: 82px;
+  flex-shrink: 0;
   background-color: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border: 1px solid #c8ccd1;
-}
-
-.avatar-wrapper.is-loading {
-  background-color: #e9ecef;
-}
-
-.avatar-wrapper.is-loading .avatar-image {
-  opacity: 0.3;
 }
 
 .avatar-image {
@@ -329,9 +372,13 @@ function onClose() {
 }
 
 .fallback-icon {
-    width: 50px;
-    height: 50px;
-    color: #54595d;
+  width: 50px;
+  height: 50px;
+  color: #54595d;
+}
+
+.url-input-field {
+  flex-grow: 1;
 }
 
 .delete-section {
