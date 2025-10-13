@@ -15,9 +15,26 @@
     <cdx-field>
       <template #label>Εικόνα Προφίλ</template>
       <div class="avatar-wrapper" :class="{ 'is-loading': isLoading }">
-        <img v-if="avatarUrl" :src="avatarUrl" alt="Εικόνα προφίλ" class="avatar-image" />
-        <p v-else>Δεν έχει οριστεί εικόνα προφίλ.</p>
+        <img
+            v-if="avatarUrl && !imageError"
+            :src="avatarUrl"
+            alt="Εικόνα προφίλ"
+            class="avatar-image"
+            @error="onImageError"
+        />
+        <CdxIcon v-else :icon="cdxIconUserAvatar" class="fallback-icon" />
       </div>
+    </cdx-field>
+
+    <cdx-field>
+        <template #label>
+            URL Εικόνας Προφίλ
+        </template>
+        <cdx-text-input
+            v-model="avatarUrl"
+            :disabled="isLoading"
+            aria-label="URL Εικόνας Προφίλ"
+        />
     </cdx-field>
 
     <cdx-field :status="error ? 'error' : null" :messages="error ? { error: error } : {}">
@@ -58,7 +75,7 @@
     :open="isConfirmingDeletion"
     :title-icon="cdxIconAlert"
     title="Επιβεβαίωση διαγραφής"
-    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting }"
+    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting || !isConfirmationValid }"
     :default-action="{ label: 'Ακύρωση' }"
     @primary="onDeleteAccount"
     @default="onCloseConfirmDialog"
@@ -67,12 +84,26 @@
     <cdx-message type="warning" inline class="warning-message">
       Η ενέργεια αυτή είναι μη αναστρέψιμη. Ο λογαριασμός σας θα διαγραφεί οριστικά.
     </cdx-message>
-    <cdx-field :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
+
+    <!-- Dialog for users WITHOUT a password (e.g. Google Sign in) -->
+    <cdx-field v-if="!hasPassword" :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
+        <template #label>
+            Για επιβεβαίωση, πληκτρολογήστε το email σας: <strong>{{ user.email }}</strong>
+        </template>
+        <cdx-text-input
+            v-model="confirmationText"
+            :disabled="isDeleting"
+            aria-label="Επιβεβαίωση με email"
+        />
+    </cdx-field>
+
+    <!-- Dialog for users WITH a password -->
+    <cdx-field v-else :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
       <template #label>
         Εισαγάγετε τον κωδικό πρόσβασής σας για επιβεβαίωση
       </template>
       <cdx-text-input
-        v-model="password"
+        v-model="confirmationText"
         input-type="password"
         :disabled="isDeleting"
         aria-label="Κωδικός πρόσβασης"
@@ -83,18 +114,20 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import {
   CdxDialog,
   CdxField,
   CdxTextInput,
   CdxButton,
   CdxProgressBar,
-  CdxMessage
+  CdxMessage,
+  CdxIcon
 } from '@wikimedia/codex';
 import {
   cdxIconSettings,
-  cdxIconAlert
+  cdxIconAlert,
+  cdxIconUserAvatar
 } from '@wikimedia/codex-icons';
 import { user, signOut } from '../auth';
 import { supabase } from '../supabase';
@@ -113,11 +146,30 @@ const isLoading = ref(false);
 const fullName = ref('');
 const avatarUrl = ref('');
 const error = ref('');
+const imageError = ref(false);
+
+const onImageError = () => {
+    imageError.value = true;
+};
 
 const isConfirmingDeletion = ref(false);
 const isDeleting = ref(false);
-const password = ref('');
+const confirmationText = ref('');
 const deleteError = ref('');
+
+const hasPassword = computed(() => {
+  if (!user.value || !user.value.identities) {
+    return false;
+  }
+  return user.value.identities.some(identity => identity.provider === 'email');
+});
+
+const isConfirmationValid = computed(() => {
+    if (!hasPassword.value) {
+        return user.value && confirmationText.value === user.value.email;
+    }
+    return confirmationText.value.length > 0;
+});
 
 async function fetchProfile() {
   if (!user.value) return;
@@ -146,25 +198,29 @@ async function fetchProfile() {
   }
 }
 
-watch([() => props.modelValue, user], ([isOpen, currentUser], [wasOpen, wasUser]) => {
-  const dialogJustOpened = isOpen && !wasOpen;
-
-  if (dialogJustOpened) {
-    error.value = '';
-    isConfirmingDeletion.value = false;
-    password.value = '';
-    deleteError.value = '';
-  }
-
-  if (isOpen && currentUser && wasUser && currentUser.id !== wasUser.id) {
-    fullName.value = '';
-    avatarUrl.value = '';
-  }
-
-  if (isOpen && currentUser) {
-    fetchProfile();
-  }
+watch(avatarUrl, (newUrl, oldUrl) => {
+    if (newUrl !== oldUrl) {
+        imageError.value = false;
+    }
 });
+
+watch([() => props.modelValue, user], ([isOpen, currentUser]) => {
+  const dialogJustOpened = isOpen && !props.modelValue;
+  
+  if (isOpen) {
+    if (dialogJustOpened) {
+      error.value = '';
+      isConfirmingDeletion.value = false;
+      confirmationText.value = '';
+      deleteError.value = '';
+      imageError.value = false;
+    }
+    
+    if (currentUser) {
+        fetchProfile();
+    }
+  }
+}, { immediate: true });
 
 async function onSave() {
   if (!fullName.value) {
@@ -178,7 +234,8 @@ async function onSave() {
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ 
-        full_name: fullName.value
+        full_name: fullName.value,
+        avatar_url: avatarUrl.value
       })
       .eq('id', user.value.id);
 
@@ -202,21 +259,28 @@ function onOpenConfirmDialog() {
 
 function onCloseConfirmDialog() {
   isConfirmingDeletion.value = false;
-  password.value = '';
+  confirmationText.value = '';
   deleteError.value = '';
 }
 
 async function onDeleteAccount() {
+  if (!isConfirmationValid.value) {
+    deleteError.value = 'Η επιβεβαίωση δεν είναι σωστή.';
+    return;
+  }
   deleteError.value = '';
   isDeleting.value = true;
 
   try {
     const { error: functionError } = await supabase.functions.invoke('delete-user', {
-      body: { password: password.value },
+      body: { 
+        confirmation: confirmationText.value,
+        hasPassword: hasPassword.value
+      },
     });
 
     if (functionError) {
-      throw new Error('Η διαγραφή απέτυχε. Ελέγξτε τον κωδικό σας ή δοκιμάστε ξανά.');
+      throw new Error('Η διαγραφή απέτυχε. Ελέγξτε τα στοιχεία σας ή δοκιμάστε ξανά.');
     }
 
     await signOut();
@@ -239,16 +303,35 @@ function onClose() {
 </script>
 
 <style scoped>
+.avatar-wrapper {
+  width: 80px;
+  height: 80px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid #c8ccd1;
+}
+
+.avatar-wrapper.is-loading {
+  background-color: #e9ecef;
+}
+
 .avatar-wrapper.is-loading .avatar-image {
-  opacity: 0.5;
-  filter: grayscale(80%);
+  opacity: 0.3;
 }
 
 .avatar-image {
-  max-width: 100px;
-  max-height: 100px;
-  border: 1px solid #c8ccd1;
-  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fallback-icon {
+    width: 50px;
+    height: 50px;
+    color: #54595d;
 }
 
 .delete-section {
