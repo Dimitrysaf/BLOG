@@ -479,6 +479,7 @@ onBeforeUnmount(() => {
   border: 1px solid #c8ccd1;
   border-radius: 2px;
   padding: 0.25rem;
+  background: white;
 }
 
 .editor-toolbar .cdx-button.is-active {
