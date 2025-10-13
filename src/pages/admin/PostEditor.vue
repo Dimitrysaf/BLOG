@@ -135,6 +135,24 @@
               <cdx-icon :icon="cdxIconListNumbered" />
             </cdx-button>
           </div>
+
+          <div class="editor-button-group">
+            <cdx-button
+              @click="addImage"
+              aria-label="Add Image"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconImage" />
+            </cdx-button>
+            <cdx-button
+              @click="addTable"
+              aria-label="Insert Table"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconTable" />
+            </cdx-button>
+          </div>
+
         </div>
 
         <div class="editor-content-wrapper">
@@ -155,6 +173,13 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
+// ΝΕΑ IMPORTS ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ ΠΙΝΑΚΕΣ
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import TableRow from '@tiptap/extension-table-row';
+
 import {
   CdxButton,
   CdxIcon,
@@ -168,7 +193,10 @@ import {
   cdxIconStrikethrough,
   cdxIconTextStyle,
   cdxIconListBullet,
-  cdxIconListNumbered
+  cdxIconListNumbered,
+  // ΝΕΑ IMPORTS ΕΙΚΟΝΙΔΙΩΝ
+  cdxIconImage,
+  cdxIconTable
 } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
@@ -202,6 +230,14 @@ const editor = useEditor({
         levels: [1, 2, 3],
       },
     }),
+    // ΝΕΕΣ ΕΠΕΚΤΑΣΕΙΣ
+    Image,
+    Table.configure({
+      resizable: true,
+    }),
+    TableRow,
+    TableHeader,
+    TableCell,
   ],
   editorProps: {
     attributes: {
@@ -209,6 +245,20 @@ const editor = useEditor({
     },
   },
 });
+
+// ΝΕΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ
+function addImage() {
+  const url = window.prompt('Εισάγετε το URL της εικόνας:');
+  if (url && editor.value) {
+    editor.value.chain().focus().setImage({ src: url }).run();
+  }
+}
+
+function addTable() {
+  if (editor.value) {
+    editor.value.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }
+}
 
 async function fetchPost() {
   isLoading.value = true;
@@ -374,7 +424,6 @@ onBeforeUnmount(() => {
   border-top-right-radius: 0;
 }
 
-
 :deep(.ProseMirror p) {
   margin-block: 0 1em;
 }
@@ -402,5 +451,30 @@ onBeforeUnmount(() => {
   border: none;
   border-top: 1px solid #c8ccd1;
   margin-block: 2rem;
+}
+
+/* ΝΕΑ ΣΤΥΛ ΓΙΑ ΠΙΝΑΚΕΣ ΚΑΙ ΕΙΚΟΝΕΣ */
+:deep(table) {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+:deep(td), :deep(th) {
+  border: 1px solid #c8ccd1;
+  padding: 0.5rem;
+  min-width: 1em;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+:deep(th) {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f8f9fa;
+}
+:deep(img) {
+  max-width: 100%;
+  height: auto;
 }
 </style>

@@ -11,6 +11,11 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
     "@supabase/supabase-js": "^2.75.0",
+    "@tiptap/extension-image": "^3.6.6",
+    "@tiptap/extension-table": "^3.6.6",
+    "@tiptap/extension-table-cell": "^3.6.6",
+    "@tiptap/extension-table-header": "^3.6.6",
+    "@tiptap/extension-table-row": "^3.6.6",
     "@tiptap/starter-kit": "^3.6.6",
     "@tiptap/vue-3": "^3.6.6",
     "@types/cookie": "^0.6.0",
