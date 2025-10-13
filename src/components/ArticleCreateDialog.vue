@@ -46,10 +46,7 @@
 
     <cdx-field class="dialog-field">
       <template #label>Συγγραφέας</template>
-      <cdx-text-input
-        v-model="authorName"
-        placeholder="Π.χ. Γιάννης Παπαδόπουλος"
-      />
+      <author-selector v-model="authorId" />
     </cdx-field>
 
     <cdx-field class="dialog-field">
@@ -79,6 +76,7 @@ import {
   CdxCheckbox
 } from '@wikimedia/codex';
 import { cdxIconImage } from '@wikimedia/codex-icons';
+import AuthorSelector from './AuthorSelector.vue';
 
 const props = defineProps({
   open: {
@@ -93,7 +91,7 @@ const imageUrl = ref('');
 const articleTitle = ref('');
 const articleSlug = ref('');
 const slugId = ref('');
-const authorName = ref('');
+const authorId = ref(null);
 const creationDate = ref('');
 const isDraft = ref(true);
 
@@ -103,7 +101,7 @@ const imageLoadError = ref(false);
 const primaryAction = computed(() => ({
   label: 'Δημιουργία',
   action: 'progressive',
-  disabled: isLoadingImage.value || !articleTitle.value.trim() || !authorName.value.trim()
+  disabled: isLoadingImage.value || !articleTitle.value.trim() || !authorId.value
 }));
 
 const defaultAction = {
@@ -153,7 +151,7 @@ watch(() => props.open, (isOpen) => {
     // Reset state when dialog opens
     imageUrl.value = '';
     articleTitle.value = '';
-    authorName.value = '';
+    authorId.value = null;
     isDraft.value = true;
     isLoadingImage.value = false;
     imageLoadError.value = false;
@@ -187,7 +185,7 @@ const onCreate = () => {
   emit('create', { 
     title: articleTitle.value, 
     slug: articleSlug.value, 
-    author: authorName.value,
+    author_id: authorId.value,
     image_url: imageUrl.value && !imageLoadError.value ? imageUrl.value : '',
     is_published: !isDraft.value
   });

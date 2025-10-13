@@ -56,7 +56,7 @@
 
           <cdx-field>
             <template #label>Συγγραφέας</template>
-            <cdx-text-input :model-value="post.profiles?.full_name" disabled />
+            <author-selector v-if="post" v-model="post.author_id" />
           </cdx-field>
         </div>
         
@@ -349,6 +349,7 @@ import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import Container from '../../components/Container.vue';
 import ImageInsertDialog from '../../components/ImageInsertDialog.vue';
+import AuthorSelector from '../../components/AuthorSelector.vue';
 
 const props = defineProps({
   id: {
@@ -449,6 +450,7 @@ async function saveContent() {
     title: post.value.title,
     slug: post.value.slug,
     image_url: post.value.image_url,
+    author_id: post.value.author_id
   };
 
   try {
