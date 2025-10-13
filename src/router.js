@@ -6,6 +6,7 @@ import Home from './pages/Home.vue';
 import NotFound from './pages/NotFound.vue';
 import Post from './pages/Post.vue';
 import AdminDashboard from './pages/admin/AdminDashboard.vue';
+import PostEditor from './pages/admin/PostEditor.vue'; // Import PostEditor
 import Forbidden from './pages/Forbidden.vue';
 
 const routes = [
@@ -23,6 +24,13 @@ const routes = [
     path: '/admin',
     name: 'AdminDashboard',
     component: AdminDashboard,
+    meta: { requiresAuth: true, requiredRole: 'admin' },
+  },
+  {
+    path: '/admin/edit/:id',
+    name: 'PostEditor',
+    component: PostEditor,
+    props: true, // Pass route params as props
     meta: { requiresAuth: true, requiredRole: 'admin' },
   },
   {

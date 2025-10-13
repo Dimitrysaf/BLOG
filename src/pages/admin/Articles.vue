@@ -30,7 +30,7 @@
           </cdx-toggle-button>
           <cdx-button
             aria-label="Επεξεργασία"
-            @click="editPost(row.id)"
+            @click="editPost(row)"
           >
             <cdx-icon :icon="cdxIconEdit" />
           </cdx-button>
@@ -88,6 +88,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   CdxTable,
   CdxButton,
@@ -117,6 +118,8 @@ const postToDeleteId = ref(null);
 const isPublishingDialogOpen = ref(false);
 const isPublishing = ref(false);
 const postToPublish = ref(null);
+
+const router = useRouter();
 
 function openNewArticleDialog() {
   isCreateDialogOpen.value = true;
@@ -172,7 +175,7 @@ async function fetchPosts() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select(`id, title, created_at, is_published, profiles ( full_name )`)
+      .select(`id, title, content, created_at, is_published, profiles ( full_name )`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -180,6 +183,7 @@ async function fetchPosts() {
     posts.value = data.map(post => ({
       id: post.id,
       title: post.title,
+      content: post.content,
       is_published: post.is_published,
       author_name: post.profiles ? post.profiles.full_name : 'Άγνωστος',
       created_at_formatted: new Date(post.created_at).toLocaleDateString('el-GR'),
@@ -211,7 +215,6 @@ function promptPublish(post) {
 function cancelPublish() {
   isPublishingDialogOpen.value = false;
   if (postToPublish.value) {
-    // Revert optimistic UI update if cancelled
     const postInList = posts.value.find(p => p.id === postToPublish.value.id);
     if (postInList) {
       postInList.is_published = false;
@@ -251,8 +254,8 @@ async function updatePublishedStatus(post, newStatus) {
   }
 }
 
-function editPost(postId) {
-  notificationService.push(`Επεξεργασία άρθρου ${postId} (δεν έχει υλοποιηθεί ακόμα).`);
+function editPost(post) {
+  router.push({ name: 'PostEditor', params: { id: post.id } });
 }
 
 function promptDelete(postId) {
@@ -291,7 +294,6 @@ async function confirmDelete() {
 onMounted(() => {
   fetchPosts();
 });
-
 </script>
 
 <style scoped>
