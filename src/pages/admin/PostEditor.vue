@@ -276,7 +276,8 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style>
+<style scoped>
+/* Scoped styles for the page layout */
 .page-header {
   margin-bottom: 20px;
 }
@@ -293,7 +294,7 @@ onBeforeUnmount(() => {
 
 .post-metadata-grid {
   display: grid;
-  grid-template-columns: 1fr; /* Default to 1 column for small screens */
+  grid-template-columns: 1fr;
   gap: 1rem;
   margin-bottom: 2rem;
   align-items: baseline;
@@ -305,10 +306,9 @@ onBeforeUnmount(() => {
   justify-content: center;
 }
 
-/* Media query for larger screens */
 @media (min-width: 768px) {
   .post-metadata-grid {
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider screens */
+    grid-template-columns: repeat(2, 1fr);
   }
   .post-metadata-grid .button-container {
     grid-column: 1 / -1;
@@ -316,7 +316,6 @@ onBeforeUnmount(() => {
   }
 }
 
-/* Override default CdxField margins for a clean grid */
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
@@ -342,12 +341,18 @@ onBeforeUnmount(() => {
   flex-grow: 1;
   overflow-y: auto;
 }
+</style>
 
+<style>
+/* Global (non-scoped) styles for Tiptap editor content */
 .ProseMirror {
   outline: none;
   color: var(--color-base);
   line-height: 1.6;
-  min-height: 400px; /* Ensure editor has a minimum height */
+  min-height: 400px; 
+  padding: 1rem;
+  border: 1px solid var(--border-color-base);
+  border-radius: var(--border-radius-base);
 }
 
 .ProseMirror p {
@@ -398,7 +403,6 @@ onBeforeUnmount(() => {
 }
 
 .ProseMirror:focus-visible {
-  outline: none;
+  outline: 1px solid var(--border-color-interactive);
 }
-
 </style>
