@@ -17,19 +17,24 @@
       caption="Λίστα των άρθρων του ιστολογίου"
       :columns="columns"
       :data="posts"
-      :use-row-headers="false"
+      :use-row-headers="true"
     >
       <template #item-actions="{ row }">
         <div class="action-buttons">
+          <cdx-toggle-button
+            :model-value="row.is_published"
+            aria-label="Toggle Published State"
+            @update:model-value="handlePublicationToggle(row)"
+          >
+            <cdx-icon :icon="cdxIconUpload" />
+          </cdx-toggle-button>
           <cdx-button
-            weight="quiet"
             aria-label="Επεξεργασία"
             @click="editPost(row.id)"
           >
             <cdx-icon :icon="cdxIconEdit" />
           </cdx-button>
           <cdx-button
-            weight="quiet"
             action="destructive"
             aria-label="Διαγραφή"
             @click="promptDelete(row.id)"
@@ -65,6 +70,19 @@
       <cdx-progress-bar v-if="isDeleting" inline />
     </cdx-dialog>
 
+    <cdx-dialog
+      :open="isPublishingDialogOpen"
+      title="Επιβεβαίωση Δημοσίευσης"
+      :primary-action="{ label: 'Δημοσίευση', actionType: 'progressive', disabled: isPublishing }"
+      :default-action="{ label: 'Άκυρο' }"
+      @primary="confirmPublish"
+      @default="cancelPublish"
+      @close="cancelPublish"
+    >
+      <p>Είστε σίγουροι ότι θέλετε να δημοσιεύσετε αυτό το άρθρο; Θα είναι ορατό σε όλους τους επισκέπτες.</p>
+      <cdx-progress-bar v-if="isPublishing" inline />
+    </cdx-dialog>
+
   </div>
 </template>
 
@@ -75,9 +93,10 @@ import {
   CdxButton,
   CdxIcon,
   CdxProgressBar,
-  CdxDialog
+  CdxDialog,
+  CdxToggleButton
 } from '@wikimedia/codex';
-import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper } from '@wikimedia/codex-icons';
+import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import ArticleCreateDialog from '../../components/ArticleCreateDialog.vue';
@@ -95,6 +114,9 @@ const isCreateDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const isDeleting = ref(false);
 const postToDeleteId = ref(null);
+const isPublishingDialogOpen = ref(false);
+const isPublishing = ref(false);
+const postToPublish = ref(null);
 
 function openNewArticleDialog() {
   isCreateDialogOpen.value = true;
@@ -128,7 +150,7 @@ async function handleCreate(newArticleData) {
       .insert({
         title: newArticleData.title,
         slug: newArticleData.slug,
-        author_id: user.id, // Corrected back from user_id
+        author_id: user.id,
         image_url: newArticleData.image_url,
         is_published: newArticleData.is_published,
         content: ''
@@ -150,7 +172,7 @@ async function fetchPosts() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select(`id, title, created_at, profiles ( full_name )`)
+      .select(`id, title, created_at, is_published, profiles ( full_name )`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -158,6 +180,7 @@ async function fetchPosts() {
     posts.value = data.map(post => ({
       id: post.id,
       title: post.title,
+      is_published: post.is_published,
       author_name: post.profiles ? post.profiles.full_name : 'Άγνωστος',
       created_at_formatted: new Date(post.created_at).toLocaleDateString('el-GR'),
     }));
@@ -170,8 +193,65 @@ async function fetchPosts() {
   }
 }
 
+async function handlePublicationToggle(post) {
+  const desiredStatus = !post.is_published;
+  
+  if (desiredStatus === true) {
+    promptPublish(post);
+  } else {
+    await updatePublishedStatus(post, false);
+  }
+}
+
+function promptPublish(post) {
+  postToPublish.value = post;
+  isPublishingDialogOpen.value = true;
+}
+
+function cancelPublish() {
+  isPublishingDialogOpen.value = false;
+  if (postToPublish.value) {
+    // Revert optimistic UI update if cancelled
+    const postInList = posts.value.find(p => p.id === postToPublish.value.id);
+    if (postInList) {
+      postInList.is_published = false;
+    }
+  }
+  postToPublish.value = null;
+}
+
+async function confirmPublish() {
+  if (!postToPublish.value) return;
+
+  isPublishing.value = true;
+  await updatePublishedStatus(postToPublish.value, true);
+  isPublishing.value = false;
+  isPublishingDialogOpen.value = false;
+  postToPublish.value = null;
+}
+
+async function updatePublishedStatus(post, newStatus) {
+  const originalStatus = post.is_published;
+  post.is_published = newStatus;
+
+  try {
+    const { error } = await supabase
+      .from('posts')
+      .update({ is_published: newStatus })
+      .eq('id', post.id);
+
+    if (error) throw error;
+
+    notificationService.push('Η κατάσταση δημοσίευσης ενημερώθηκε επιτυχώς.', 'success');
+
+  } catch (err) {
+    post.is_published = originalStatus;
+    notificationService.push('Η ενημέρωση της κατάστασης δημοσίευσης απέτυχε.', 'error');
+    console.error('Error updating published status:', err);
+  }
+}
+
 function editPost(postId) {
-  // Placeholder for edit functionality
   notificationService.push(`Επεξεργασία άρθρου ${postId} (δεν έχει υλοποιηθεί ακόμα).`);
 }
 
@@ -229,6 +309,7 @@ onMounted(() => {
 .action-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .empty-state {
