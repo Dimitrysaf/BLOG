@@ -277,13 +277,20 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* Scoped styles for the page layout */
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .page-header h1 {
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .loading-indicator, .error-indicator {
@@ -294,28 +301,20 @@ onBeforeUnmount(() => {
 
 .post-metadata-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* Default to 1 column for small screens */
   gap: 1rem;
   margin-bottom: 2rem;
   align-items: baseline;
 }
 
-.button-container {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
+/* Media query for larger screens */
 @media (min-width: 768px) {
   .post-metadata-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .post-metadata-grid .button-container {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider screens */
   }
 }
 
+/* Override default CdxField margins for a clean grid */
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
@@ -341,28 +340,32 @@ onBeforeUnmount(() => {
   flex-grow: 1;
   overflow-y: auto;
 }
-</style>
 
-<style>
-/* Global (non-scoped) styles for Tiptap editor content */
-.ProseMirror {
+:deep(.ProseMirror) {
   outline: none;
   color: var(--color-base);
   line-height: 1.6;
-  min-height: 400px; 
-  padding: 1rem;
-  border: 1px solid var(--border-color-base);
-  border-radius: var(--border-radius-base);
+  min-height: 400px; /* Ensure editor has a minimum height */
+  border: 1px solid #a2a9b1;
+  padding: 8px;
+  border-radius: 2px;
 }
 
-.ProseMirror p {
+:deep(.ProseMirror:focus-visible) {
+  outline: none;
+  border-color: #36c;
+  box-shadow: 0 0 0 1px #36c;
+}
+
+
+:deep(.ProseMirror p) {
   margin-block-start: 0;
   margin-block-end: var(--spacing-400);
 }
 
-.ProseMirror h1,
-.ProseMirror h2,
-.ProseMirror h3 {
+:deep(.ProseMirror h1),
+:deep(.ProseMirror h2),
+:deep(.ProseMirror h3) {
   margin-block-start: var(--spacing-600);
   margin-block-end: var(--spacing-200);
   line-height: 1.2;
@@ -370,25 +373,25 @@ onBeforeUnmount(() => {
   border-bottom: none;
 }
 
-.ProseMirror h1 {
+:deep(.ProseMirror h1) {
   font-size: var(--font-size-xx-large);
 }
 
-.ProseMirror h2 {
+:deep(.ProseMirror h2) {
   font-size: var(--font-size-x-large);
 }
 
-.ProseMirror h3 {
+:deep(.ProseMirror h3) {
   font-size: var(--font-size-large);
 }
 
-.ProseMirror ul,
-.ProseMirror ol {
+:deep(.ProseMirror ul),
+:deep(.ProseMirror ol) {
   padding-inline-start: 1.5rem;
   margin-block-end: var(--spacing-400);
 }
 
-.ProseMirror blockquote {
+:deep(.ProseMirror blockquote) {
   border-inline-start: 3px solid var(--border-color-base);
   padding-inline-start: 1rem;
   margin-inline-start: 0;
@@ -396,13 +399,10 @@ onBeforeUnmount(() => {
   color: var(--color-subtle);
 }
 
-.ProseMirror hr {
+:deep(.ProseMirror hr) {
   border: none;
   border-top: 1px solid var(--border-color-base);
   margin-block: 2rem;
 }
 
-.ProseMirror:focus-visible {
-  outline: 1px solid var(--border-color-interactive);
-}
 </style>
