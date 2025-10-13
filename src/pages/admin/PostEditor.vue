@@ -61,7 +61,7 @@
         </div>
         
         <div v-if="editor" class="editor-toolbar">
-          <cdx-button-group>
+          <div class="editor-button-group">
             <cdx-button
               @click="editor.chain().focus().toggleBold().run()"
               :class="{ 'is-active': editor.isActive('bold') }"
@@ -83,9 +83,9 @@
               :icon="cdxIconStrikethrough"
               weight="quiet"
             ></cdx-button>
-          </cdx-button-group>
+          </div>
 
-          <cdx-button-group>
+          <div class="editor-button-group">
             <cdx-button
               @click="editor.chain().focus().setParagraph().run()"
               :class="{ 'is-active': editor.isActive('paragraph') }"
@@ -111,9 +111,9 @@
               aria-label="Heading 3"
               weight="quiet"
             >H3</cdx-button>
-          </cdx-button-group>
+          </div>
 
-          <cdx-button-group>
+          <div class="editor-button-group">
             <cdx-button
               @click="editor.chain().focus().toggleBulletList().run()"
               :class="{ 'is-active': editor.isActive('bulletList') }"
@@ -128,7 +128,7 @@
               :icon="cdxIconListNumbered"
               weight="quiet"
             ></cdx-button>
-          </cdx-button-group>
+          </div>
         </div>
 
         <div class="editor-content-wrapper">
@@ -149,13 +149,6 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-import {
-  CdxButton,
-  CdxButtonGroup,
-  CdxProgressBar,
-  CdxField,
-  CdxTextInput
-} from '@wikimedia/codex';
 import {
   cdxIconBold, 
   cdxIconItalic, 
@@ -332,6 +325,15 @@ onBeforeUnmount(() => {
   background-color: #f8f9fa;
 }
 
+.editor-button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid #c8ccd1;
+  border-radius: 2px;
+  padding: 0.25rem;
+}
+
 .editor-toolbar .cdx-button.is-active {
   background-color: #eaf3ff;
   color: #36c;
@@ -342,7 +344,8 @@ onBeforeUnmount(() => {
   overflow-y: auto;
 }
 
-:deep(.tiptap) {
+:deep(.tiptap),
+:deep(.ProseMirror) {
   border: 1px solid #c8ccd1;
   border-radius: 0 0 2px 2px;
   padding: 0.5rem 0.75rem;
@@ -354,7 +357,10 @@ onBeforeUnmount(() => {
   outline: none;
   border-color: #36c;
   box-shadow: 0 0 0 1px #36c;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
+
 
 :deep(.ProseMirror p) {
   margin-block: 0 1em;
