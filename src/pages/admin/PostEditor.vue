@@ -173,12 +173,13 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-// ΝΕΑ IMPORTS ΓΙΑ ΕΙΚΟΝΕΣ ΚΑΙ ΠΙΝΑΚΕΣ
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import TableRow from '@tiptap/extension-table-row';
+// --- ΔΙΟΡΘΩΣΗ ΕΔΩ ---
+import { Image } from '@tiptap/extension-image';
+import { Table } from '@tiptap/extension-table';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableRow } from '@tiptap/extension-table-row';
+// --- ΤΕΛΟΣ ΔΙΟΡΘΩΣΗΣ ---
 
 import {
   CdxButton,
@@ -194,7 +195,6 @@ import {
   cdxIconTextStyle,
   cdxIconListBullet,
   cdxIconListNumbered,
-  // ΝΕΑ IMPORTS ΕΙΚΟΝΙΔΙΩΝ
   cdxIconImage,
   cdxIconTable
 } from '@wikimedia/codex-icons';
@@ -230,7 +230,6 @@ const editor = useEditor({
         levels: [1, 2, 3],
       },
     }),
-    // ΝΕΕΣ ΕΠΕΚΤΑΣΕΙΣ
     Image,
     Table.configure({
       resizable: true,
@@ -246,7 +245,6 @@ const editor = useEditor({
   },
 });
 
-// ΝΕΕΣ ΣΥΝΑΡΤΗΣΕΙΣ ΓΙΑ ΤΑ ΚΟΥΜΠΙΑ
 function addImage() {
   const url = window.prompt('Εισάγετε το URL της εικόνας:');
   if (url && editor.value) {
@@ -476,5 +474,6 @@ onBeforeUnmount(() => {
 :deep(img) {
   max-width: 100%;
   height: auto;
+  display: block;
 }
 </style>
