@@ -63,6 +63,25 @@
         <div v-if="editor" class="editor-toolbar">
           <div class="editor-button-group">
             <cdx-button
+              @click="editor.chain().focus().undo().run()"
+              :disabled="!editor.can().chain().focus().undo().run()"
+              aria-label="Undo"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconUndo" />
+            </cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().redo().run()"
+              :disabled="!editor.can().chain().focus().redo().run()"
+              aria-label="Redo"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconRedo" />
+            </cdx-button>
+          </div>
+
+          <div class="editor-button-group">
+            <cdx-button
               @click="editor.chain().focus().toggleBold().run()"
               :class="{ 'is-active': editor.isActive('bold') }"
               aria-label="Bold"
@@ -135,6 +154,32 @@
               <cdx-icon :icon="cdxIconListNumbered" />
             </cdx-button>
           </div>
+          
+          <div class="editor-button-group">
+            <cdx-button
+              @click="editor.chain().focus().toggleBlockquote().run()"
+              :class="{ 'is-active': editor.isActive('blockquote') }"
+              aria-label="Quote"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconQuotes" />
+            </cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleCodeBlock().run()"
+              :class="{ 'is-active': editor.isActive('codeBlock') }"
+              aria-label="Code Block"
+              weight="quiet"
+            >
+              <cdx-icon :icon="cdxIconCode" />
+            </cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().setHorizontalRule().run()"
+              aria-label="Horizontal Rule"
+              weight="quiet"
+            >
+              —
+            </cdx-button>
+          </div>
 
           <div class="editor-button-group">
             <cdx-button
@@ -173,13 +218,11 @@ import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
-// --- ΔΙΟΡΘΩΣΗ ΕΔΩ ---
 import { Image } from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
-// --- ΤΕΛΟΣ ΔΙΟΡΘΩΣΗΣ ---
 
 import {
   CdxButton,
@@ -196,7 +239,11 @@ import {
   cdxIconListBullet,
   cdxIconListNumbered,
   cdxIconImage,
-  cdxIconTable
+  cdxIconTable,
+  cdxIconQuotes,
+  cdxIconCode,
+  cdxIconUndo,
+  cdxIconRedo
 } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
@@ -451,7 +498,6 @@ onBeforeUnmount(() => {
   margin-block: 2rem;
 }
 
-/* ΝΕΑ ΣΤΥΛ ΓΙΑ ΠΙΝΑΚΕΣ ΚΑΙ ΕΙΚΟΝΕΣ */
 :deep(table) {
   border-collapse: collapse;
   width: 100%;
@@ -475,5 +521,20 @@ onBeforeUnmount(() => {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Στυλ για το Code Block */
+:deep(pre) {
+  background: #0D0D0D;
+  color: #FFF;
+  font-family: 'JetBrainsMono', monospace;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+:deep(pre code) {
+  color: inherit;
+  padding: 0;
+  background: none;
+  font-size: 0.8rem;
 }
 </style>
