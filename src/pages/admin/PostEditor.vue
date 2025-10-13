@@ -1,18 +1,14 @@
 <template>
-  <div class="post-editor-page">
-    <div v-if="isLoading" class="loading-indicator">
-      <cdx-progress-bar inline aria-label="Φόρτωση επεξεργαστή..." />
-    </div>
-
-    <template v-if="post">
-      <div class="editor-header">
-        <h1 class="editor-title">Επεξεργασία: {{ post.title }}</h1>
-        <div class="editor-actions">
+  <Container>
+    <div class="post-editor-page">
+      <div class="page-header">
+        <h1>Επεξεργασία Άρθρου</h1>
+        <div class="header-actions" v-if="post">
           <cdx-button
             weight="primary"
             action="progressive"
             @click="saveContent"
-            :disabled="isSaving"
+            :disabled="isSaving || isLoading"
           >
             Αποθήκευση
           </cdx-button>
@@ -21,102 +17,143 @@
             aria-label="Πίσω στη λίστα"
             @click="goBack"
             weight="quiet"
+            :disabled="isSaving"
           ></cdx-button>
         </div>
       </div>
-      
-      <div v-if="editor" class="editor-toolbar">
-        <cdx-button-group>
-          <cdx-button
-            @click="editor.chain().focus().toggleBold().run()"
-            :class="{ 'is-active': editor.isActive('bold') }"
-            aria-label="Bold"
-            :icon="cdxIconBold"
-            weight="quiet"
-          ></cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleItalic().run()"
-            :class="{ 'is-active': editor.isActive('italic') }"
-            aria-label="Italic"
-            :icon="cdxIconItalic"
-            weight="quiet"
-          ></cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleStrike().run()"
-            :class="{ 'is-active': editor.isActive('strike') }"
-            aria-label="Strikethrough"
-            :icon="cdxIconStrikethrough"
-            weight="quiet"
-          ></cdx-button>
-        </cdx-button-group>
 
-        <cdx-button-group>
-          <cdx-button
-            @click="editor.chain().focus().setParagraph().run()"
-            :class="{ 'is-active': editor.isActive('paragraph') }"
-            aria-label="Paragraph"
-            :icon="cdxIconTextStyle"
-            weight="quiet"
-          ></cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
-            aria-label="Heading 1"
-            weight="quiet"
-          >H1</cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
-            aria-label="Heading 2"
-            weight="quiet"
-          >H2</cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
-            aria-label="Heading 3"
-            weight="quiet"
-          >H3</cdx-button>
-        </cdx-button-group>
-
-        <cdx-button-group>
-          <cdx-button
-            @click="editor.chain().focus().toggleBulletList().run()"
-            :class="{ 'is-active': editor.isActive('bulletList') }"
-            aria-label="Bullet List"
-            :icon="cdxIconListBullet"
-            weight="quiet"
-          ></cdx-button>
-          <cdx-button
-            @click="editor.chain().focus().toggleOrderedList().run()"
-            :class="{ 'is-active': editor.isActive('orderedList') }"
-            aria-label="Ordered List"
-            :icon="cdxIconListNumbered"
-            weight="quiet"
-          ></cdx-button>
-        </cdx-button-group>
+      <div v-if="isLoading" class="loading-indicator">
+        <cdx-progress-bar inline aria-label="Φόρτωση άρθρου..." />
       </div>
 
-      <div class="editor-content-wrapper">
-        <editor-content :editor="editor" />
-      </div>
-      <cdx-progress-bar v-if="isSaving" inline aria-label="Αποθήκευση..." />
-    </template>
+      <template v-if="post">
+        <div class="post-metadata-grid">
+          <cdx-field>
+            <template #label>ID Άρθρου</template>
+            <cdx-text-input :model-value="post.id" disabled />
+          </cdx-field>
 
-    <div v-if="errorLoading" class="error-indicator">
-       <p>Αποτυχία φόρτωσης του άρθρου. <a href="/admin">Επιστροφή στη λίστα</a>.</p>
+          <cdx-field>
+            <template #label>Όνομα Άρθρου</template>
+            <cdx-text-input v-model="post.title" />
+          </cdx-field>
+
+           <cdx-field>
+            <template #label>Δημιουργήθηκε στις</template>
+            <cdx-text-input :model-value="formattedCreatedAt" disabled />
+          </cdx-field>
+
+          <cdx-field>
+            <template #label>Slug</template>
+            <cdx-text-input v-model="post.slug" />
+          </cdx-field>
+
+          <cdx-field>
+            <template #label>Φωτογραφία (URL)</template>
+            <cdx-text-input v-model="post.image_url" />
+          </cdx-field>
+
+          <cdx-field>
+            <template #label>Συγγραφέας</template>
+            <cdx-text-input :model-value="post.profiles?.full_name" disabled />
+          </cdx-field>
+        </div>
+        
+        <div v-if="editor" class="editor-toolbar">
+          <cdx-button-group>
+            <cdx-button
+              @click="editor.chain().focus().toggleBold().run()"
+              :class="{ 'is-active': editor.isActive('bold') }"
+              aria-label="Bold"
+              :icon="cdxIconBold"
+              weight="quiet"
+            ></cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleItalic().run()"
+              :class="{ 'is-active': editor.isActive('italic') }"
+              aria-label="Italic"
+              :icon="cdxIconItalic"
+              weight="quiet"
+            ></cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleStrike().run()"
+              :class="{ 'is-active': editor.isActive('strike') }"
+              aria-label="Strikethrough"
+              :icon="cdxIconStrikethrough"
+              weight="quiet"
+            ></cdx-button>
+          </cdx-button-group>
+
+          <cdx-button-group>
+            <cdx-button
+              @click="editor.chain().focus().setParagraph().run()"
+              :class="{ 'is-active': editor.isActive('paragraph') }"
+              aria-label="Paragraph"
+              :icon="cdxIconTextStyle"
+              weight="quiet"
+            ></cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+              aria-label="Heading 1"
+              weight="quiet"
+            >H1</cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+              aria-label="Heading 2"
+              weight="quiet"
+            >H2</cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+              :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+              aria-label="Heading 3"
+              weight="quiet"
+            >H3</cdx-button>
+          </cdx-button-group>
+
+          <cdx-button-group>
+            <cdx-button
+              @click="editor.chain().focus().toggleBulletList().run()"
+              :class="{ 'is-active': editor.isActive('bulletList') }"
+              aria-label="Bullet List"
+              :icon="cdxIconListBullet"
+              weight="quiet"
+            ></cdx-button>
+            <cdx-button
+              @click="editor.chain().focus().toggleOrderedList().run()"
+              :class="{ 'is-active': editor.isActive('orderedList') }"
+              aria-label="Ordered List"
+              :icon="cdxIconListNumbered"
+              weight="quiet"
+            ></cdx-button>
+          </cdx-button-group>
+        </div>
+
+        <div class="editor-content-wrapper">
+          <editor-content :editor="editor" />
+        </div>
+        <cdx-progress-bar v-if="isSaving" inline aria-label="Αποθήκευση..." />
+      </template>
+
+      <div v-if="errorLoading" class="error-indicator">
+        <p>Αποτυχία φόρτωσης του άρθρου. <a href="/admin">Επιστροφή στη λίστα</a>.</p>
+      </div>
     </div>
-  </div>
+  </Container>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import {
   CdxButton,
   CdxButtonGroup,
-  CdxProgressBar
+  CdxProgressBar,
+  CdxField,
+  CdxTextInput
 } from '@wikimedia/codex';
 import {
   cdxIconArrowPrevious, 
@@ -129,6 +166,7 @@ import {
 } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
+import Container from '../../components/Container.vue';
 
 const props = defineProps({
   id: {
@@ -142,6 +180,13 @@ const post = ref(null);
 const isLoading = ref(true);
 const isSaving = ref(false);
 const errorLoading = ref(false);
+
+const formattedCreatedAt = computed(() => {
+  if (post.value && post.value.created_at) {
+    return new Date(post.value.created_at).toLocaleString('el-GR');
+  }
+  return '';
+});
 
 const editor = useEditor({
   content: '',
@@ -165,7 +210,7 @@ async function fetchPost() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select('id, title, content')
+      .select('*, profiles(full_name)')
       .eq('id', props.id)
       .single();
 
@@ -184,17 +229,22 @@ async function saveContent() {
   if (!editor.value || !post.value) return;
   isSaving.value = true;
   
-  const newContent = editor.value.getHTML();
+  const updatedPost = {
+    content: editor.value.getHTML(),
+    title: post.value.title,
+    slug: post.value.slug,
+    image_url: post.value.image_url,
+  };
 
   try {
     const { error } = await supabase
       .from('posts')
-      .update({ content: newContent })
+      .update(updatedPost)
       .eq('id', post.value.id);
 
     if (error) throw error;
     
-    notificationService.push('Το περιεχόμενο αποθηκεύτηκε με επιτυχία.');
+    notificationService.push('Το άρθρο αποθηκεύτηκε με επιτυχία.');
     router.push({ name: 'AdminDashboard' });
 
   } catch (err) {
@@ -212,7 +262,6 @@ function goBack() {
 watch(post, (newPost) => {
   if (editor.value && newPost) {
     editor.value.commands.setContent(newPost.content || '');
-    editor.value.commands.focus();
   }
 });
 
@@ -228,35 +277,46 @@ onBeforeUnmount(() => {
 </script>
 
 <style>
-.post-editor-page {
-  padding: 1rem;
+.page-header {
   display: flex;
-  flex-direction: column;
-  height: calc(100vh - 50px); /* Adjust based on header height */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .loading-indicator, .error-indicator {
   margin: auto;
   text-align: center;
+  padding: 40px 0;
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color-base);
-  flex-shrink: 0;
+.post-metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Default to 1 column for small screens */
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: baseline;
 }
 
-.editor-title {
-  font-size: var(--font-size-x-large);
-  margin: 0;
+/* Media query for larger screens */
+@media (min-width: 768px) {
+  .post-metadata-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for wider screens */
+  }
 }
 
-.editor-actions {
-  display: flex;
-  gap: 0.5rem;
+/* Override default CdxField margins for a clean grid */
+.post-metadata-grid .cdx-field {
+  margin-bottom: 0;
 }
 
 .editor-toolbar {
@@ -264,10 +324,10 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.5rem 0;
+  border-top: 1px solid var(--border-color-base);
   border-bottom: 1px solid var(--border-color-base);
   background-color: var(--background-color-interactive-subtle);
-  flex-shrink: 0;
-  margin: 0 -1rem; /* Extend to page edges */
+  margin: 1rem 0;
   padding: 0.5rem 1rem;
 }
 
@@ -279,14 +339,13 @@ onBeforeUnmount(() => {
 .editor-content-wrapper {
   flex-grow: 1;
   overflow-y: auto;
-  padding-top: 1rem;
 }
 
 .ProseMirror {
   outline: none;
   color: var(--color-base);
   line-height: 1.6;
-  height: 100%;
+  min-height: 400px; /* Ensure editor has a minimum height */
 }
 
 .ProseMirror p {
