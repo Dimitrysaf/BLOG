@@ -249,7 +249,7 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
-import BubbleMenu from '@tiptap/extension-bubble-menu';
+import { BubbleMenu } from '@tiptap/vue-3/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { Image } from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
@@ -323,10 +323,6 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
-    BubbleMenu.configure({
-        pluginKey: 'tableBubbleMenu',
-        shouldShow: ({ editor }) => editor.isActive('table'),
-    }),
   ],
   editorProps: {
     attributes: {
