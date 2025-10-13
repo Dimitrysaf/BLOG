@@ -10,10 +10,11 @@
       </cdx-button>
     </div>
 
-    <cdx-progress-bar v-if="isLoading" />
+    <cdx-progress-bar v-if="isLoading" aria-label="Φόρτωση άρθρων..." />
 
     <cdx-table
       v-else
+      caption="Λίστα των άρθρων του ιστολογίου"
       :columns="columns"
       :data="posts"
       :use-row-headers="false"
@@ -84,9 +85,41 @@ function openNewArticleDialog() {
 
 async function handleCreate(newArticleData) {
   isCreateDialogOpen.value = false;
-  // For now, just show a notification, as requested.
-  notificationService.push(`Το άρθρο "${newArticleData.title}" θα δημιουργηθεί (δεν έχει υλοποιηθεί ακόμα).`);
-  console.log('Data from dialog:', newArticleData);
+  
+  try {
+    // Get the current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw userError || new Error('User not found.');
+
+    // Update the user's profile with the author name from the dialog
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ full_name: newArticleData.author })
+      .eq('id', user.id);
+
+    if (profileError) throw profileError;
+
+    // Create the new post
+    const { error: postError } = await supabase
+      .from('posts')
+      .insert({
+        title: newArticleData.title,
+        slug: newArticleData.slug,
+        author_id: user.id,
+        image_url: newArticleData.image_url,
+        is_published: newArticleData.is_published,
+        content: '' // Empty content as requested and fixed column name
+      });
+
+    if (postError) throw postError;
+
+    notificationService.push(`Το άρθρο "${newArticleData.title}" δημιουργήθηκε με επιτυχία.`);
+    await fetchPosts(); // Refresh the posts list
+
+  } catch (err) {
+    notificationService.push('Αποτυχία δημιουργίας άρθρου. Παρακαλώ δοκιμάστε ξανά.', 'error');
+    console.error('Error creating post:', err);
+  }
 }
 
 async function fetchPosts() {
