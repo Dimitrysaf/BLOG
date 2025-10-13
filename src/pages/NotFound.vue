@@ -1,9 +1,9 @@
 <template>
   <Container>
-    <div class="not-found">
+    <div class="not-found-page">
       <h1 class="code">404</h1>
-      <h2>Η σελίδα δεν βρέθηκε</h2>
-      <p>Κωδικός: Τετρακόσιατέσερα, σημαίνει ότι η σελίδα δεν υπάρχει ή έχει μετακινηθεί.</p>
+      <h2>Η Σελίδα δεν Βρέθηκε</h2>
+      <p>Αυτή η σελίδα δεν υπάρχει ή μπορεί να έχει μετακινηθεί.</p>
       <router-link to="/">
         <cdx-button>
           <cdx-icon :icon="cdxIconHome" />
@@ -14,46 +14,29 @@
   </Container>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import { cdxIconHome } from '@wikimedia/codex-icons';
 import Container from '../components/Container.vue';
 </script>
 
 <style scoped>
-.not-found {
+.not-found-page {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  height: calc(100vh - 200px); /* Adjust height to be less than full viewport */
   text-align: center;
 }
 
 .code {
-  background-color: #36c;
-  border-bottom: 4px solid rgba(0, 0, 0, 0.096);
-  flex-direction: column;
-  display: flex;
-  color: white;
-  padding-left: 100px;
-  padding-right: 100px;
-  align-items: center;
-  text-align: center;
-  position: relative;
-}
-
-h1 {
-  font-size: 5rem;
-  margin: 0;
+  font-size: 6rem;
+  font-weight: bold;
+  color: #36c; /* Blue color for 404, similar to the original design */
 }
 
 h2 {
-  font-size: 2rem;
-  margin: 0;
-}
-
-a {
-  text-decoration: none;
+  margin-top: 0;
 }
 </style>
