@@ -10,20 +10,20 @@
   <!-- Content -->
   <div v-else-if="post" class="post-page-container">
     <div class="blue-banner">
-      <Container>
+      <div class="banner-content">
         <div class="post-details">
           <h1>{{ post.title }}</h1>
         </div>
-      </Container>
-      <div class="post-meta">
-        <span v-if="post.author" class="meta-item">
-          <CdxIcon :icon="cdxIconUserAvatarOutline" />
-          <span>{{ post.author.full_name }}</span>
-        </span>
-        <span class="meta-item">
-          <CdxIcon :icon="cdxIconCalendar" />
-          <span>{{ formatDate(post.created_at) }}</span>
-        </span>
+        <div class="post-meta">
+          <span v-if="post.author" class="meta-item">
+            <CdxIcon :icon="cdxIconUserAvatarOutline" />
+            <span>{{ post.author.full_name }}</span>
+          </span>
+          <span class="meta-item">
+            <CdxIcon :icon="cdxIconCalendar" />
+            <span>{{ formatDate(post.created_at) }}</span>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -233,17 +233,19 @@ function formatDate(dateString) {
 .blue-banner {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
-  min-height: 300px;
-  height: fit-content;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  position: relative;
   margin-bottom: 24px;
 }
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 16px 40px;
+  gap: 32px;
+}
+
 
 .post-details h1 {
   font-size: xxx-large;
@@ -260,10 +262,6 @@ function formatDate(dateString) {
 }
 
 .post-meta {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   gap: 24px;
   color: white;
