@@ -27,6 +27,11 @@
           </cdx-field>
 
           <cdx-field>
+            <template #label>Τρέχουσα Ώρα</template>
+            <cdx-text-input :model-value="currentTime" disabled />
+          </cdx-field>
+
+          <cdx-field>
             <template #label>Slug</template>
             <cdx-text-input v-model="post.slug" />
           </cdx-field>
@@ -40,25 +45,25 @@
             <template #label>Συγγραφέας</template>
             <author-selector v-if="post" v-model="post.author_id" />
           </cdx-field>
-        </div>
-
-        <div class="page-actions">
-          <cdx-button
-            weight="primary"
-            action="progressive"
-            @click="saveContent"
-            :disabled="isSaving || isLoading || !isDirty"
-          >
-            Αποθήκευση
-          </cdx-button>
-          <cdx-button
-            @click="handleClose"
-            :disabled="isSaving"
-            weight="quiet"
-            class="cancel-button"
-          >
-            Κλείσιμο
-          </cdx-button>
+          
+          <div class="grid-actions">
+            <cdx-button
+              weight="primary"
+              action="progressive"
+              @click="saveContent"
+              :disabled="isSaving || isLoading || !isDirty"
+            >
+              Αποθήκευση
+            </cdx-button>
+            <cdx-button
+              @click="handleClose"
+              :disabled="isSaving"
+              weight="quiet"
+              class="cancel-button"
+            >
+              Κλείσιμο
+            </cdx-button>
+          </div>
         </div>
         
         <bubble-menu
@@ -380,6 +385,8 @@ const errorLoading = ref(false);
 const isImageDialogVisible = ref(false);
 const showConfirmCloseDialog = ref(false);
 const isDirty = ref(false);
+const currentTime = ref('');
+let timeInterval = null;
 
 let initialPostState = {};
 
@@ -411,6 +418,10 @@ const editor = useEditor({
     isDirty.value = true;
   }
 });
+
+function updateTime() {
+  currentTime.value = new Date().toLocaleString('el-GR');
+}
 
 function storeInitialState() {
   if (post.value && editor.value) {
@@ -528,12 +539,15 @@ function addTable() {
 
 onMounted(() => {
   fetchPost();
+  updateTime();
+  timeInterval = setInterval(updateTime, 1000);
 });
 
 onBeforeUnmount(() => {
   if (editor.value) {
     editor.value.destroy();
   }
+  clearInterval(timeInterval);
 });
 
 </script>
@@ -548,12 +562,6 @@ onBeforeUnmount(() => {
 .page-header h1 {
   margin: 0;
 }
-.page-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-bottom: 2rem;
-}
 .loading-indicator, .error-indicator {
   margin: auto;
   text-align: center;
@@ -562,7 +570,8 @@ onBeforeUnmount(() => {
 .post-metadata-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  column-gap: 1rem;
+  row-gap: 0;
   margin-bottom: 2rem;
   align-items: baseline;
 }
@@ -574,6 +583,14 @@ onBeforeUnmount(() => {
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
+.grid-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end; /* Align items to the bottom */
+  justify-content: flex-end; /* Align buttons to the right */
+  height: 100%; /* Ensure the container takes full height of the grid cell */
+}
+
 .editor-toolbar {
   display: flex;
   flex-wrap: wrap;
