@@ -1,16 +1,23 @@
 
 <template>
   <Container class="comment-list-container">
-    <h3 class="comments-title">Σχόλια ({{ comments.length }})</h3>
-    <div v-if="isLoading" class="loading-container">
-        <cdx-progress-bar inline aria-label="Loading..."></cdx-progress-bar>
+    <div class="comments-header">
+      <h3 class="comments-title">Σχόλια ({{ comments.length }})</h3>
+      <CdxButton
+        aria-label="Ανανέωση σχολίων"
+        weight="quiet"
+        :disabled="isRefreshing"
+        @click="handleRefresh"
+      >
+        <CdxIcon :icon="cdxIconReload" />
+      </CdxButton>
     </div>
-    <div v-else-if="error" class="error-container">
+    <div v-if="error" class="error-container">
       <CdxMessage type="error">Η φόρτωση των σχολίων απέτυχε.</CdxMessage>
     </div>
     <ul v-else-if="commentItems.length > 0" role="listbox" class="comment-list">
       <li v-for="item in commentItems" :key="item.value">
-        <cdx-menu-item v-bind="item" :show-thumbnail="true" />
+        <CdxMenuItem v-bind="item" :show-thumbnail="true" />
       </li>
     </ul>
     <div v-else class="no-comments-container">
@@ -22,9 +29,10 @@
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
 import { supabase } from '../supabase';
-import { CdxMessage, CdxProgressBar } from '@wikimedia/codex';
-import { cdxIconUserAvatar } from '@wikimedia/codex-icons';
+import { CdxMessage, CdxButton, CdxMenuItem, CdxIcon } from '@wikimedia/codex';
+import { cdxIconUserAvatar, cdxIconReload } from '@wikimedia/codex-icons';
 import Container from './Container.vue';
+import loadingService from '../loading';
 
 const props = defineProps({
   postId: {
@@ -34,8 +42,8 @@ const props = defineProps({
 });
 
 const comments = ref([]);
-const isLoading = ref(true);
 const error = ref(null);
+const isRefreshing = ref(false);
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -50,22 +58,21 @@ function formatDate(dateString) {
   });
 }
 
-// Computed property to transform comments data for CdxMenuItem
 const commentItems = computed(() => {
   return comments.value.map(comment => ({
+    id: `comment-${comment.id}`,
     value: comment.id,
-    label: comment.profiles?.full_name || 'Ανώνυμος Χρήστης',
+    label: comment.profiles?.full_name || 'Ανώνυμος Χρήστηs',
     description: comment.content,
     thumbnail: comment.profiles?.avatar_url
         ? { url: comment.profiles.avatar_url }
-        : cdxIconUserAvatar,
+        : { icon: cdxIconUserAvatar },
     supportingText: formatDate(comment.created_at)
   }));
 });
 
 async function fetchComments() {
   if (!props.postId) return;
-  isLoading.value = true;
   error.value = null;
   try {
     const { data, error: fetchError } = await supabase
@@ -81,18 +88,31 @@ async function fetchComments() {
   } catch (err) {
     console.error("Error fetching comments:", err);
     error.value = err.message;
-  } finally {
-    isLoading.value = false;
   }
 }
 
-// Expose fetchComments to be called from parent
-defineExpose({ fetchComments });
+async function handleRefresh() {
+  if (isRefreshing.value) return;
 
-onMounted(fetchComments);
+  isRefreshing.value = true;
+  await initialFetch();
 
-// Watch for postId changes, in case the component is reused for different posts
-watch(() => props.postId, fetchComments);
+  setTimeout(() => {
+    isRefreshing.value = false;
+  }, 1500);
+}
+
+async function initialFetch() {
+  loadingService.show();
+  await fetchComments();
+  loadingService.hide();
+}
+
+defineExpose({ fetchComments: handleRefresh });
+
+onMounted(initialFetch);
+
+watch(() => props.postId, initialFetch);
 
 </script>
 
@@ -101,15 +121,23 @@ watch(() => props.postId, fetchComments);
   margin-top: 2rem;
 }
 
-.comments-title {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    font-weight: bold;
-    border-bottom: 1px solid #c8ccd1;
-    padding-bottom: 1rem;
+.comments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #c8ccd1;
+  margin-bottom: 1.5rem;
 }
 
-.loading-container, .error-container, .no-comments-container {
+.comments-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    padding-bottom: 1rem;
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.error-container, .no-comments-container {
     padding: 2rem;
     text-align: center;
     color: #72777d;
@@ -130,7 +158,7 @@ watch(() => props.postId, fetchComments);
 
 .comment-list :deep(.cdx-menu-item__content-wrapper) {
   flex: 1;
-  min-width: 0; /* This is key for flex-shrink to work */
+  min-width: 0;
 }
 
 .comment-list :deep(.cdx-menu-item) {
