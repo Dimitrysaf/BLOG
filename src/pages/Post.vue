@@ -1,26 +1,21 @@
 
 <template>
-  <!-- Loading State -->
-  <div v-if="loading" class="loading-container">
-    <CdxProgressBar />
-  </div>
-
   <!-- Error State -->
-  <div v-else-if="error" class="error-container">
+  <div v-if="error" class="error-container">
      <CdxMessage type="error">
         Η φόρτωση της ανάρτησης απέτυχε: {{ error }}
       </CdxMessage>
   </div>
 
   <!-- Not Found State -->
-  <div v-else-if="!post" class="not-found-container">
+  <div v-else-if="!post && !loading" class="not-found-container">
     <CdxMessage type="warning">
       Η ανάρτηση δεν βρέθηκε.
     </CdxMessage>
   </div>
 
   <!-- Content -->
-  <div v-else>
+  <div v-else-if="post">
     <div class="blue-banner">
       <Container>
         <div class="post-details">
@@ -50,8 +45,9 @@
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
+import loadingService from '../loading.js';
 import Container from '../components/Container.vue';
-import { CdxIcon, CdxMessage, CdxProgressBar } from '@wikimedia/codex';
+import { CdxIcon, CdxMessage } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
   cdxIconCalendar
@@ -80,6 +76,7 @@ const postBody = ref(null);
 
 const fetchPost = async () => {
   loading.value = true;
+  loadingService.show();
   try {
     const { data, error: fetchError } = await supabase
       .from('posts')
@@ -101,6 +98,7 @@ const fetchPost = async () => {
     error.value = e.message;
   } finally {
     loading.value = false;
+    loadingService.hide();
   }
 };
 
@@ -220,7 +218,6 @@ function formatDate(dateString) {
 </style>
 
 <style scoped>
-.loading-container,
 .error-container,
 .not-found-container {
   display: flex;
