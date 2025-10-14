@@ -9,6 +9,7 @@ import {
   CdxIcon,
   CdxImage,
   CdxMessage,
+  CdxMenuItem, // Προσθήκη CdxMenuItem
   CdxProgressBar,
   CdxProgressIndicator,
   CdxTextArea,
@@ -24,6 +25,7 @@ export function installCodex( app ) {
   app.component( 'CdxIcon', CdxIcon );
   app.component( 'CdxImage', CdxImage );
   app.component( 'CdxMessage', CdxMessage );
+  app.component( 'CdxMenuItem', CdxMenuItem ); // Εγκατάσταση CdxMenuItem
   app.component( 'CdxProgressBar', CdxProgressBar );
   app.component( 'CdxProgressIndicator', CdxProgressIndicator );
   app.component( 'CdxTextArea', CdxTextArea );

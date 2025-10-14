@@ -29,6 +29,11 @@
 
     <Container class="post-body-container">
       <div ref="postBody" class="post-body" v-html="post.content"></div>
+       <!-- Comment Section -->
+      <div class="comment-section">
+        <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
+        <CommentList :post-id="post.id" ref="commentListRef" />
+      </div>
     </Container>
 
   </div>
@@ -40,6 +45,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 import loadingService from '../loading.js';
 import Container from '../components/Container.vue';
+import DoComment from '../components/DoComment.vue';
+import CommentList from '../components/CommentList.vue';
 import { CdxIcon, CdxMessage } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
@@ -66,6 +73,13 @@ const router = useRouter();
 const post = ref(null);
 const error = ref(null);
 const postBody = ref(null);
+const commentListRef = ref(null);
+
+const handleCommentAdded = () => {
+  if (commentListRef.value) {
+    commentListRef.value.fetchComments();
+  }
+};
 
 const fetchPost = async () => {
   loadingService.show();
@@ -274,5 +288,9 @@ function formatDate(dateString) {
   font-size: 1.1em;
   line-height: 1.6;
   text-align: left;
+}
+
+.comment-section {
+  margin-top: 3rem;
 }
 </style>

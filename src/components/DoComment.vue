@@ -1,167 +1,98 @@
-
 <template>
-  <div class="comment-section">
-    <!-- Show comment form if user is logged in -->
-    <div v-if="user" class="comment-form">
-      <CdxTextArea
-        v-model="newComment"
-        placeholder="Γράψτε το σχόλιό σας..."
-        aria-label="Νέο σχόλιο"
-        :disabled="isSubmitting"
-      />
-      <CdxButton 
-        weight="primary" 
-        action="progressive" 
-        @click="submitComment" 
-        :disabled="isSubmitting || newComment.length < 5"
-        class="submit-comment-button"
-      >
-        Υποβολή σχολίου
-      </CdxButton>
-    </div>
-
-    <!-- Show login prompt if user is not logged in -->
-    <div v-else class="login-prompt">
-        <p>Θέλετε να αφήσετε το σχόλιό σας;</p>
-      <CdxButton 
-        weight="primary" 
+  <div class="do-comment-container">
+    <div v-if="user">
+      <CdxField>
+        <template #label>Προσθήκη σχολίου</template>
+        <CdxTextInput
+          v-model="newComment"
+          :multiline="true"
+          aria-label="Προσθήκη σχολίου"
+          placeholder="Γράψτε το σχόλιό σας..."
+          :disabled="isSubmitting"
+        />
+      </CdxField>
+      <CdxButton
+        class="comment-submit-button"
+        :disabled="!newComment.trim() || isSubmitting"
+        @click="submitComment"
         action="progressive"
-        @click="openAuthDialog"
       >
-        Συνδεθείτε για να σχολιάσετε
+        {{ isSubmitting ? 'Υποβολή...' : 'Υποβολή σχολίου' }}
       </CdxButton>
+      <CdxMessage v-if="error" type="error" class="error-message">
+        {{ error }}
+      </CdxMessage>
     </div>
-
-    <CdxMessage v-if="feedbackMessage" :type="feedbackType" class="feedback-message">
-        {{ feedbackMessage }}
-    </CdxMessage>
-
+    <div v-else>
+      <CdxMessage type="warning">
+        Πρέπει να είστε <a href="#" @click.prevent="openAuthDialog">συνδεδεμένοι</a> για να σχολιάσετε.
+      </CdxMessage>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, watch } from 'vue';
-import { CdxTextArea, CdxButton, CdxMessage } from '@wikimedia/codex';
-import { user, openAuthDialog } from '../auth';
+import { ref } from 'vue';
 import { supabase } from '../supabase';
+import { user, openAuthDialog } from '../auth';
+import { CdxField, CdxTextInput, CdxButton, CdxMessage } from '@wikimedia/codex';
+import notificationService from '../notification';
 
 const props = defineProps({
-  postSlug: {
-    type: String,
+  postId: {
+    type: [Number, String],
     required: true,
-  }
+  },
 });
 
-const emit = defineEmits(['comment-posted']);
+const emit = defineEmits(['comment-added']);
 
 const newComment = ref('');
 const isSubmitting = ref(false);
-const feedbackMessage = ref('');
-const feedbackType = ref('success'); // 'success' or 'error'
-const postId = ref(null);
-
-async function fetchPostId() {
-    if (!props.postSlug) return;
-    try {
-        const { data, error } = await supabase
-            .from('posts')
-            .select('id')
-            .eq('slug', props.postSlug)
-            .single();
-        if (error) throw error;
-        postId.value = data.id;
-    } catch (error) {
-        console.error('Error fetching post ID:', error.message);
-        feedbackType.value = 'error';
-        feedbackMessage.value = 'Could not load post data to comment.';
-    }
-}
-
-// Fetch post ID when the component is loaded
-watch(() => props.postSlug, (newSlug) => {
-    if (newSlug) {
-        fetchPostId();
-    }
-}, { immediate: true });
+const error = ref(null);
 
 async function submitComment() {
-  if (newComment.value.trim().length < 5) {
-    feedbackType.value = 'error';
-    feedbackMessage.value = 'Το σχόλιο πρέπει να είναι τουλάχιστον 5 χαρακτήρες.';
-    setTimeout(() => { feedbackMessage.value = ''; }, 5000);
-    return;
-  }
-
-  if (!postId.value) {
-    feedbackType.value = 'error';
-    feedbackMessage.value = 'Δεν είναι δυνατή η υποβολή σχολίου χωρίς αναγνωριστικό ανάρτησης.';
-    return;
-  }
+  if (!newComment.value.trim()) return;
 
   isSubmitting.value = true;
-  feedbackMessage.value = '';
+  error.value = null;
 
   try {
-    const commentData = {
-      post_id: postId.value,
+    const { error: insertError } = await supabase.from('comments').insert({
+      post_id: props.postId,
       user_id: user.value.id,
-      content: newComment.value,
-    };
+      content: newComment.value.trim(),
+    });
 
-    const { error } = await supabase.from('comments').insert([commentData]);
+    if (insertError) {
+      throw insertError;
+    }
 
-    if (error) throw error;
-
-    feedbackType.value = 'success';
-    feedbackMessage.value = 'Το σχόλιό σας δημοσιεύτηκε με επιτυχία!';
-    
-    newComment.value = ''; // Clear the textarea
-    emit('comment-posted');
-
-  } catch (error) {
-    console.error('Error submitting comment:', error);
-    feedbackType.value = 'error';
-    feedbackMessage.value = `Παρουσιάστηκε σφάλμα: ${error.message}`;
+    newComment.value = '';
+    notificationService.push('Το σχόλιό σας δημοσιεύτηκε με επιτυχία!', 'success');
+    emit('comment-added');
+  } catch (e) {
+    error.value = 'Η υποβολή του σχολίου απέτυχε. Παρακαλώ δοκιμάστε ξανά.';
+    console.error('Error submitting comment:', e);
+    notificationService.push('Η υποβολή του σχολίου απέτυχε.', 'error');
   } finally {
     isSubmitting.value = false;
-    // Hide the success/error message after a few seconds
-    setTimeout(() => {
-        feedbackMessage.value = '';
-    }, 5000);
   }
 }
 </script>
 
 <style scoped>
-.comment-section {
-  margin-top: 40px;
-  padding: 24px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
+.do-comment-container {
+  margin-top: 2rem;
+  border-top: 1px solid #c8ccd1;
+  padding-top: 2rem;
 }
 
-.comment-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+.comment-submit-button {
+  margin-top: 1rem;
 }
 
-.login-prompt {
-  text-align: center;
-  padding: 20px 0;
+.error-message {
+  margin-top: 1rem;
 }
-
-.login-prompt p {
-    font-size: 1.1em;
-    margin-bottom: 16px;
-}
-
-.submit-comment-button {
-    align-self: flex-start; /* Align button to the left */
-}
-
-.feedback-message {
-    margin-top: 16px;
-}
-
 </style>
