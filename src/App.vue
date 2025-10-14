@@ -1,5 +1,6 @@
 <template>
   <div id="app-container">
+    <SpeedInsights/>
     <div class="notification-container">
       <Notification
         v-for="notification in notificationService.state.notifications"
@@ -29,6 +30,7 @@ import UserCompleteDialog from './components/UserCompleteDialog.vue';
 import notificationService from './notification';
 import { user } from './auth';
 import { isCompleteProfileDialogOpen, checkUserProfile, closeCompleteProfileDialog } from './profile';
+import { SpeedInsights } from "@vercel/speed-insights/vue"
 
 const router = useRouter();
 
