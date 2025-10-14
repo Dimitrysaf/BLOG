@@ -27,14 +27,15 @@ const loadingState = loadingService.state;
 </script>
 
 <style scoped>
-/* Τα styles παραμένουν ίδια */
 .navbar {
   height: 60px;
   background-color: #f8f8f8;
   border-bottom: 1px solid #e7e7e7;
   width: 100%;
   border-bottom: solid 2px #c8ccd1;
-  position: relative; /* Needed for positioning the progress bar */
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
 .navbar-progress-bar {
