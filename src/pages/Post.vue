@@ -18,7 +18,7 @@
       <div class="post-meta">
         <span v-if="post.author" class="meta-item">
           <CdxIcon :icon="cdxIconUserAvatarOutline" />
-          <span>By {{ post.author.full_name }}</span>
+          <span>{{ post.author.full_name }}</span>
         </span>
         <span class="meta-item">
           <CdxIcon :icon="cdxIconCalendar" />
