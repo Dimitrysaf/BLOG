@@ -7,6 +7,7 @@ import {
   CdxCard,
   CdxField,
   CdxIcon,
+  CdxImage,
   CdxMessage,
   CdxProgressBar,
   CdxProgressIndicator,
@@ -21,6 +22,7 @@ export function installCodex( app ) {
   app.component( 'CdxCard', CdxCard );
   app.component( 'CdxField', CdxField );
   app.component( 'CdxIcon', CdxIcon );
+  app.component( 'CdxImage', CdxImage );
   app.component( 'CdxMessage', CdxMessage );
   app.component( 'CdxProgressBar', CdxProgressBar );
   app.component( 'CdxProgressIndicator', CdxProgressIndicator );

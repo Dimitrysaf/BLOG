@@ -1,4 +1,3 @@
-
 <template>
   <div>
     <div v-if="error" class="error-container">
@@ -11,9 +10,10 @@
       <CdxCard
         v-for="post in posts"
         :key="post.id"
-        class="post-card"
+        class="post-card post-card--blog"
         :url="`/p/${post.slug}`"
         :thumbnail="post.image_url ? { url: post.image_url } : null"
+        force-thumbnail="true"
       >
         <template #title>{{ post.title }}</template>
         <template #description>
@@ -75,6 +75,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
 .error-container,
 .no-posts-container {
   display: flex;
@@ -96,10 +97,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
-}
-
-.post-card {
-  max-width: 100%;
 }
 
 .card-footer {
