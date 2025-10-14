@@ -7,13 +7,6 @@
       </CdxMessage>
   </div>
 
-  <!-- Not Found State -->
-  <div v-else-if="!post && !loading" class="not-found-container">
-    <CdxMessage type="warning">
-      Η ανάρτηση δεν βρέθηκε.
-    </CdxMessage>
-  </div>
-
   <!-- Content -->
   <div v-else-if="post">
     <div class="blue-banner">
@@ -43,7 +36,7 @@
 
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 import loadingService from '../loading.js';
 import Container from '../components/Container.vue';
@@ -69,13 +62,12 @@ hljs.registerLanguage('bash', bash);
 hljs.registerLanguage('powershell', powershell);
 
 const route = useRoute();
+const router = useRouter();
 const post = ref(null);
 const error = ref(null);
-const loading = ref(true);
 const postBody = ref(null);
 
 const fetchPost = async () => {
-  loading.value = true;
   loadingService.show();
   try {
     const { data, error: fetchError } = await supabase
@@ -85,19 +77,17 @@ const fetchPost = async () => {
       .single();
 
     if (fetchError) {
-        if (fetchError.code === 'PGRST116') {
-            post.value = null;
-        } else {
-            throw fetchError;
-        }
-    } else {
-        post.value = data;
+      if (fetchError.code === 'PGRST116') {
+        router.push({ name: 'NotFound' });
+        return;
+      } else {
+        throw fetchError;
+      }
     }
-
+    post.value = data;
   } catch (e) {
     error.value = e.message;
   } finally {
-    loading.value = false;
     loadingService.hide();
   }
 };
@@ -218,8 +208,7 @@ function formatDate(dateString) {
 </style>
 
 <style scoped>
-.error-container,
-.not-found-container {
+.error-container {
   display: flex;
   justify-content: center;
   align-items: center;
