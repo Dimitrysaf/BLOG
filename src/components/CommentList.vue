@@ -163,6 +163,7 @@ watch(() => props.postId, initialFetch);
 
 .comment-list :deep(.cdx-menu-item) {
   display: flex;
+  padding-left: 0;
 }
 
 .comment-list :deep(.cdx-menu-item__label),
