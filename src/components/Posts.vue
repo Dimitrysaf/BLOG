@@ -11,9 +11,9 @@
         v-for="post in posts"
         :key="post.id"
         class="post-card post-card--blog"
-        :url="`/p/${post.slug}`"
         :thumbnail="post.image_url ? { url: post.image_url } : null"
         force-thumbnail="true"
+        @click="navigateToPost(post.slug)"
       >
         <template #title>{{ post.title }}</template>
         <template #description>
@@ -35,6 +35,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { supabase } from '../supabase'; 
 import { CdxCard, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
 import { cdxIconArticle } from '@wikimedia/codex-icons';
@@ -42,6 +43,11 @@ import loadingService from '../loading.js';
 
 const posts = ref([]);
 const error = ref(null);
+const router = useRouter();
+
+function navigateToPost(slug) {
+  router.push(`/p/${slug}`);
+}
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -75,6 +81,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.post-card {
+  cursor: pointer;
+}
 
 .error-container,
 .no-posts-container {
