@@ -5,10 +5,6 @@
         <h1>Επεξεργασία Άρθρου</h1>
       </div>
 
-      <div v-if="isLoading" class="loading-indicator">
-        <cdx-progress-bar inline aria-label="Φόρτωση άρθρου..." />
-      </div>
-
       <template v-if="post">
         <div class="post-metadata-grid">
           <cdx-field>
@@ -73,7 +69,7 @@
                 weight="primary"
                 action="progressive"
                 @click="saveContent"
-                :disabled="isSaving || isLoading || !isDirty"
+                :disabled="isSaving || !isDirty"
               >
                 Αποθήκευση
               </cdx-button>
@@ -137,6 +133,7 @@ import {
 } from '@wikimedia/codex';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
+import loadingService from '../../loading';
 import Container from '../../components/Container.vue';
 import ImageInsertDialog from '../../components/ImageInsertDialog.vue';
 import AuthorSelector from '../../components/AuthorSelector.vue';
@@ -151,7 +148,6 @@ const props = defineProps({
 
 const router = useRouter();
 const post = ref(null);
-const isLoading = ref(true);
 const isSaving = ref(false);
 const errorLoading = ref(false);
 const isImageDialogVisible = ref(false);
@@ -239,7 +235,7 @@ watch(post, (newPostValue) => {
 }, { deep: true });
 
 async function fetchPost() {
-  isLoading.value = true;
+  loadingService.show();
   errorLoading.value = false;
   try {
     const { data, error } = await supabase
@@ -261,7 +257,7 @@ async function fetchPost() {
     notificationService.push('Αποτυχία φόρτωσης άρθρου.', 'error');
     errorLoading.value = true;
   } finally {
-    isLoading.value = false;
+    loadingService.hide();
   }
 }
 
@@ -352,7 +348,7 @@ onBeforeUnmount(() => {
 .page-header h1 {
   margin: 0;
 }
-.loading-indicator, .error-indicator {
+.error-indicator {
   margin: auto;
   text-align: center;
   padding: 40px 0;
