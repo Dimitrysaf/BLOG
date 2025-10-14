@@ -1,5 +1,6 @@
+
 <template>
-  <div class="do-comment-container">
+  <Container class="do-comment-container">
     <div v-if="user">
       <CdxField>
         <template #label>Προσθήκη σχολίου</template>
@@ -28,7 +29,7 @@
         Πρέπει να είστε <a href="#" @click.prevent="openAuthDialog">συνδεδεμένοι</a> για να σχολιάσετε.
       </CdxMessage>
     </div>
-  </div>
+  </Container>
 </template>
 
 <script setup>
@@ -37,6 +38,7 @@ import { supabase } from '../supabase';
 import { user, openAuthDialog } from '../auth';
 import { CdxField, CdxTextInput, CdxButton, CdxMessage } from '@wikimedia/codex';
 import notificationService from '../notification';
+import Container from './Container.vue';
 
 const props = defineProps({
   postId: {

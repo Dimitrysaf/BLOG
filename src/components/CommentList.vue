@@ -1,6 +1,6 @@
 
 <template>
-  <div class="comment-list-container">
+  <Container class="comment-list-container">
     <h3 class="comments-title">Σχόλια ({{ comments.length }})</h3>
     <div v-if="isLoading" class="loading-container">
         <cdx-progress-bar inline aria-label="Loading..."></cdx-progress-bar>
@@ -16,7 +16,7 @@
     <div v-else class="no-comments-container">
       <p>Δεν υπάρχουν σχόλια ακόμα. Γίνε ο πρώτος που θα σχολιάσει!</p>
     </div>
-  </div>
+  </Container>
 </template>
 
 <script setup>
@@ -24,6 +24,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { supabase } from '../supabase';
 import { CdxMessage, CdxProgressBar } from '@wikimedia/codex';
 import { cdxIconUserAvatar } from '@wikimedia/codex-icons';
+import Container from './Container.vue';
 
 const props = defineProps({
   postId: {
@@ -120,16 +121,25 @@ watch(() => props.postId, fetchComments);
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* Add some space between comment items */
-}
-
-/* The CdxMenuItem takes care of its own styling, so we don't need much here.
-   We can add overrides if needed. */
-.comment-list .cdx-menu-item {
-    width: 100%;
+  gap: 0.5rem;
 }
 
 .comment-list :deep(.cdx-menu-item__thumbnail) {
   border-radius: 50%;
+}
+
+.comment-list :deep(.cdx-menu-item__content-wrapper) {
+  flex: 1;
+  min-width: 0; /* This is key for flex-shrink to work */
+}
+
+.comment-list :deep(.cdx-menu-item) {
+  display: flex;
+}
+
+.comment-list :deep(.cdx-menu-item__label),
+.comment-list :deep(.cdx-menu-item__description) {
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 </style>

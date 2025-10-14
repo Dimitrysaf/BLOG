@@ -33,10 +33,8 @@
 
     <!-- Comment Section -->
     <div class="comment-section">
-      <Container>
-        <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
-        <CommentList :post-id="post.id" ref="commentListRef" />
-      </Container>
+      <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
+      <CommentList :post-id="post.id" ref="commentListRef" />
     </div>
 
   </div>
