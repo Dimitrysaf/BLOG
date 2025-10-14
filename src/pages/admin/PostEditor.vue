@@ -36,9 +36,29 @@
             <cdx-text-input v-model="post.slug" />
           </cdx-field>
 
-          <cdx-field>
+          <cdx-field class="image-url-field">
             <template #label>Φωτογραφία (URL)</template>
-            <cdx-text-input v-model="post.image_url" />
+            <div style="position: relative;">
+              <cdx-text-input
+                v-model="post.image_url"
+                @focus="showImagePreview"
+                @blur="hideImagePreview"
+              />
+              <div v-if="isImagePreviewVisible" class="image-preview-popover">
+                <cdx-progress-bar v-if="isImageLoading" inline />
+                <img
+                  v-else-if="!hasImageError && post.image_url"
+                  :src="post.image_url"
+                  alt="Preview"
+                  @load="onImageLoad"
+                  @error="onImageError"
+                  class="preview-image"
+                />
+                <div v-else class="no-preview">
+                  {{ hasImageError ? 'Αποτυχία φόρτωσης' : 'Επικολλήστε ένα URL' }}
+                </div>
+              </div>
+            </div>
           </cdx-field>
 
           <cdx-field>
@@ -327,13 +347,13 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
-import { BubbleMenu } from '@tiptap/vue-3/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { Image } from '@tiptap/extension-image';
 import { Table } from '@tiptap/extension-table';
 import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
+import { BubbleMenu } from '@tiptap/vue-3/menus';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 
@@ -393,6 +413,10 @@ const isDirty = ref(false);
 const currentTime = ref('');
 let timeInterval = null;
 
+const isImagePreviewVisible = ref(false);
+const isImageLoading = ref(false);
+const hasImageError = ref(false);
+
 let initialPostState = {};
 
 const formattedCreatedAt = computed(() => {
@@ -427,6 +451,50 @@ const editor = useEditor({
 function updateTime() {
   currentTime.value = new Date().toLocaleString('el-GR');
 }
+
+function showImagePreview() {
+  isImagePreviewVisible.value = true;
+  if (post.value?.image_url) {
+    validateImage(post.value.image_url);
+  }
+}
+
+function hideImagePreview() {
+  // Delay hiding to allow for interaction with the popover if needed
+  setTimeout(() => {
+    isImagePreviewVisible.value = false;
+  }, 200);
+}
+
+function onImageLoad() {
+  isImageLoading.value = false;
+  hasImageError.value = false;
+}
+
+function onImageError() {
+  isImageLoading.value = false;
+  hasImageError.value = true;
+}
+
+function validateImage(url) {
+  if (!url) {
+    isImageLoading.value = false;
+    hasImageError.value = false;
+    return;
+  }
+  isImageLoading.value = true;
+  hasImageError.value = false;
+  const img = new window.Image();
+  img.src = url;
+  img.onload = onImageLoad;
+  img.onerror = onImageError;
+}
+
+watch(() => post.value?.image_url, (newUrl) => {
+  if (isImagePreviewVisible.value) {
+    validateImage(newUrl);
+  }
+});
 
 function storeInitialState() {
   if (post.value && editor.value) {
@@ -598,10 +666,42 @@ onBeforeUnmount(() => {
   margin: auto;
 }
 
+.image-url-field {
+  position: relative;
+}
+
+.image-preview-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  border: 1px solid #c8ccd1;
+  background-color: #ffffff;
+  border-radius: 2px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-top: 4px;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+}
+
+.preview-image {
+  max-width: auto;
+  max-height: 300px;
+  object-fit: contain;
+}
+
+.no-preview {
+  color: #54595d;
+}
+
+
 .grid-actions > * {
   flex: 1;
 }
-
 .editor-toolbar {
   display: flex;
   flex-wrap: wrap;
