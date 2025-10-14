@@ -331,13 +331,18 @@
       <cdx-dialog
         v-model:open="showConfirmCloseDialog"
         title="Μη αποθηκευμένες αλλαγές"
-        primary-action-label="Έξοδος"
-        secondary-action-label="Ακύρωση"
-        :primary-action-disabled="isSaving"
-        @primary-action="goBack(true)"
-        @secondary-action="showConfirmCloseDialog = false"
+        :primary-action="{
+          label: 'Αποθήκευση και κλείσιμο',
+          disabled: isSaving
+        }"
+        :default-action="{
+          label: 'Χωρίς αποθήκευση'
+        }"
+        @primary="saveAndClose"
+        @default="goBack(true)"
+        @close="showConfirmCloseDialog = false"
       >
-        Έχετε μη αποθηκευμένες αλλαγές. Είστε βέβαιοι ότι θέλετε να εγκαταλείψετε τη σελίδα;
+        Έχετε μη αποθηκευμένες αλλαγές. Θέλετε να αποθηκεύσετε τις αλλαγές σας πριν την έξοδο;
       </cdx-dialog>
     </div>
   </Container>
@@ -543,8 +548,9 @@ async function fetchPost() {
 }
 
 async function saveContent() {
-  if (!editor.value || !post.value) return;
+  if (!editor.value || !post.value) return false;
   isSaving.value = true;
+  let success = false;
   
   const updatedPost = {
     content: editor.value.getHTML(),
@@ -564,12 +570,20 @@ async function saveContent() {
     
     await fetchPost();
     notificationService.push('Το άρθρο αποθηκεύτηκε με επιτυχία.');
-
+    success = true;
   } catch (err) {
     notificationService.push('Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.', 'error');
     console.error('Error saving post content:', err);
   } finally {
     isSaving.value = false;
+  }
+  return success;
+}
+
+async function saveAndClose() {
+  const saved = await saveContent();
+  if (saved) {
+    goBack(true);
   }
 }
 
