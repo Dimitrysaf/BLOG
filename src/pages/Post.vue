@@ -187,8 +187,36 @@ function formatDate(dateString) {
 .post-body th { font-weight: bold; text-align: left; background-color: #f8f9fa; }
 .post-body img { max-width: 100%; height: auto; display: block; cursor: pointer; }
 .post-body .resize-cursor { cursor: col-resize; }
-.post-body pre { background: #000; color: white; font-family: 'JetBrainsMono', monospace; padding: 0.75rem 1rem; border-radius: 0; }
-.post-body pre code { color: inherit; padding: 0; background: none; font-size: 0.8rem; }
+.post-body pre {
+    background: #000;
+    color: white;
+    font-family: 'JetBrainsMono', monospace;
+    padding: 1.5em 2em;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid #39FF14;
+    margin: 2em 0;
+}
+.post-body pre::before {
+    content: '{ }';
+    position: absolute;
+    top: 0.2em;
+    left: 0.2em;
+    font-size: 3em;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+}
+.post-body pre code {
+    color: inherit;
+    padding: 0;
+    background: none;
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 1;
+}
 </style>
 
 <style scoped>

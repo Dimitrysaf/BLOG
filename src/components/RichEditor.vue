@@ -325,8 +325,36 @@ defineExpose({ insertImage });
 :deep(th) { font-weight: bold; text-align: left; background-color: #f8f9fa; }
 :deep(img) { max-width: 100%; height: auto; display: block; cursor: pointer; }
 :deep(.ProseMirror .resize-cursor) { cursor: col-resize; }
-:deep(pre) { background: #000; color: white; font-family: 'JetBrainsMono', monospace; padding: 0.75rem 1rem; border-radius: 0; }
-:deep(pre code) { color: inherit; padding: 0; background: none; font-size: 0.8rem; }
+:deep(pre) {
+    background: #000;
+    color: white;
+    font-family: 'JetBrainsMono', monospace;
+    padding: 1.5em 2em;
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid #39FF14;
+    margin: 2em 0;
+}
+:deep(pre::before) {
+    content: '{ }';
+    position: absolute;
+    top: 0.2em;
+    left: 0.2em;
+    font-size: 3em;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+}
+:deep(pre code) {
+    color: inherit;
+    padding: 0;
+    background: none;
+    font-size: 0.8rem;
+    position: relative;
+    z-index: 1;
+}
 .bubble-menu {
   display: flex;
   background-color: #f8f9fa;
