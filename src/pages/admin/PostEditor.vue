@@ -3,24 +3,6 @@
     <div class="post-editor-page">
       <div class="page-header">
         <h1>Επεξεργασία Άρθρου</h1>
-        <div class="header-actions" v-if="post">
-          <cdx-button
-            weight="primary"
-            action="progressive"
-            @click="saveContent"
-            :disabled="isSaving || isLoading"
-          >
-            Αποθήκευση
-          </cdx-button>
-          <cdx-button
-            @click="goBack"
-            :disabled="isSaving"
-            weight="quiet"
-            class="cancel-button"
-          >
-            Ακύρωση
-          </cdx-button>
-        </div>
       </div>
 
       <div v-if="isLoading" class="loading-indicator">
@@ -58,6 +40,25 @@
             <template #label>Συγγραφέας</template>
             <author-selector v-if="post" v-model="post.author_id" />
           </cdx-field>
+        </div>
+
+        <div class="page-actions">
+          <cdx-button
+            weight="primary"
+            action="progressive"
+            @click="saveContent"
+            :disabled="isSaving || isLoading || !isDirty"
+          >
+            Αποθήκευση
+          </cdx-button>
+          <cdx-button
+            @click="handleClose"
+            :disabled="isSaving"
+            weight="quiet"
+            class="cancel-button"
+          >
+            Κλείσιμο
+          </cdx-button>
         </div>
         
         <bubble-menu
@@ -288,7 +289,7 @@
       </template>
 
       <div v-if="errorLoading" class="error-indicator">
-        <p>Αποτυχία φόρτωσης του άρθρου. <a href="/admin">Επιστροφή στη λίστα</a>.</p>
+        <p>Αποτυχία φόρτωσης του άρθρου. <a @click.prevent="goBack(true)" href="#">Επιστροφή στη λίστα</a>.</p>
       </div>
 
       <ImageInsertDialog
@@ -296,12 +297,24 @@
         @insert="handleImageInsert"
         @close="hideImageDialog"
       />
+      
+      <cdx-dialog
+        v-model:open="showConfirmCloseDialog"
+        title="Μη αποθηκευμένες αλλαγές"
+        primary-action-label="Έξοδος"
+        secondary-action-label="Ακύρωση"
+        :primary-action-disabled="isSaving"
+        @primary-action="goBack(true)"
+        @secondary-action="showConfirmCloseDialog = false"
+      >
+        Έχετε μη αποθηκευμένες αλλαγές. Είστε βέβαιοι ότι θέλετε να εγκαταλείψετε τη σελίδα;
+      </cdx-dialog>
     </div>
   </Container>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import { BubbleMenu } from '@tiptap/vue-3/menus';
@@ -319,7 +332,8 @@ import {
   CdxIcon,
   CdxProgressBar,
   CdxField,
-  CdxTextInput
+  CdxTextInput,
+  CdxDialog
 } from '@wikimedia/codex';
 import {
   cdxIconBold, 
@@ -364,6 +378,10 @@ const isLoading = ref(true);
 const isSaving = ref(false);
 const errorLoading = ref(false);
 const isImageDialogVisible = ref(false);
+const showConfirmCloseDialog = ref(false);
+const isDirty = ref(false);
+
+let initialPostState = {};
 
 const formattedCreatedAt = computed(() => {
   if (post.value && post.value.created_at) {
@@ -376,49 +394,45 @@ const editor = useEditor({
   content: '',
   extensions: [
     StarterKit.configure({
-      heading: {
-        levels: [1, 2, 3],
-      },
+      heading: { levels: [1, 2, 3] },
     }),
     Image,
-    Table.configure({
-      resizable: true,
-    }),
+    Table.configure({ resizable: true }),
     TableRow,
     TableHeader,
     TableCell,
     Underline,
-    TextAlign.configure({
-      types: ['heading', 'paragraph'],
-    }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
   ],
   editorProps: {
-    attributes: {
-      class: 'ProseMirror',
-    },
+    attributes: { class: 'ProseMirror' },
   },
+  onUpdate: () => {
+    isDirty.value = true;
+  }
 });
 
-function showImageDialog() {
-  isImageDialogVisible.value = true;
-}
-
-function hideImageDialog() {
-  isImageDialogVisible.value = false;
-}
-
-function handleImageInsert(url) {
-  if (url && editor.value) {
-    editor.value.chain().focus().setImage({ src: url }).run();
-  }
-  hideImageDialog();
-}
-
-function addTable() {
-  if (editor.value) {
-    editor.value.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+function storeInitialState() {
+  if (post.value && editor.value) {
+    initialPostState = {
+      ...JSON.parse(JSON.stringify(post.value)),
+      content: editor.value.getHTML(),
+    };
+    isDirty.value = false;
   }
 }
+
+watch(post, (newPost) => {
+  if (editor.value && newPost) {
+    const isSameContent = editor.value.getHTML() === (newPost.content || '');
+    if (!isSameContent) {
+      editor.value.commands.setContent(newPost.content || '', false);
+    }
+  }
+}, { deep: true });
+
+watch(() => post.value, () => { isDirty.value = true; }, { deep: true });
+
 
 async function fetchPost() {
   isLoading.value = true;
@@ -432,6 +446,9 @@ async function fetchPost() {
 
     if (error) throw error;
     post.value = data;
+    await nextTick();
+    editor.value.commands.setContent(post.value.content || '', false);
+    storeInitialState();
   } catch (err) {
     console.error('Error fetching post:', err);
     notificationService.push('Αποτυχία φόρτωσης άρθρου.', 'error');
@@ -461,8 +478,8 @@ async function saveContent() {
 
     if (error) throw error;
     
+    await fetchPost();
     notificationService.push('Το άρθρο αποθηκεύτηκε με επιτυχία.');
-    router.push({ name: 'AdminDashboard' });
 
   } catch (err) {
     notificationService.push('Η αποθήκευση απέτυχε. Παρακαλώ δοκιμάστε ξανά.', 'error');
@@ -472,18 +489,42 @@ async function saveContent() {
   }
 }
 
-function goBack() {
-  router.push({ name: 'AdminDashboard' });
+function goBack(force = false) {
+  if (force) {
+    router.push({ name: 'AdminDashboard' });
+    return;
+  }
+  handleClose();
 }
 
-watch(post, (newPost) => {
-  if (editor.value && newPost) {
-    const isSameContent = editor.value.getHTML() === (newPost.content || '');
-    if (!isSameContent) {
-      editor.value.commands.setContent(newPost.content || '');
-    }
+function handleClose() {
+  if (isDirty.value) {
+    showConfirmCloseDialog.value = true;
+  } else {
+    router.push({ name: 'AdminDashboard' });
   }
-});
+}
+
+function showImageDialog() {
+  isImageDialogVisible.value = true;
+}
+
+function hideImageDialog() {
+  isImageDialogVisible.value = false;
+}
+
+function handleImageInsert(url) {
+  if (url && editor.value) {
+    editor.value.chain().focus().setImage({ src: url }).run();
+  }
+  hideImageDialog();
+}
+
+function addTable() {
+  if (editor.value) {
+    editor.value.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }
+}
 
 onMounted(() => {
   fetchPost();
@@ -494,6 +535,7 @@ onBeforeUnmount(() => {
     editor.value.destroy();
   }
 });
+
 </script>
 
 <style scoped>
@@ -503,23 +545,20 @@ onBeforeUnmount(() => {
   align-items: center;
   margin-bottom: 20px;
 }
-
 .page-header h1 {
   margin: 0;
 }
-
-.header-actions {
+.page-actions {
   display: flex;
   gap: 1rem;
-  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
 }
-
 .loading-indicator, .error-indicator {
   margin: auto;
   text-align: center;
   padding: 40px 0;
 }
-
 .post-metadata-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -527,17 +566,14 @@ onBeforeUnmount(() => {
   margin-bottom: 2rem;
   align-items: baseline;
 }
-
 @media (min-width: 768px) {
   .post-metadata-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
-
 .editor-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -548,7 +584,6 @@ onBeforeUnmount(() => {
   border-radius: 2px 2px 0 0;
   background-color: #f8f9fa;
 }
-
 .editor-button-group {
   display: flex;
   align-items: center;
@@ -558,17 +593,14 @@ onBeforeUnmount(() => {
   padding: 0.25rem;
   background: white;
 }
-
 .editor-toolbar .cdx-button.is-active {
   background-color: #eaf3ff;
   color: #36c;
 }
-
 .editor-content-wrapper {
   flex-grow: 1;
   overflow-y: auto;
 }
-
 :deep(.tiptap),
 :deep(.ProseMirror) {
   border: 1px solid #c8ccd1;
@@ -576,7 +608,6 @@ onBeforeUnmount(() => {
   padding: 0.5rem 0.75rem;
   min-height: 400px;
 }
-
 :deep(.tiptap:focus),
 :deep(.ProseMirror:focus) {
   outline: none;
@@ -585,48 +616,39 @@ onBeforeUnmount(() => {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
-
 :deep(.ProseMirror p) {
   margin-block: 0 1em;
 }
-
 :deep(.ProseMirror h1),
 :deep(.ProseMirror h2),
 :deep(.ProseMirror h3) {
   margin-block: 1.5em 0.5em;
   line-height: 1.2;
 }
-
 :deep([data-text-align="center"]) {
   text-align: center;
 }
-
 :deep([data-text-align="right"]) {
   text-align: right;
 }
-
 :deep([data-text-align="left"]) {
   text-align: left;
 }
-
 :deep(.ProseMirror ul),
 :deep(.ProseMirror ol) {
   padding-inline-start: 1.5rem;
 }
-
 :deep(.ProseMirror blockquote) {
   border-inline-start: 3px solid #c8ccd1;
   padding-inline-start: 1rem;
   margin-inline: 0;
   color: #54595d;
 }
-
 :deep(.ProseMirror hr) {
   border: none;
   border-top: 1px solid #c8ccd1;
   margin-block: 2rem;
 }
-
 :deep(table) {
   border-collapse: collapse;
   width: 100%;
@@ -648,20 +670,15 @@ onBeforeUnmount(() => {
   text-align: left;
   background-color: #f8f9fa;
 }
-
 :deep(img) {
   max-width: 100%;
   height: auto;
   display: block; 
   cursor: pointer;
 }
-
-
 :deep(.ProseMirror .resize-cursor) {
     cursor: col-resize;
 }
-
-/* Στυλ για το Code Block */
 :deep(pre) {
   background: #0D0D0D;
   color: #FFF;
@@ -675,7 +692,6 @@ onBeforeUnmount(() => {
   background: none;
   font-size: 0.8rem;
 }
-
 .bubble-menu {
   display: flex;
   background-color: #f8f9fa;
