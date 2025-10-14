@@ -38,7 +38,15 @@ const error = ref(null);
 
 function formatDate(dateString) {
   const date = new Date(dateString);
-  return date.toLocaleString('el-GR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleString('el-GR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Europe/Athens'
+  });
 }
 
 // Computed property to transform comments data for CdxMenuItem

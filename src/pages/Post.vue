@@ -301,4 +301,12 @@ function formatDate(dateString) {
   border-top: 1px solid #c8ccd1;
   flex-grow: 1;
 }
+
+@media (max-width: 768px) {
+  .post-meta {
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+}
 </style>
