@@ -8,7 +8,7 @@
   </div>
 
   <!-- Content -->
-  <div v-else-if="post">
+  <div v-else-if="post" class="post-page-container">
     <div class="blue-banner">
       <Container>
         <div class="post-details">
@@ -29,12 +29,15 @@
 
     <Container class="post-body-container">
       <div ref="postBody" class="post-body" v-html="post.content"></div>
-       <!-- Comment Section -->
-      <div class="comment-section">
+    </Container>
+
+    <!-- Comment Section -->
+    <div class="comment-section">
+      <Container>
         <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
         <CommentList :post-id="post.id" ref="commentListRef" />
-      </div>
-    </Container>
+      </Container>
+    </div>
 
   </div>
 </template>
@@ -292,5 +295,10 @@ function formatDate(dateString) {
 
 .comment-section {
   margin-top: 3rem;
+  background-color: #f8f9fa;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+  border-top: 1px solid #c8ccd1;
+  flex-grow: 1;
 }
 </style>

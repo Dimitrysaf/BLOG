@@ -82,11 +82,6 @@ async function submitComment() {
 </script>
 
 <style scoped>
-.do-comment-container {
-  margin-top: 2rem;
-  border-top: 1px solid #c8ccd1;
-  padding-top: 2rem;
-}
 
 .comment-submit-button {
   margin-top: 1rem;
