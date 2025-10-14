@@ -133,6 +133,14 @@ import { TableRow } from '@tiptap/extension-table-row';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { onBeforeUnmount, watch } from 'vue';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { createLowlight } from 'lowlight';
+import css from 'highlight.js/lib/languages/css';
+import js from 'highlight.js/lib/languages/javascript';
+import ts from 'highlight.js/lib/languages/typescript';
+import html from 'highlight.js/lib/languages/xml';
+import bash from 'highlight.js/lib/languages/bash';
+import powershell from 'highlight.js/lib/languages/powershell';
 
 import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import {
@@ -143,6 +151,14 @@ import {
   cdxIconTableAddRowBefore, cdxIconTableAddRowAfter, cdxIconSubtract,
   cdxIconUnderline, cdxIconAlignLeft, cdxIconAlignCenter, cdxIconAlignRight
 } from '@wikimedia/codex-icons';
+
+const lowlight = createLowlight();
+lowlight.register('html', html);
+lowlight.register('css', css);
+lowlight.register('js', js);
+lowlight.register('ts', ts);
+lowlight.register('bash', bash);
+lowlight.register('powershell', powershell);
 
 const props = defineProps({
   modelValue: {
@@ -156,7 +172,11 @@ const emit = defineEmits(['update:modelValue', 'dirty']);
 const editor = useEditor({
   content: props.modelValue,
   extensions: [
-    StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+    StarterKit.configure({ 
+        heading: { levels: [1, 2, 3] },
+        codeBlock: false
+    }),
+    CodeBlockLowlight.configure({ lowlight }),
     Image,
     Table.configure({ resizable: true }),
     TableRow,
@@ -200,6 +220,10 @@ onBeforeUnmount(() => {
 
 defineExpose({ insertImage });
 </script>
+
+<style>
+@import 'highlight.js/styles/atom-one-dark.css';
+</style>
 
 <style scoped>
 .editor-toolbar {
@@ -255,10 +279,45 @@ defineExpose({ insertImage });
 :deep(.ProseMirror ul),
 :deep(.ProseMirror ol) { padding-inline-start: 1.5rem; }
 :deep(.ProseMirror blockquote) {
-  border-inline-start: 3px solid #c8ccd1;
-  padding-inline-start: 1rem;
-  margin-inline: 0;
-  color: #54595d;
+    position: relative; 
+    padding: 1.5em 2em; 
+    background-color: #f7f7f7; 
+    border-radius: 1px;
+    border-left: 5px solid #3366cc; 
+    margin: 2em 0;
+    font-style: italic;
+    color: #555;
+}
+
+:deep(.ProseMirror blockquote::before) {
+    content: '“';
+    position: absolute;
+    top: 0.1em;
+    left: 0.1em;
+    font-size: 5em; 
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(51, 102, 204, 0.15);
+    line-height: 1; 
+}
+
+:deep(.ProseMirror blockquote::after) {
+    content: '”';
+    position: absolute;
+    bottom: -0.2em;
+    right: 0.1em;
+    font-size: 5em;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(51, 102, 204, 0.15);
+    line-height: 1;
+}
+
+:deep(.ProseMirror blockquote p) {
+    font-family: 'Times New Roman', Times, serif;
+    position: relative;
+    z-index: 1;
+    margin: 0;
 }
 :deep(.ProseMirror hr) { border: none; border-top: 1px solid #c8ccd1; margin-block: 2rem; }
 :deep(table) { border-collapse: collapse; width: 100%; margin: 1rem 0; overflow: hidden; table-layout: fixed; }
@@ -266,7 +325,7 @@ defineExpose({ insertImage });
 :deep(th) { font-weight: bold; text-align: left; background-color: #f8f9fa; }
 :deep(img) { max-width: 100%; height: auto; display: block; cursor: pointer; }
 :deep(.ProseMirror .resize-cursor) { cursor: col-resize; }
-:deep(pre) { background: #0D0D0D; color: #FFF; font-family: 'JetBrainsMono', monospace; padding: 0.75rem 1rem; border-radius: 0.5rem; }
+:deep(pre) { background: #000; color: white; font-family: 'JetBrainsMono', monospace; padding: 0.75rem 1rem; border-radius: 0; }
 :deep(pre code) { color: inherit; padding: 0; background: none; font-size: 0.8rem; }
 .bubble-menu {
   display: flex;

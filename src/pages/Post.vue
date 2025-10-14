@@ -1,6 +1,26 @@
+
 <template>
-  <div v-if="error"></div>
-  <div v-if="post">
+  <!-- Loading State -->
+  <div v-if="loading" class="loading-container">
+    <CdxProgressBar />
+  </div>
+
+  <!-- Error State -->
+  <div v-else-if="error" class="error-container">
+     <CdxMessage type="error">
+        Η φόρτωση της ανάρτησης απέτυχε: {{ error }}
+      </CdxMessage>
+  </div>
+
+  <!-- Not Found State -->
+  <div v-else-if="!post" class="not-found-container">
+    <CdxMessage type="warning">
+      Η ανάρτηση δεν βρέθηκε.
+    </CdxMessage>
+  </div>
+
+  <!-- Content -->
+  <div v-else>
     <div class="blue-banner">
       <Container>
         <div class="post-details">
@@ -8,68 +28,97 @@
         </div>
       </Container>
       <div class="post-meta">
-        <span class="meta-item">
-          <cdx-icon :icon="cdxIconUserAvatarOutline" />
-          <span>By {{ post.author.username }}</span>
+        <span v-if="post.author" class="meta-item">
+          <CdxIcon :icon="cdxIconUserAvatarOutline" />
+          <span>By {{ post.author.full_name }}</span>
         </span>
         <span class="meta-item">
-          <cdx-icon :icon="cdxIconCalendar" />
+          <CdxIcon :icon="cdxIconCalendar" />
           <span>{{ formatDate(post.created_at) }}</span>
         </span>
       </div>
     </div>
 
     <Container class="post-body-container">
-      <p class="post-body">{{ post.content }}</p>
+      <div ref="postBody" class="post-body" v-html="post.content"></div>
     </Container>
 
-    <Container>
-      <DoComment :post-slug="route.params.slug" @comment-posted="handleCommentPosted" />
-      <CommentsList :post-slug="route.params.slug" ref="commentsList" />
-    </Container>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '../supabase';
 import Container from '../components/Container.vue';
-import CommentsList from '../components/CommentsList.vue';
-import DoComment from '../components/DoComment.vue';
-import { CdxIcon } from '@wikimedia/codex';
+import { CdxIcon, CdxMessage, CdxProgressBar } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
   cdxIconCalendar
 } from '@wikimedia/codex-icons';
-import loadingService from '../loading.js';
+
+import hljs from 'highlight.js/lib/core';
+import css from 'highlight.js/lib/languages/css';
+import js from 'highlight.js/lib/languages/javascript';
+import ts from 'highlight.js/lib/languages/typescript';
+import xml from 'highlight.js/lib/languages/xml';
+import bash from 'highlight.js/lib/languages/bash';
+import powershell from 'highlight.js/lib/languages/powershell';
+
+hljs.registerLanguage('css', css);
+hljs.registerLanguage('javascript', js);
+hljs.registerLanguage('typescript', ts);
+hljs.registerLanguage('xml', xml);
+hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('powershell', powershell);
 
 const route = useRoute();
 const post = ref(null);
 const error = ref(null);
-const commentsList = ref(null);
+const loading = ref(true);
+const postBody = ref(null);
 
 const fetchPost = async () => {
-  loadingService.show();
+  loading.value = true;
   try {
     const { data, error: fetchError } = await supabase
       .from('posts')
-      .select('*, author:profiles(username)')
+      .select('*, author:profiles(full_name)')
       .eq('slug', route.params.slug)
       .single();
 
     if (fetchError) {
-      throw fetchError;
+        if (fetchError.code === 'PGRST116') {
+            post.value = null;
+        } else {
+            throw fetchError;
+        }
+    } else {
+        post.value = data;
     }
-    
-    post.value = data;
 
   } catch (e) {
     error.value = e.message;
   } finally {
-    loadingService.hide();
+    loading.value = false;
   }
 };
+
+const highlightCode = async () => {
+    await nextTick();
+    if (postBody.value) {
+        const blocks = postBody.value.querySelectorAll('pre code');
+        blocks.forEach((block) => {
+            hljs.highlightElement(block);
+        });
+    }
+}
+
+watch(post, () => {
+    if (post.value) {
+        highlightCode();
+    }
+});
 
 onMounted(fetchPost);
 
@@ -77,19 +126,85 @@ function formatDate(dateString) {
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
   return new Date(dateString).toLocaleDateString('el-GR', options);
 }
-
-function handleCommentPosted() {
-  if (commentsList.value) {
-    commentsList.value.refresh();
-  }
-}
 </script>
 
+<style>
+@import 'highlight.js/styles/atom-one-dark.css';
+
+.post-body p { margin-block: 0 1em; }
+.post-body h1,
+.post-body h2,
+.post-body h3 { margin-block: 1.5em 0.5em; line-height: 1.2; }
+.post-body [data-text-align="center"] { text-align: center; }
+.post-body [data-text-align="right"] { text-align: right; }
+.post-body [data-text-align="left"] { text-align: left; }
+.post-body ul,
+.post-body ol { padding-inline-start: 1.5rem; }
+.post-body blockquote {
+    position: relative; 
+    padding: 1.5em 2em; 
+    background-color: #f7f7f7; 
+    border-radius: 1px;
+    border-left: 5px solid #3366cc; 
+    margin: 2em 0;
+    font-style: italic;
+    color: #555;
+}
+
+.post-body blockquote::before {
+    content: '“';
+    position: absolute;
+    top: 0.1em;
+    left: 0.1em;
+    font-size: 5em; 
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(51, 102, 204, 0.15);
+    line-height: 1; 
+}
+
+.post-body blockquote::after {
+    content: '”';
+    position: absolute;
+    bottom: -0.2em;
+    right: 0.1em;
+    font-size: 5em;
+    font-weight: bold;
+    font-family: 'Times New Roman', Times, serif;
+    color: rgba(51, 102, 204, 0.15);
+    line-height: 1;
+}
+
+.post-body blockquote p {
+    font-family: 'Times New Roman', Times, serif;
+    position: relative;
+    z-index: 1;
+    margin: 0;
+}
+.post-body hr { border: none; border-top: 1px solid #c8ccd1; margin-block: 2rem; }
+.post-body table { border-collapse: collapse; width: 100%; margin: 1rem 0; overflow: hidden; table-layout: fixed; }
+.post-body td, .post-body th { border: 1px solid #c8ccd1; padding: 0.5rem; min-width: 1em; vertical-align: top; box-sizing: border-box; position: relative; word-wrap: break-word; }
+.post-body th { font-weight: bold; text-align: left; background-color: #f8f9fa; }
+.post-body img { max-width: 100%; height: auto; display: block; cursor: pointer; }
+.post-body .resize-cursor { cursor: col-resize; }
+.post-body pre { background: #000; color: white; font-family: 'JetBrainsMono', monospace; padding: 0.75rem 1rem; border-radius: 0; }
+.post-body pre code { color: inherit; padding: 0; background: none; font-size: 0.8rem; }
+</style>
+
 <style scoped>
+.loading-container,
+.error-container,
+.not-found-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 40px;
+}
+
 .blue-banner {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
-  height: 300px;
+  height: 500px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -142,7 +257,6 @@ function handleCommentPosted() {
 }
 
 .post-body {
-  white-space: pre-wrap;
   font-size: 1.1em;
   line-height: 1.6;
   text-align: left;
