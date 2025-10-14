@@ -46,24 +46,29 @@
             <author-selector v-if="post" v-model="post.author_id" />
           </cdx-field>
           
-          <div class="grid-actions">
-            <cdx-button
-              weight="primary"
-              action="progressive"
-              @click="saveContent"
-              :disabled="isSaving || isLoading || !isDirty"
-            >
-              Αποθήκευση
-            </cdx-button>
-            <cdx-button
-              @click="handleClose"
-              :disabled="isSaving"
-              weight="quiet"
-              class="cancel-button"
-            >
-              Κλείσιμο
-            </cdx-button>
-          </div>
+          <cdx-field>
+            <template #label>
+              Ενέργειες
+            </template>
+            <div class="grid-actions">
+              <cdx-button
+                weight="primary"
+                action="progressive"
+                @click="saveContent"
+                :disabled="isSaving || isLoading || !isDirty"
+              >
+                Αποθήκευση
+              </cdx-button>
+              <cdx-button
+                @click="handleClose"
+                :disabled="isSaving"
+                weight="quiet"
+                class="cancel-button"
+              >
+                Κλείσιμο
+              </cdx-button>
+            </div>
+          </cdx-field>
         </div>
         
         <bubble-menu
@@ -575,20 +580,26 @@ onBeforeUnmount(() => {
   margin-bottom: 2rem;
   align-items: baseline;
 }
-@media (min-width: 768px) {
-  .grid-actions {
-    grid-column: span 2;
-  }
-}
+
 .post-metadata-grid .cdx-field {
   margin-bottom: 0;
 }
+
+@media (min-width: 768px) {
+  .post-metadata-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .grid-actions {
   display: flex;
   gap: 1rem;
-  align-items: flex-end; /* Align items to the bottom */
-  justify-content: flex-end; /* Align buttons to the right */
-  height: 100%; /* Ensure the container takes full height of the grid cell */
+  width: 100%;
+  margin: auto;
+}
+
+.grid-actions > * {
+  flex: 1;
 }
 
 .editor-toolbar {
