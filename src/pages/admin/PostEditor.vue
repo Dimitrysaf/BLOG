@@ -576,8 +576,8 @@ onBeforeUnmount(() => {
   align-items: baseline;
 }
 @media (min-width: 768px) {
-  .post-metadata-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .grid-actions {
+    grid-column: span 2;
   }
 }
 .post-metadata-grid .cdx-field {
