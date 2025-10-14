@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <Container class="post-body-container">
+    <Container>
       <div ref="postBody" class="post-body" v-html="post.content"></div>
     </Container>
 
@@ -289,11 +289,6 @@ function formatDate(dateString) {
   color: white;
 }
 
-.post-body-container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
 
 .post-body {
   font-size: 1.1em;
