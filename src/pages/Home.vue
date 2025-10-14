@@ -18,7 +18,7 @@ import Posts from '../components/Posts.vue';
 .blue-banner {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
-  height: 500px;
+  height: 300px;
   width: 100%;
   display: flex;
   flex-direction: column;
