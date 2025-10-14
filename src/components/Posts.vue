@@ -13,12 +13,16 @@
         :key="post.id"
         class="post-card"
         :url="`/p/${post.slug}`"
+        :thumbnail="post.image_url ? { url: post.image_url } : null"
       >
-        <template #image>
-          <img v-if="post.image_url" :src="post.image_url" :alt="post.title" />
-        </template>
         <template #title>{{ post.title }}</template>
-        <template #description>{{ post.content.substring(0, 150) }}...</template>
+        <template #description>
+            <div class="card-footer">
+                <span>{{ post.profiles.full_name }}</span>
+                <span class="separator">·</span>
+                <span>{{ formatDate(post.created_at) }}</span>
+            </div>
+        </template>
       </CdxCard>
     </div>
 
@@ -39,12 +43,17 @@ import loadingService from '../loading.js';
 const posts = ref([]);
 const error = ref(null);
 
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
 async function fetchPosts() {
   loadingService.show();
   try {
     const { data, error: fetchError } = await supabase
       .from('posts')
-      .select('id, title, slug, content, image_url')
+      .select('id, title, slug, image_url, created_at, profiles(full_name)')
       .eq('is_published', true)
       .order('created_at', { ascending: false });
 
@@ -93,9 +102,12 @@ onMounted(() => {
   max-width: 100%;
 }
 
-.post-card img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
+.card-footer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #54595d;
+    padding-top: 8px;
 }
 </style>
