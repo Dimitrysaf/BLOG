@@ -9,7 +9,7 @@
 
   <!-- Content -->
   <div v-else-if="post" class="post-page-container">
-    <div class="blue-banner">
+    <div class="blue-banner" :style="bannerStyle">
       <div class="banner-content">
         <div class="post-details">
           <h1>{{ post.title }}</h1>
@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, watch, nextTick, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 import loadingService from '../loading.js';
@@ -75,6 +75,18 @@ const post = ref(null);
 const error = ref(null);
 const postBody = ref(null);
 const commentListRef = ref(null);
+
+const bannerStyle = computed(() => {
+  if (post.value?.image_url) {
+    return {
+      backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${post.value.image_url})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    };
+  }
+  return {};
+});
 
 const handleCommentAdded = () => {
   if (commentListRef.value) {
@@ -245,7 +257,6 @@ function formatDate(dateString) {
   padding: 60px 16px 40px;
   gap: 32px;
 }
-
 
 .post-details h1 {
   font-size: xxx-large;
