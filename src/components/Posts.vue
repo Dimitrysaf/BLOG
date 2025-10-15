@@ -2,7 +2,7 @@
   <div>
     <!-- Loading State: Show a spinner in the content area -->
     <div v-if="loading" class="placeholder-container">
-      <CdxProgressIndicator />
+      <CdxProgressIndicator aria-label="Φόρτωση αναρτήσεων..." />
     </div>
 
     <!-- Error State -->
@@ -19,13 +19,13 @@
         :key="post.id"
         class="post-card post-card--blog"
         :thumbnail="post.image_url ? { url: post.image_url } : null"
-        force-thumbnail="true"
+        :force-thumbnail="true"
         @click="navigateToPost(post.slug)"
       >
         <template #title>{{ post.title }}</template>
         <template #description>
             <div class="card-footer">
-                <span>{{ post.profiles.full_name }}</span>
+                <span>{{ post.profiles?.full_name || 'Ανώνυμος' }}</span>
                 <span class="separator">·</span>
                 <span>{{ formatDate(post.created_at) }}</span>
             </div>

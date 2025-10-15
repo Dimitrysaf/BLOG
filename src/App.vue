@@ -12,6 +12,7 @@
     <div class="main-content">
       <router-view :key="$route.fullPath" />
     </div>
+    <CookieBanner />
     <Footer />
     <UserCompleteDialog 
       v-model="isCompleteProfileDialogOpen"
@@ -25,6 +26,7 @@ import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import CookieBanner from './components/CookieBanner.vue'; // Import the new component
 import Notification from './components/Notification.vue';
 import UserCompleteDialog from './components/UserCompleteDialog.vue';
 import notificationService from './notification';
