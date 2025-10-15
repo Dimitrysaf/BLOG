@@ -1,9 +1,6 @@
 <template>
   <div class="articles-container">
-    <cdx-progress-bar v-if="isLoading" inline aria-label="Φόρτωση άρθρων..." />
-
     <cdx-table
-      v-else
       caption="Λίστα των άρθρων του ιστολογίου"
       :columns="columns"
       :data="posts"
@@ -114,6 +111,7 @@ import {
 import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
+import loadingService from '../../loading';
 import ArticleCreateDialog from '../../components/ArticleCreateDialog.vue';
 
 const columns = [
@@ -125,7 +123,6 @@ const columns = [
 ];
 
 const posts = ref([]);
-const isLoading = ref(true);
 const isCreateDialogOpen = ref(false);
 const isDeleteDialogOpen = ref(false);
 const isDeleting = ref(false);
@@ -186,7 +183,7 @@ async function handleCreate(newArticleData) {
 }
 
 async function fetchPosts() {
-  isLoading.value = true;
+  loadingService.show();
   try {
     const { data, error } = await supabase
       .from('posts')
@@ -209,7 +206,7 @@ async function fetchPosts() {
     notificationService.push('Αποτυχία φόρτωσης άρθρων.', 'error');
     console.error('Error fetching posts:', err);
   } finally {
-    isLoading.value = false;
+    loadingService.hide();
   }
 }
 

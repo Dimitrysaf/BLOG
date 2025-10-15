@@ -2,7 +2,7 @@
   <Container>
     <div class="admin-dashboard">
       <h1>Πίνακας Ελέγχου</h1>
-      <cdx-tabs :framed="true">
+      <cdx-tabs>
         <cdx-tab
           v-for="(tab, index) in tabsData"
           :key="index"
@@ -53,12 +53,7 @@ const tabsData = ref([
   {
     name: 'comments',
     label: 'Διαχείριση Σχολίων',
-  },
-  {
-    name: 'settings',
-    label: 'Ρυθμίσεις',
-    disabled: true,
-  },
+  }
 ]);
 
 </script>
@@ -74,6 +69,8 @@ h1 {
 
 .tab-content {
   padding: 20px;
-  /* The border is now handled by the framed tab-panel */
+  border: 1px solid #c8ccd1; /* Standard border color */
+  border-top: none; /* The tabs themselves provide the top line */
+  background-color: #fff; /* Ensure content area has a background */
 }
 </style>
