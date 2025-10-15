@@ -1,15 +1,5 @@
 <template>
   <div class="articles-container">
-    <div class="page-header" v-if="!isLoading">
-      <cdx-button
-        weight="primary"
-        action="progressive"
-        @click="openNewArticleDialog"
-      >
-        Νέο Άρθρο
-      </cdx-button>
-    </div>
-
     <cdx-progress-bar v-if="isLoading" inline aria-label="Φόρτωση άρθρων..." />
 
     <cdx-table
@@ -20,6 +10,24 @@
       :use-row-headers="true"
       :paginate="true"
     >
+      <template #header>
+        <div class="table-header-actions">
+          <cdx-button
+            weight="primary"
+            action="progressive"
+            @click="openNewArticleDialog"
+          >
+            Νέο Άρθρο
+          </cdx-button>
+          <cdx-button
+            aria-label="Ανανέωση λίστας"
+            @click="fetchPosts"
+          >
+            <cdx-icon :icon="cdxIconReload" />
+          </cdx-button>
+        </div>
+      </template>
+
       <template #item-image="{ row }">
         <cdx-thumbnail :thumbnail="row.image_url ? { url: row.image_url } : { icon: cdxIconNewspaper }" />
       </template>
@@ -103,7 +111,7 @@ import {
   CdxToggleButton,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload } from '@wikimedia/codex-icons';
+import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import ArticleCreateDialog from '../../components/ArticleCreateDialog.vue';
@@ -310,11 +318,12 @@ onMounted(() => {
   margin: -20px;
 }
 
-.page-header {
-  margin-bottom: 20px;
+.table-header-actions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
-  padding-top: 20px;
+  width: 100%;
+  padding: 12px 0;
 }
 
 .action-buttons {

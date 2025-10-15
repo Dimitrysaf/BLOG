@@ -1,8 +1,5 @@
 <template>
   <div class="users-container">
-    <div class="page-header">
-    </div>
-
     <cdx-table
       caption="Λίστα των χρηστών της εφαρμογής"
       :columns="columns"
@@ -10,6 +7,17 @@
       :use-row-headers="true"
       :paginate="true"
     >
+      <template #header>
+        <div class="table-header-actions">
+          <cdx-button
+            aria-label="Ανανέωση λίστας"
+            @click="fetchUsers"
+          >
+            <cdx-icon :icon="cdxIconReload" />
+          </cdx-button>
+        </div>
+      </template>
+
       <template #item-image="{ row }">
         <cdx-thumbnail :thumbnail="row.avatar_url ? { url: row.avatar_url } : { icon: cdxIconUserAvatar }" />
       </template>
@@ -69,7 +77,7 @@ import {
   CdxDialog,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar, cdxIconImage } from '@wikimedia/codex-icons';
+import { cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar, cdxIconImage, cdxIconReload } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import loadingService from '../../loading';
@@ -180,12 +188,12 @@ onMounted(() => {
   margin: -20px;
 }
 
-.page-header {
-  margin-bottom: 20px;
+.table-header-actions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
-  padding-top: 20px;
-  height: 40px;
+  width: 100%;
+  padding: 12px 0;
 }
 
 .action-buttons {

@@ -16,6 +16,9 @@
           <div v-else-if="tab.name === 'users'" class="tab-content">
             <Users />
           </div>
+          <div v-else-if="tab.name === 'comments'" class="tab-content">
+            <Comments />
+          </div>
           <div v-else class="tab-content">
             <h2>{{ tab.label }}</h2>
             <p>Περιεχόμενο για τη σελίδα "{{ tab.label }}".</p>
@@ -32,6 +35,7 @@ import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
 import Articles from './Articles.vue';
 import Users from './Users.vue';
+import Comments from './Comments.vue';
 
 const tabsData = ref([
   {
@@ -45,6 +49,10 @@ const tabsData = ref([
   {
     name: 'posts',
     label: 'Διαχείριση Άρθρων',
+  },
+  {
+    name: 'comments',
+    label: 'Διαχείριση Σχολίων',
   },
   {
     name: 'settings',
