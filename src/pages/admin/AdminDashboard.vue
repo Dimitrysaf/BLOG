@@ -13,6 +13,9 @@
           <div v-if="tab.name === 'posts'" class="tab-content">
             <Articles />
           </div>
+          <div v-else-if="tab.name === 'users'" class="tab-content">
+            <Users />
+          </div>
           <div v-else class="tab-content">
             <h2>{{ tab.label }}</h2>
             <p>Περιεχόμενο για τη σελίδα "{{ tab.label }}".</p>
@@ -28,6 +31,7 @@ import { ref } from 'vue';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
 import Articles from './Articles.vue';
+import Users from './Users.vue';
 
 const tabsData = ref([
   {

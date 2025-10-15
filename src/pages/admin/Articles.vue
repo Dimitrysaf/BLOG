@@ -20,6 +20,10 @@
       :use-row-headers="true"
       :paginate="true"
     >
+      <template #item-image="{ row }">
+        <cdx-thumbnail :thumbnail="row.image_url ? { url: row.image_url } : { icon: cdxIconNewspaper }" />
+      </template>
+
       <template #item-actions="{ row }">
         <div class="action-buttons">
           <cdx-toggle-button
@@ -96,7 +100,8 @@ import {
   CdxIcon,
   CdxProgressBar,
   CdxDialog,
-  CdxToggleButton
+  CdxToggleButton,
+  CdxThumbnail
 } from '@wikimedia/codex';
 import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
@@ -104,6 +109,7 @@ import notificationService from '../../notification';
 import ArticleCreateDialog from '../../components/ArticleCreateDialog.vue';
 
 const columns = [
+  { id: 'image', label: 'Εικόνα' },
   { id: 'title', label: 'Τίτλος' },
   { id: 'author_name', label: 'Συγγραφέας' },
   { id: 'created_at_formatted', label: 'Ημερομηνία Δημιουργίας' },
@@ -176,7 +182,7 @@ async function fetchPosts() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select(`id, title, content, created_at, is_published, profiles ( full_name )`)
+      .select(`id, title, content, created_at, is_published, image_url, profiles ( full_name )`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -186,6 +192,7 @@ async function fetchPosts() {
       title: post.title,
       content: post.content,
       is_published: post.is_published,
+      image_url: post.image_url,
       author_name: post.profiles ? post.profiles.full_name : 'Άγνωστος',
       created_at_formatted: new Date(post.created_at).toLocaleDateString('el-GR'),
     }));
@@ -292,6 +299,7 @@ async function confirmDelete() {
   }
 }
 
+
 onMounted(() => {
   fetchPosts();
 });
@@ -306,7 +314,7 @@ onMounted(() => {
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-end;
-  padding: 20px 20px 0 20px;
+  padding-top: 20px;
 }
 
 .action-buttons {
@@ -330,5 +338,9 @@ onMounted(() => {
   margin-bottom: 16px;
   font-size: 1.1em;
   color: #54595d;
+}
+
+:deep(.cdx-table__cell:first-child) {
+  text-align: center;
 }
 </style>
