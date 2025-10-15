@@ -1,7 +1,7 @@
 <template>
   <div class="comments-container">
     <cdx-table
-      caption="Λίστα των σχολίων της εφαρμογής"
+      caption="Λίστα των σχολίων"
       :columns="columns"
       :data="comments"
       :use-row-headers="true"

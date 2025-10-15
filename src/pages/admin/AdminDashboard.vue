@@ -69,8 +69,6 @@ h1 {
 
 .tab-content {
   padding: 80px 20px 20px; /* Adjusted for a 60px top gap */
-  border: 1px solid #c8ccd1; /* Standard border color */
-  border-top: none; /* The tabs themselves provide the top line */
   background-color: #fff; /* Ensure content area has a background */
 }
 </style>

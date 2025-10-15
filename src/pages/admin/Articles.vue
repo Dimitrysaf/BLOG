@@ -1,7 +1,7 @@
 <template>
   <div class="articles-container">
     <cdx-table
-      caption="Λίστα των άρθρων του ιστολογίου"
+      caption="Λίστα των άρθρων"
       :columns="columns"
       :data="posts"
       :use-row-headers="true"

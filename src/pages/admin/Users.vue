@@ -1,7 +1,7 @@
 <template>
   <div class="users-container">
     <cdx-table
-      caption="Λίστα των χρηστών της εφαρμογής"
+      caption="Λίστα των χρηστών"
       :columns="columns"
       :data="users"
       :use-row-headers="true"
