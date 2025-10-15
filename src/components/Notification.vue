@@ -70,4 +70,9 @@ const notificationIcon = computed(() => {
 .notification-message {
   margin-bottom: 8px; /* Add some space between notifications */
 }
+
+.notification-message :deep(.cdx-message__content) {
+  overflow-wrap: break-word;
+  white-space: normal;
+}
 </style>

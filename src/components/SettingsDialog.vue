@@ -349,7 +349,7 @@ function onClose() {
 .image-url-field {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
+  column-gap: 20px;
   margin-bottom: 20px;
 }
 
