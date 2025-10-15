@@ -1,7 +1,7 @@
 <template>
   <Container>
     <div class="admin-dashboard">
-      <h1>Πίνακας Ελέγχου</h1>
+      <h1>Πίνακας Ελέγχou</h1>
       <cdx-tabs>
         <cdx-tab
           v-for="(tab, index) in tabsData"
@@ -10,7 +10,10 @@
           :label="tab.label"
           :disabled="tab.disabled"
         >
-          <div v-if="tab.name === 'posts'" class="tab-content">
+          <div v-if="tab.name === 'links'" class="tab-content">
+            <Links />
+          </div>
+          <div v-else-if="tab.name === 'posts'" class="tab-content">
             <Articles />
           </div>
           <div v-else-if="tab.name === 'users'" class="tab-content">
@@ -18,10 +21,6 @@
           </div>
           <div v-else-if="tab.name === 'comments'" class="tab-content">
             <Comments />
-          </div>
-          <div v-else class="tab-content">
-            <h2>{{ tab.label }}</h2>
-            <p>Περιεχόμενο για τη σελίδα "{{ tab.label }}".</p>
           </div>
         </cdx-tab>
       </cdx-tabs>
@@ -36,11 +35,12 @@ import Container from '../../components/Container.vue';
 import Articles from './Articles.vue';
 import Users from './Users.vue';
 import Comments from './Comments.vue';
+import Links from './Links.vue';
 
 const tabsData = ref([
   {
-    name: 'dashboard',
-    label: 'Dashboard',
+    name: 'links',
+    label: 'Σύνδεσμοι',
   },
   {
     name: 'users',
