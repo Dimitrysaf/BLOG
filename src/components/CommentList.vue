@@ -63,6 +63,7 @@ const commentItems = computed(() => {
     id: `comment-${comment.id}`,
     value: comment.id,
     label: comment.profiles?.full_name || 'Ανώνυμος Χρήστηs',
+    boldLabel: true,
     description: comment.content,
     thumbnail: comment.profiles?.avatar_url
         ? { url: comment.profiles.avatar_url }
