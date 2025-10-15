@@ -344,6 +344,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  padding-top: 21.440px;
 }
 .page-header h1 {
   margin: 0;
