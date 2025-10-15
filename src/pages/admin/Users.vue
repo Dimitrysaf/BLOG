@@ -1,13 +1,6 @@
 <template>
   <div class="users-container">
     <div class="page-header">
-      <cdx-button
-        weight="primary"
-        action="progressive"
-        @click="openNewUserDialog"
-      >
-        Νέος Χρήστης
-      </cdx-button>
     </div>
 
     <cdx-table
@@ -23,12 +16,6 @@
 
       <template #item-actions="{ row }">
         <div class="action-buttons">
-          <cdx-button
-            aria-label="Επεξεργασία"
-            @click="editUser(row)"
-          >
-            <cdx-icon :icon="cdxIconEdit" />
-          </cdx-button>
           <cdx-button
             action="destructive"
             aria-label="Διαγραφή"
@@ -73,7 +60,7 @@ import {
   CdxDialog,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconEdit, cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar } from '@wikimedia/codex-icons';
+import { cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import loadingService from '../../loading';
@@ -82,6 +69,8 @@ const columns = [
   { id: 'image', label: 'Εικόνα' },
   { id: 'full_name', label: 'Ονοματεπώνυμο' },
   { id: 'role', label: 'Ρόλος' },
+  { id: 'created_at_formatted', label: 'Ημ/νία Δημιουργίας' },
+  { id: 'updated_at_formatted', label: 'Ημ/νία Ενημέρωσης' },
   { id: 'actions', label: 'Ενέργειες' }
 ];
 
@@ -90,20 +79,20 @@ const isDeleteDialogOpen = ref(false);
 const isDeleting = ref(false);
 const userToDeleteId = ref(null);
 
-function openNewUserDialog() {
-  notificationService.push('Η δημιουργία νέου χρήστη δεν έχει υλοποιηθεί ακόμα.', 'info');
-}
-
 async function fetchUsers() {
   loadingService.show();
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, role, avatar_url');
+      .select('id, full_name, role, avatar_url, created_at, updated_at');
 
     if (error) throw error;
 
-    users.value = data;
+    users.value = data.map(user => ({
+      ...user,
+      created_at_formatted: user.created_at ? new Date(user.created_at).toLocaleDateString('el-GR') : '-',
+      updated_at_formatted: user.updated_at ? new Date(user.updated_at).toLocaleDateString('el-GR') : '-',
+    }));
 
   } catch (err) {
     notificationService.push('Αποτυχία φόρτωσης χρηστών.', 'error');
@@ -111,10 +100,6 @@ async function fetchUsers() {
   } finally {
     loadingService.hide();
   }
-}
-
-function editUser(user) {
-  notificationService.push(`Η επεξεργασία του χρήστη ${user.full_name} δεν έχει υλοποιηθεί ακόμα.`, 'info');
 }
 
 function promptDelete(userId) {
@@ -128,8 +113,27 @@ function cancelDelete() {
 }
 
 async function confirmDelete() {
-    notificationService.push('Η διαγραφή χρηστών δεν υποστηρίζεται σε αυτό το demo.', 'warning');
+  if (!userToDeleteId.value) return;
+  isDeleting.value = true;
+  try {
+    const { error: functionError } = await supabase.functions.invoke('admin-delete-user', {
+      body: { userIdToDelete: userToDeleteId.value },
+    });
+
+    if (functionError) {
+      throw new Error(functionError.message);
+    }
+
+    users.value = users.value.filter(u => u.id !== userToDeleteId.value);
+    notificationService.push('Ο χρήστης διαγράφηκε με επιτυχία.', 'success');
+
+  } catch (err) {
+    notificationService.push(`Η διαγραφή του χρήστη απέτυχε: ${err.message}`, 'error');
+    console.error('Error deleting user:', err);
+  } finally {
+    isDeleting.value = false;
     cancelDelete();
+  }
 }
 
 onMounted(() => {
@@ -147,6 +151,7 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   padding-top: 20px;
+  height: 40px;
 }
 
 .action-buttons {
