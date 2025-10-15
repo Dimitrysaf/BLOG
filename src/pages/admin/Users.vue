@@ -17,6 +17,15 @@
       <template #item-actions="{ row }">
         <div class="action-buttons">
           <cdx-button
+            v-if="row.avatar_url"
+            aria-label="Αφαίρεση Avatar"
+            @click="removeAvatar(row)"
+            :disabled="removingAvatarForUserId === row.id"
+          >
+            <cdx-progress-bar v-if="removingAvatarForUserId === row.id" inline />
+            <cdx-icon v-else :icon="cdxIconImage" />
+          </cdx-button>
+          <cdx-button
             action="destructive"
             aria-label="Διαγραφή"
             @click="promptDelete(row.id)"
@@ -60,7 +69,7 @@ import {
   CdxDialog,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar } from '@wikimedia/codex-icons';
+import { cdxIconTrash, cdxIconUserGroup, cdxIconUserAvatar, cdxIconImage } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import loadingService from '../../loading';
@@ -78,6 +87,7 @@ const users = ref([]);
 const isDeleteDialogOpen = ref(false);
 const isDeleting = ref(false);
 const userToDeleteId = ref(null);
+const removingAvatarForUserId = ref(null);
 
 async function fetchUsers() {
   loadingService.show();
@@ -99,6 +109,30 @@ async function fetchUsers() {
     console.error('Error fetching users:', err);
   } finally {
     loadingService.hide();
+  }
+}
+
+async function removeAvatar(user) {
+  removingAvatarForUserId.value = user.id;
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: null })
+      .eq('id', user.id);
+
+    if (error) throw error;
+
+    const userInList = users.value.find(u => u.id === user.id);
+    if (userInList) {
+      userInList.avatar_url = null;
+    }
+
+    notificationService.push('Το avatar αφαιρέθηκε με επιτυχία.', 'success');
+  } catch (err) {
+    notificationService.push('Η αφαίρεση του avatar απέτυχε.', 'error');
+    console.error('Error removing avatar:', err);
+  } finally {
+    removingAvatarForUserId.value = null;
   }
 }
 
