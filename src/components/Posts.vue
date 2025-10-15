@@ -1,11 +1,18 @@
 <template>
   <div>
-    <div v-if="error" class="error-container">
+    <!-- Loading State: Show a spinner in the content area -->
+    <div v-if="loading" class="placeholder-container">
+      <CdxProgressIndicator />
+    </div>
+
+    <!-- Error State -->
+    <div v-else-if="error" class="placeholder-container">
       <CdxMessage type="error">
         Η φόρτωση των αναρτήσεων απέτυχε. Παρακαλώ δοκιμάστε ξανά αργότερα.
       </CdxMessage>
     </div>
     
+    <!-- Content: Posts Grid (uses cached data) -->
     <div v-else-if="posts.length > 0" class="posts-grid">
       <CdxCard
         v-for="post in posts"
@@ -26,7 +33,8 @@
       </CdxCard>
     </div>
 
-    <div v-else class="no-posts-container">
+    <!-- Empty State: Show only if not loading and no posts exist -->
+    <div v-else class="placeholder-container">
          <CdxIcon :icon="cdxIconArticle" />
          <p>Δεν βρέθηκαν αναρτήσεις.</p>
     </div>
@@ -37,12 +45,16 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { supabase } from '../supabase'; 
-import { CdxCard, CdxMessage, CdxIcon } from '@wikimedia/codex'; 
+import { CdxCard, CdxMessage, CdxIcon, CdxProgressIndicator } from '@wikimedia/codex'; 
 import { cdxIconArticle } from '@wikimedia/codex-icons';
 import loadingService from '../loading.js';
 
+// These refs are defined at the module level.
+// They are created once and persist, acting as our cache.
 const posts = ref([]);
 const error = ref(null);
+const loading = ref(false); // Initially not loading
+
 const router = useRouter();
 
 function navigateToPost(slug) {
@@ -55,7 +67,12 @@ function formatDate(dateString) {
 }
 
 async function fetchPosts() {
-  loadingService.show();
+  if (loading.value) return; // Prevent concurrent fetches
+
+  loading.value = true;
+  error.value = null;
+  loadingService.show(); // Show global top-level loading bar
+
   try {
     const { data, error: fetchError } = await supabase
       .from('posts')
@@ -71,12 +88,16 @@ async function fetchPosts() {
     error.value = err.message;
     console.error('Error fetching posts:', err);
   } finally {
-    loadingService.hide();
+    loading.value = false;
+    loadingService.hide(); // Hide global loading bar
   }
 }
 
 onMounted(() => {
-  fetchPosts();
+  // Only fetch if the cache is empty.
+  if (posts.value.length === 0) {
+    fetchPosts();
+  }
 });
 </script>
 
@@ -85,8 +106,8 @@ onMounted(() => {
   cursor: pointer;
 }
 
-.error-container,
-.no-posts-container {
+/* A single container for loading, error, and empty states */
+.placeholder-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -96,7 +117,7 @@ onMounted(() => {
   color: #72777d; 
 }
 
-.no-posts-container .cdx-icon {
+.placeholder-container .cdx-icon {
   width: 128px;  
   height: 128px; 
   margin-bottom: 16px;
