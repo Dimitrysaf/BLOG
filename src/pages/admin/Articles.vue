@@ -18,6 +18,7 @@
       :columns="columns"
       :data="posts"
       :use-row-headers="true"
+      :paginate="true"
     >
       <template #item-actions="{ row }">
         <div class="action-buttons">
