@@ -31,6 +31,7 @@
         <cdx-text-input
           v-model="avatarUrl"
           :disabled="isLoading"
+          :placeholder="avatarUrl ? '' : '(κενό)'"
           aria-label="URL Εικόνας Προφίλ"
         />
       </cdx-field>
