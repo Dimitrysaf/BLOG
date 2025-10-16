@@ -36,6 +36,11 @@ import { CdxImage } from '@wikimedia/codex';
   flex-shrink: 0;
 }
 
+.info {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 .info h2 {
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
@@ -54,5 +59,11 @@ import { CdxImage } from '@wikimedia/codex';
 
 .email-link:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .details {
+    flex-direction: column;
+  }
 }
 </style>
