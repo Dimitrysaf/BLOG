@@ -4,7 +4,9 @@
       v-if="notification.visible"
       :type="notification.type"
       :icon="notificationIcon"
-      allow-user-dismiss
+      :fade-in="true"
+      :auto-dismiss="true"
+      :display-time="1000"
       @user-dismissed="onDismiss"
       class="notification-message"
     >
@@ -31,7 +33,7 @@ const props = defineProps({
   }
 });
 
-// Step 1: When user clicks dismiss, we just HIDE the notification.
+// Step 1: When the component auto-dismisses, we just HIDE the notification.
 // The data is still there.
 const onDismiss = () => {
   notificationService.hide(props.notification.id);
