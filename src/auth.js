@@ -113,6 +113,19 @@ export async function updateUser(metadata) {
   return data;
 }
 
+export async function sendOtp() {
+  if (!user.value) {
+    throw new Error('User not authenticated.');
+  }
+
+  const { error } = await supabase.auth.reauthenticate();
+
+  if (error) {
+    throw error;
+  }
+}
+
+
 // --- Auth State Management ---
 
 supabase.auth.getSession().then(({ data }) => {

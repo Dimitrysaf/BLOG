@@ -1,6 +1,6 @@
 <template>
   <cdx-dialog
-    v-if="!isConfirmingDeletion"
+    v-if="!isConfirmingDeletion && !isEnteringCode"
     :open="modelValue"
     :title-icon="cdxIconSettings"
     title="Ρυθμίσεις"
@@ -65,7 +65,7 @@
       <cdx-button
         :action-type="'destructive'"
         :disabled="isLoading"
-        @click="onOpenConfirmDialog"
+        @click="isConfirmingDeletion = true"
       >
         Διαγραφή λογαριασμού
       </cdx-button>
@@ -74,39 +74,32 @@
 
   <cdx-dialog
     :open="isConfirmingDeletion"
-    :title-icon="cdxIconAlert"
-    title="Επιβεβαίωση διαγραφής"
-    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting || !isConfirmationValid }"
+    title="Επιβεβαίωση αποστολής email"
+    :primary-action="{ label: 'Συνέχεια', actionType: 'progressive', disabled: isSendingEmail }"
     :default-action="{ label: 'Ακύρωση' }"
-    @primary="onDeleteAccount"
+    @primary="onSendDeletionEmail"
     @default="onCloseConfirmDialog"
     @close="onCloseConfirmDialog"
   >
-    <cdx-message type="warning" inline class="warning-message">
-      Η ενέργεια αυτή είναι μη αναστρέψιμη. Ο λογαριασμός σας θα διαγραφεί οριστικά.
-    </cdx-message>
+    <cdx-message v-if="emailError" type="error" inline>{{ emailError }}</cdx-message>
+    <p v-else>Θα σταλεί ένα email στο <strong>{{ user.email }}</strong> για επιβεβαίωση. Είστε σίγουρος ότι θέλετε να συνεχίσετε;</p>
+    <cdx-progress-bar v-if="isSendingEmail" inline />
+  </cdx-dialog>
 
-    <cdx-field v-if="!hasPassword" :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
-        <template #label>
-            Για επιβεβαίωση, πληκτρολογήστε το email σας: <strong>{{ user.email }}</strong>
-        </template>
-        <cdx-text-input
-            v-model="confirmationText"
-            :disabled="isDeleting"
-            aria-label="Επιβεβαίωση με email"
-        />
-    </cdx-field>
-
-    <cdx-field v-else :status="deleteError ? 'error' : null" :messages="deleteError ? { error: deleteError } : {}">
-      <template #label>
-        Εισαγάγετε τον κωδικό πρόσβασης σας για επιβεβαίωση
-      </template>
-      <cdx-text-input
-        v-model="confirmationText"
-        input-type="password"
-        :disabled="isDeleting"
-        aria-label="Κωδικός πρόσβασης"
-      />
+  <cdx-dialog
+    :open="isEnteringCode"
+    title="Εισαγωγή κωδικού"
+    :primary-action="{ label: 'Διαγραφή', actionType: 'destructive', disabled: isDeleting || !otpCode }"
+    :default-action="{ label: 'Ακύρωση' }"
+    @primary="onDeleteAccount"
+    @default="onCloseEnterCodeDialog"
+    @close="onCloseEnterCodeDialog"
+  >
+    <cdx-message v-if="deleteError" type="error" inline>{{ deleteError }}</cdx-message>
+    <p>Παρακαλώ εισάγετε τον κωδικό που λάβατε στο email σας για να ολοκληρώσετε τη διαγραφή του λογαριασμού σας.</p>
+    <cdx-field>
+      <template #label>Κωδικός</template>
+      <cdx-text-input v-model="otpCode" :disabled="isDeleting" />
     </cdx-field>
     <cdx-progress-bar v-if="isDeleting" inline />
   </cdx-dialog>
@@ -129,7 +122,7 @@ import {
   cdxIconAlert,
   cdxIconUserAvatar
 } from '@wikimedia/codex-icons';
-import { user, signOut } from '../auth';
+import { user, signOut, sendOtp } from '../auth';
 import { supabase } from '../supabase';
 import notificationService from '../notification';
 
@@ -153,23 +146,12 @@ const fullNameStatus = ref('default');
 const fullNameValidationMessage = ref('');
 
 const isConfirmingDeletion = ref(false);
+const isEnteringCode = ref(false);
+const isSendingEmail = ref(false);
 const isDeleting = ref(false);
-const confirmationText = ref('');
+const otpCode = ref('');
+const emailError = ref('');
 const deleteError = ref('');
-
-const hasPassword = computed(() => {
-  if (!user.value || !user.value.identities) {
-    return false;
-  }
-  return user.value.identities.some(identity => identity.provider === 'email');
-});
-
-const isConfirmationValid = computed(() => {
-    if (!hasPassword.value) {
-        return user.value && confirmationText.value === user.value.email;
-    }
-    return confirmationText.value.length > 0;
-});
 
 function validateFullName() {
   if (!fullName.value) {
@@ -245,22 +227,20 @@ watch(avatarUrl, (newUrl) => {
   }
 });
 
-watch([() => props.modelValue, user], ([isOpen, currentUser]) => {
-  const dialogJustOpened = isOpen && !props.modelValue;
-  
+watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    if (dialogJustOpened) {
-      error.value = '';
-      isConfirmingDeletion.value = false;
-      confirmationText.value = '';
-      deleteError.value = '';
-      imageError.value = false;
-      isImageLoading.value = false;
-      fullNameStatus.value = 'default';
-      fullNameValidationMessage.value = '';
-    }
+    error.value = '';
+    isConfirmingDeletion.value = false;
+    isEnteringCode.value = false;
+    otpCode.value = '';
+    emailError.value = '';
+    deleteError.value = '';
+    imageError.value = false;
+    isImageLoading.value = false;
+    fullNameStatus.value = 'default';
+    fullNameValidationMessage.value = '';
     
-    if (currentUser) {
+    if (user.value) {
         fetchProfile();
     }
   }
@@ -296,38 +276,46 @@ async function onSave() {
   }
 }
 
-function onOpenConfirmDialog() {
-  isConfirmingDeletion.value = true;
-}
-
 function onCloseConfirmDialog() {
   isConfirmingDeletion.value = false;
-  confirmationText.value = '';
+  emailError.value = '';
+}
+
+function onCloseEnterCodeDialog() {
+  isEnteringCode.value = false;
   deleteError.value = '';
+  otpCode.value = '';
+}
+
+async function onSendDeletionEmail() {
+  isSendingEmail.value = true;
+  emailError.value = '';
+  try {
+    await sendOtp();
+    isConfirmingDeletion.value = false;
+    isEnteringCode.value = true;
+  } catch (error) {
+    emailError.value = error.message;
+  } finally {
+    isSendingEmail.value = false;
+  }
 }
 
 async function onDeleteAccount() {
-  if (!isConfirmationValid.value) {
-    deleteError.value = 'Η επιβεβαίωση δεν είναι σωστή.';
-    return;
-  }
-  deleteError.value = '';
   isDeleting.value = true;
+  deleteError.value = '';
 
   try {
     const { error: functionError } = await supabase.functions.invoke('delete-user', {
-      body: { 
-        confirmation: confirmationText.value,
-        hasPassword: hasPassword.value
-      },
+      body: { otp: otpCode.value },
     });
 
     if (functionError) {
-      throw new Error('Η διαγραφή απέτυχε. Ελέγξτε τα στοιχεία σας ή δοκιμάστε ξανά.');
+      throw new Error('Η διαγραφή απέτυχε. Ελέγξτε τον κωδικό σας ή δοκιμάστε ξανά.');
     }
 
     await signOut();
-    onCloseConfirmDialog();
+    onCloseEnterCodeDialog();
     emit('update:modelValue', false);
     window.location.reload();
 
