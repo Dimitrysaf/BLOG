@@ -35,7 +35,7 @@ const loadingState = loadingService.state;
   border-bottom: solid 2px #c8ccd1;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 400;
 }
 
 .navbar-progress-bar {
