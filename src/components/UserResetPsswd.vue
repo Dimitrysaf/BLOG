@@ -4,7 +4,9 @@
     title="Ορισμός Νέου Κωδικού"
     subtitle="Εισάγετε τον νέο σας κωδικό πρόσβασης."
     :primary-action="{ label: 'Αποθήκευση', actionType: 'progressive', disabled: isLoading }"
+    :secondary-actions="[{ label: 'Άκυρο', actionType: 'default', disabled: isLoading }]"
     @primary="onResetPassword"
+    @secondary="onClose"
     @close="onClose"
   >
     <cdx-progress-bar v-if="isLoading" inline />
