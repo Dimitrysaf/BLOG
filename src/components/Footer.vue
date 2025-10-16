@@ -4,16 +4,15 @@
       <div class="footer-content">
         <p class="footer-text">&copy; 2025 Το Ιστολόγιο του Δημήτρη</p>
         <ul class="footer-links">
-          <li><a href="#" class="footer-link">Πολιτικές απορύτου</a></li>
-          <li><a href="#" class="footer-link">Όροι χρήσης</a></li>
-          <li><a href="#" class="footer-link">Επικοινωνία</a></li>
+          <li><router-link to="/privacy-policy" class="footer-link">Πολιτικές απορρήτου</router-link></li>
+          <li><router-link to="/contact" class="footer-link">Επικοινωνία</router-link></li>
         </ul>
       </div>
     </Container>
   </footer>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import Container from './Container.vue';
 </script>
 

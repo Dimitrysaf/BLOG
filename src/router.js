@@ -8,6 +8,8 @@ import Post from './pages/Post.vue';
 import AdminDashboard from './pages/admin/AdminDashboard.vue';
 import PostEditor from './pages/admin/PostEditor.vue'; // Import PostEditor
 import Forbidden from './pages/Forbidden.vue';
+import PrivacyPolicies from './pages/PrivacyPolicies.vue';
+import Contact from './pages/Contact.vue';
 
 const routes = [
   {
@@ -19,6 +21,16 @@ const routes = [
     path: '/p/:slug',
     name: 'Post',
     component: Post,
+  },
+  {
+    path: '/privacy-policy',
+    name: 'PrivacyPolicy',
+    component: PrivacyPolicies,
+  },
+  {
+    path: '/contact',
+    name: 'Contact',
+    component: Contact,
   },
   {
     path: '/admin',
