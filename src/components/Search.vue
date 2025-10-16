@@ -24,13 +24,19 @@
           Παρουσιάστηκε σφάλμα: {{ error }}
         </cdx-message>
 
-        <ul v-else-if="results.length > 0" class="results-list">
-          <li v-for="post in results" :key="post.id">
-            <a href="#" @click.prevent="navigateToPost(post.slug)" class="result-item">
-              <span class="result-title">{{ post.title }}</span>
-              <span class="result-date">{{ formatDate(post.created_at) }}</span>
-            </a>
-          </li>
+        <ul v-else-if="results.length > 0" class="results-list" role="listbox">
+          <cdx-menu-item
+            v-for="post in results"
+            :key="post.id"
+            :label="post.title"
+            :description="`Από ${post.profiles?.full_name || 'Άγνωστος'} - ${formatDate(post.created_at)}`"
+            :thumbnail="post.image_url ? { url: post.image_url } : { icon: cdxIconNewspaper }"
+            :show-thumbnail="true"
+            :highlighted="hoveredPostId === post.id"
+            @click="navigateToPost(post.slug)"
+            @mouseover="hoveredPostId = post.id"
+            @mouseleave="hoveredPostId = null"
+          />
         </ul>
 
         <cdx-message v-else-if="hasSearched && results.length === 0" type="notice" inline>
@@ -50,9 +56,10 @@ import {
   CdxIcon,
   CdxSearchInput,
   CdxProgressBar,
-  CdxMessage
+  CdxMessage,
+  CdxMenuItem
 } from '@wikimedia/codex';
-import { cdxIconSearch } from '@wikimedia/codex-icons';
+import { cdxIconSearch, cdxIconNewspaper } from '@wikimedia/codex-icons';
 import { supabase } from '../supabase';
 
 const open = ref(false);
@@ -62,6 +69,7 @@ const isLoading = ref(false);
 const error = ref(null);
 const hasSearched = ref(false);
 const lastSearchedTerm = ref('');
+const hoveredPostId = ref(null);
 const router = useRouter();
 
 let debounceTimer;
@@ -81,11 +89,9 @@ async function performSearch() {
   lastSearchedTerm.value = query;
 
   try {
-    // Χρησιμοποιούμε plainto_tsquery για να μετατρέψουμε το κείμενο αναζήτησης σε όρους
-    // που καταλαβαίνει η βάση δεδομένων για full-text search.
     const { data, error: searchError } = await supabase
       .from('posts')
-      .select('id, title, slug, created_at')
+      .select('id, title, slug, created_at, image_url, profiles(full_name)')
       .filter('is_published', 'eq', true)
       .textSearch('title', query, {
         type: 'websearch',
@@ -126,6 +132,7 @@ function resetSearch() {
   error.value = null;
   hasSearched.value = false;
   lastSearchedTerm.value = '';
+  hoveredPostId.value = null;
   clearTimeout(debounceTimer);
 }
 
@@ -147,31 +154,5 @@ watch(open, (isOpen) => {
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.result-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 8px;
-  border-radius: 2px;
-  text-decoration: none;
-  color: #202122;
-  transition: background-color 0.2s;
-}
-
-.result-item:hover {
-  background-color: #eaecf0;
-}
-
-.result-title {
-  font-weight: bold;
-}
-
-.result-date {
-  font-size: 0.9em;
-  color: #54595d;
-  flex-shrink: 0;
-  margin-left: 16px;
 }
 </style>
