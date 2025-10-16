@@ -117,7 +117,7 @@ export async function signInWithPassword(email, password) {
  */
 export async function sendPasswordReset(email) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/?reset=true',
+        redirectTo: window.location.origin,
     });
     if (error) {
         // Don't throw the error, just log it. This is to prevent email enumeration.
@@ -203,6 +203,21 @@ supabase.auth.getSession().then(({ data }) => {
 
 supabase.auth.onAuthStateChange((event, newSession) => {
   const wasLoggedIn = !!user.value;
+  
+  // Handle password recovery as a special case.
+  if (event === 'PASSWORD_RECOVERY') {
+    // This check ensures only the tab opened from the email link will show the dialog.
+    if (window.location.hash.includes('type=recovery')) {
+      openResetPasswordDialog();
+      // Clean up the URL to prevent the dialog from re-opening on refresh.
+      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    }
+    // Update session and user, but stop further processing for this event.
+    session.value = newSession;
+    user.value = newSession?.user ?? null;
+    return;
+  }
+
   session.value = newSession;
   user.value = newSession?.user ?? null;
   const isLoggedIn = !!user.value;
@@ -212,11 +227,9 @@ supabase.auth.onAuthStateChange((event, newSession) => {
     notificationService.push(`Συνδεθήκατε ως ${username}`);
   } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
     notificationService.push('Αποσυνδεθήκατε.');
-  } else if (event === 'PASSWORD_RECOVERY') {
-      openResetPasswordDialog();
   }
 
-  // Automatically close all auth dialogs on successful login/logout/signup
+  // For other auth events, close all dialogs.
   closeAuthDialog();
   closeRegisterDialog();
   closeForgotPasswordDialog();
