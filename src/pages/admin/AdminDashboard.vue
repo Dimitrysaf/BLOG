@@ -1,7 +1,7 @@
 <template>
   <Container>
     <div class="admin-dashboard">
-      <h1>Πίνακας Ελέγχou</h1>
+      <h1>Πίνακας Ελέγχoυ</h1>
       <cdx-tabs>
         <cdx-tab
           v-for="(tab, index) in tabsData"
