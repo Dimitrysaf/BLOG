@@ -59,9 +59,6 @@ const tabsData = ref([
 </script>
 
 <style scoped>
-.admin-dashboard {
-  /* The main container now provides the horizontal padding */
-}
 
 h1 {
   margin-bottom: 20px;
