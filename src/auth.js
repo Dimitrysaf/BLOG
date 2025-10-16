@@ -10,13 +10,17 @@ export const user = ref(null);
 export const authDialogsState = reactive({
   isLoginOpen: false,
   isRegisterOpen: false,
+  isForgotPasswordOpen: false,
+  isResetPasswordOpen: false,
 });
 
 /**
  * Opens the login dialog.
  */
 export function openAuthDialog() {
-  authDialogsState.isRegisterOpen = false; // Close register if open
+  authDialogsState.isRegisterOpen = false;
+  authDialogsState.isForgotPasswordOpen = false;
+  authDialogsState.isResetPasswordOpen = false;
   authDialogsState.isLoginOpen = true;
 }
 
@@ -24,8 +28,30 @@ export function openAuthDialog() {
  * Opens the register dialog.
  */
 export function openRegisterDialog() {
-  authDialogsState.isLoginOpen = false; // Close login if open
+  authDialogsState.isLoginOpen = false;
+  authDialogsState.isForgotPasswordOpen = false;
+  authDialogsState.isResetPasswordOpen = false;
   authDialogsState.isRegisterOpen = true;
+}
+
+/**
+ * Opens the forgot password dialog.
+ */
+export function openForgotPasswordDialog() {
+  authDialogsState.isLoginOpen = false;
+  authDialogsState.isRegisterOpen = false;
+  authDialogsState.isResetPasswordOpen = false;
+  authDialogsState.isForgotPasswordOpen = true;
+}
+
+/**
+ * Opens the reset password dialog.
+ */
+export function openResetPasswordDialog() {
+  authDialogsState.isLoginOpen = false;
+  authDialogsState.isRegisterOpen = false;
+  authDialogsState.isForgotPasswordOpen = false;
+  authDialogsState.isResetPasswordOpen = true;
 }
 
 /**
@@ -40,6 +66,20 @@ export function closeAuthDialog() {
  */
 export function closeRegisterDialog() {
     authDialogsState.isRegisterOpen = false;
+}
+
+/**
+ * Closes the forgot password dialog.
+ */
+export function closeForgotPasswordDialog() {
+    authDialogsState.isForgotPasswordOpen = false;
+}
+
+/**
+ * Closes the reset password dialog.
+ */
+export function closeResetPasswordDialog() {
+    authDialogsState.isResetPasswordOpen = false;
 }
 
 
@@ -71,6 +111,21 @@ export async function signInWithPassword(email, password) {
 }
 
 /**
+ * Sends a password reset email to the user.
+ * @param {string} email
+ * @returns {Promise<void>}
+ */
+export async function sendPasswordReset(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/?reset=true',
+    });
+    if (error) {
+        // Don't throw the error, just log it. This is to prevent email enumeration.
+        console.error('Password reset error:', error.message);
+    }
+}
+
+/**
  * Signs up a new user with their email, password and metadata.
  * @param {object} credentials - The user's credentials.
  * @param {string} credentials.email
@@ -99,7 +154,7 @@ export async function signOut() {
 }
 
 /**
- * Updates the current user's metadata.
+ * Updates the current user's data.
  * @param {object} metadata - The user metadata to update.
  * @returns {Promise<object>}
  */
@@ -111,6 +166,19 @@ export async function updateUser(metadata) {
   // Manually update the local user ref after a successful update
   user.value = data.user;
   return data;
+}
+
+/**
+* Updates the user's password.
+* @param {string} newPassword - The new password.
+* @returns {Promise<object>}
+*/
+export async function updateUserPassword(newPassword) {
+    const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+    });
+    if (error) throw error;
+    return data;
 }
 
 export async function sendOtp() {
@@ -144,9 +212,12 @@ supabase.auth.onAuthStateChange((event, newSession) => {
     notificationService.push(`Συνδεθήκατε ως ${username}`);
   } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
     notificationService.push('Αποσυνδεθήκατε.');
+  } else if (event === 'PASSWORD_RECOVERY') {
+      openResetPasswordDialog();
   }
 
   // Automatically close all auth dialogs on successful login/logout/signup
   closeAuthDialog();
   closeRegisterDialog();
+  closeForgotPasswordDialog();
 });

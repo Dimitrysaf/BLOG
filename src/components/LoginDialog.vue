@@ -50,9 +50,12 @@
           :disabled="isLoading"
           @update:model-value="passwordStatus = 'default'"
         />
+        <template #help-text>
+            <a href="#" @click.prevent="onForgotPassword" class="forgot-password-link">Ξέχασα τον κωδικό μου</a>
+        </template>
       </cdx-field>
 
-      <div class="divider">ή</div>
+      <div class="divider"><span>ή</span></div>
 
       <div class="google-button-container">
         <cdx-button
@@ -80,7 +83,7 @@
     cdxIconMessage,
     cdxIconLock
   } from '@wikimedia/codex-icons';
-  import { authDialogsState, closeAuthDialog, signInWithPassword, signInWithGoogle } from '../auth';
+  import { authDialogsState, closeAuthDialog, signInWithPassword, signInWithGoogle, openForgotPasswordDialog } from '../auth';
   
   const isLoading = ref(false);
   const errorMessage = ref(null);
@@ -137,6 +140,10 @@
       isLoading.value = false;
     }
   }
+
+  function onForgotPassword() {
+    openForgotPasswordDialog();
+  }
   
   function onClose() {
     closeAuthDialog();
@@ -160,5 +167,16 @@
   display: flex;
   justify-content: flex-start;
   margin-top: 10px;
+}
+
+.forgot-password-link {
+  color: #36c;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-size: 0.875em;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
 }
 </style>

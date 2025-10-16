@@ -67,7 +67,7 @@
         />
       </cdx-field>
       
-      <div class="divider">ή</div>
+      <div class="divider"><span>ή</span></div>
 
       <div class="google-button-container">
         <cdx-button

@@ -18,6 +18,7 @@
       v-model="isCompleteProfileDialogOpen"
       @profile-completed="handleProfileCompleted"
     />
+    <UserResetPsswd />
   </div>
 </template>
 
@@ -29,6 +30,7 @@ import Footer from './components/Footer.vue';
 import CookieBanner from './components/CookieBanner.vue'; // Import the new component
 import Notification from './components/Notification.vue';
 import UserCompleteDialog from './components/UserCompleteDialog.vue';
+import UserResetPsswd from './components/UserResetPsswd.vue';
 import notificationService from './notification';
 import { user } from './auth';
 import { isCompleteProfileDialogOpen, checkUserProfile, closeCompleteProfileDialog } from './profile';

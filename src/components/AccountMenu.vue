@@ -13,6 +13,7 @@
       <!-- The dialogs are now controlled by the centralized auth state -->
       <login-dialog />
       <sign-in-dialog />
+      <user-forgot-psswd />
   
       <settings-dialog v-model="isSettingsDialogVisible" />
     </div>
@@ -34,6 +35,7 @@
   } from '@wikimedia/codex-icons';
   import LoginDialog from './LoginDialog.vue';
   import SignInDialog from './SignInDialog.vue';
+  import UserForgotPsswd from './UserForgotPsswd.vue';
   import SettingsDialog from './SettingsDialog.vue';
   import { user, session, signOut, openAuthDialog, openRegisterDialog } from '../auth';
   
