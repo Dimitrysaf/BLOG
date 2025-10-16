@@ -202,22 +202,20 @@ supabase.auth.getSession().then(({ data }) => {
 });
 
 supabase.auth.onAuthStateChange((event, newSession) => {
-  const wasLoggedIn = !!user.value;
-  
-  // Handle password recovery as a special case.
+  // Handle password recovery as a special, non-authenticating event.
   if (event === 'PASSWORD_RECOVERY') {
-    // This check ensures only the tab opened from the email link will show the dialog.
+    // This check ensures only the tab that was opened from the email link will show the dialog.
     if (window.location.hash.includes('type=recovery')) {
       openResetPasswordDialog();
       // Clean up the URL to prevent the dialog from re-opening on refresh.
       window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
     }
-    // Update session and user, but stop further processing for this event.
-    session.value = newSession;
-    user.value = newSession?.user ?? null;
+    // Crucially, do not set the session or user. Just stop processing.
     return;
   }
 
+  // Proceed with normal auth state changes for all other events.
+  const wasLoggedIn = !!user.value;
   session.value = newSession;
   user.value = newSession?.user ?? null;
   const isLoggedIn = !!user.value;
@@ -229,7 +227,7 @@ supabase.auth.onAuthStateChange((event, newSession) => {
     notificationService.push('Αποσυνδεθήκατε.');
   }
 
-  // For other auth events, close all dialogs.
+  // On any standard auth event, close all dialogs.
   closeAuthDialog();
   closeRegisterDialog();
   closeForgotPasswordDialog();
