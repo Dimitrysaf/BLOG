@@ -2,9 +2,6 @@ import { ref, reactive } from 'vue';
 import { supabase } from './supabase';
 import notificationService from './notification';
 
-// This flag is essential to prevent a race condition where a `SIGNED_IN` event fires immediately after `PASSWORD_RECOVERY`.
-let isPasswordRecovery = false;
-
 // Reactive state for the session and user
 export const session = ref(null);
 export const user = ref(null);
@@ -82,7 +79,6 @@ export function closeForgotPasswordDialog() {
  * Closes the reset password dialog.
  */
 export function closeResetPasswordDialog() {
-    isPasswordRecovery = false; // Reset the flag if the user closes the dialog.
     authDialogsState.isResetPasswordOpen = false;
 }
 
@@ -121,7 +117,7 @@ export async function signInWithPassword(email, password) {
  */
 export async function sendPasswordReset(email) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin,
+        redirectTo: window.location.origin + '/?reset=true',
     });
     if (error) {
         // Don't throw the error, just log it. This is to prevent email enumeration.
@@ -182,7 +178,6 @@ export async function updateUserPassword(newPassword) {
         password: newPassword
     });
     if (error) throw error;
-    isPasswordRecovery = false; // The recovery process is complete, so lower the flag.
     return data;
 }
 
@@ -201,22 +196,12 @@ export async function sendOtp() {
 
 // --- Auth State Management ---
 
-supabase.auth.onAuthStateChange((event, newSession) => {
-  if (event === 'PASSWORD_RECOVERY') {
-    isPasswordRecovery = true; // Raise the flag to enter recovery mode.
-    if (window.location.hash.includes('type=recovery')) {
-      openResetPasswordDialog();
-      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
-    }
-    return; // Stop processing to prevent the temporary session from being set.
-  }
-  
-  // If in recovery mode, ignore any SIGNED_IN events that are not user-initiated.
-  if (isPasswordRecovery && event === 'SIGNED_IN') {
-    return; // This is the crucial step to prevent the auto-login.
-  }
+supabase.auth.getSession().then(({ data }) => {
+  session.value = data.session;
+  user.value = data.session?.user ?? null;
+});
 
-  // Proceed with normal auth state changes for all other events.
+supabase.auth.onAuthStateChange((event, newSession) => {
   const wasLoggedIn = !!user.value;
   session.value = newSession;
   user.value = newSession?.user ?? null;
@@ -227,8 +212,11 @@ supabase.auth.onAuthStateChange((event, newSession) => {
     notificationService.push(`Συνδεθήκατε ως ${username}`);
   } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
     notificationService.push('Αποσυνδεθήκατε.');
+  } else if (event === 'PASSWORD_RECOVERY') {
+      openResetPasswordDialog();
   }
 
+  // Automatically close all auth dialogs on successful login/logout/signup
   closeAuthDialog();
   closeRegisterDialog();
   closeForgotPasswordDialog();
