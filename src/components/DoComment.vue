@@ -34,7 +34,7 @@
     </div>
     <div v-else>
       <CdxMessage type="warning">
-        Πρέπει να είστε <a href="#" @click.prevent="openAuthDialog">συνδεδεμένοι</a> για να σχολιάσετε.
+        Πρέπει να είστε <a href="#" @click.prevent="openAuthDialog" class="footer-link">συνδεδεμένοι</a> για να σχολιάσετε.
       </CdxMessage>
     </div>
   </Container>
@@ -144,5 +144,16 @@ async function submitComment() {
 
 .comment-submit-button {
   margin-top: 1rem;
+}
+
+.footer-link {
+  color: #36c;
+  text-decoration: none;
+  font-family: sans-serif;
+  font-size: 1em;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
 }
 </style>
