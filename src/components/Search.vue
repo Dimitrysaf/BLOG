@@ -20,8 +20,12 @@
       <div class="results-container">
         <cdx-progress-bar v-if="isLoading" inline aria-label="Γίνεται αναζήτηση..."></cdx-progress-bar>
         
-        <cdx-message v-else-if="error" type="error" inline>
+        <cdx-message v-else-if="error" type="error" :icon="cdxIconError" inline>
           Παρουσιάστηκε σφάλμα: {{ error }}
+        </cdx-message>
+
+        <cdx-message v-else-if="!hasSearched" type="notice" inline>
+          Αναζήτησε τίτλους από άρθρα
         </cdx-message>
 
         <ul v-else-if="results.length > 0" class="results-list" role="listbox">
@@ -59,7 +63,7 @@ import {
   CdxMessage,
   CdxMenuItem
 } from '@wikimedia/codex';
-import { cdxIconSearch, cdxIconNewspaper } from '@wikimedia/codex-icons';
+import { cdxIconSearch, cdxIconNewspaper, cdxIconError } from '@wikimedia/codex-icons';
 import { supabase } from '../supabase';
 
 const open = ref(false);
