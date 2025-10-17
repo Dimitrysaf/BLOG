@@ -60,7 +60,7 @@ onMounted(() => {
   }
 
   // Intermediate confirmation (after clicking link in old email)
-  if (hash.includes('type=email_change')) {
+  if (hash.includes('message=Confirmation+link+accepted')) {
     notificationService.push('Υπέροχα, επιβεβαιώθηκε ότι είστε εσείς! Τώρα ελέγξτε το νέο σας email και πατήστε τον σύνδεσμο για επιβεβαίωση.');
     router.replace({ hash: '' }); // Clean URL
   }
