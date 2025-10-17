@@ -18,8 +18,8 @@
     <cdx-dialog
       v-model:open="isLogoutConfirmVisible"
       title="Επιβεβαίωση Αποσύνδεσης"
-      primary-action-label="Αποσύνδεση"
-      secondary-action-label="Ακύρωση"
+      :primary-action="logoutPrimaryAction"
+      :secondary-action="logoutSecondaryAction"
       @primary="confirmLogout"
       @secondary="cancelLogout"
       :show-close-button="false"
@@ -59,6 +59,15 @@ const selection = ref(null);
 const isSettingsDialogVisible = ref(false);
 const isLogoutConfirmVisible = ref(false);
 const userRole = ref(null);
+
+const logoutPrimaryAction = {
+  label: 'Αποσύνδεση',
+  actionType: 'destructive'
+};
+
+const logoutSecondaryAction = {
+  label: 'Ακύρωση'
+};
 
 watch(user, async (currentUser) => {
   if (currentUser) {
