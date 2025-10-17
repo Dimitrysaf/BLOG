@@ -1,6 +1,7 @@
 <template>
+  <!-- Main Settings Dialog -->
   <cdx-dialog
-    v-if="!isConfirmingDeletion && !isEnteringCode"
+    v-if="!isConfirmingDeletion && !isEnteringCode && !isChangingEmail && !isChangingPassword"
     :open="modelValue"
     :title-icon="cdxIconSettings"
     title="Ρυθμίσεις"
@@ -61,6 +62,36 @@
       />
     </cdx-field>
 
+    <cdx-field>
+      <template #label>
+        Email
+      </template>
+      <div style="display: flex; gap: 8px; align-items: flex-start;">
+        <cdx-text-input
+          :model-value="user ? user.email : ''"
+          disabled
+          aria-label="Email"
+          style="flex: 1;"
+        />
+        <cdx-button
+          @click="isChangingEmail = true"
+          :disabled="isLoading"
+        >
+          Αλλαγή
+        </cdx-button>
+      </div>
+    </cdx-field>
+
+    <div class="password-section">
+      <cdx-button
+        @click="isChangingPassword = true"
+        :disabled="isLoading"
+        weight="quiet"
+      >
+        Αλλαγή Κωδικού Πρόσβασης
+      </cdx-button>
+    </div>
+
     <div class="delete-section">
       <p>Η διαγραφή του λογαριασμού σας είναι οριστική και μη αναστρέψιμη.</p>
       <cdx-button
@@ -73,6 +104,94 @@
     </div>
   </cdx-dialog>
 
+  <!-- Email Change Dialog -->
+  <cdx-dialog
+    :open="isChangingEmail"
+    title="Αλλαγή Email"
+    :primary-action="{ label: 'Αποστολή', actionType: 'progressive', disabled: isSendingEmailChange || !newEmail }"
+    :default-action="{ label: 'Ακύρωση' }"
+    @primary="onSendEmailChange"
+    @default="onCloseEmailChange"
+    @close="onCloseEmailChange"
+  >
+    <cdx-message v-if="emailChangeError" type="error" inline>{{ emailChangeError }}</cdx-message>
+    <cdx-message v-else-if="emailChangeSent" type="success" inline>
+      Σας στείλαμε email επιβεβαίωσης στο <strong>{{ newEmail }}</strong>. 
+      Παρακαλώ ελέγξτε και τα δύο emails (παλιό και νέο) για επιβεβαίωση.
+    </cdx-message>
+    <template v-else>
+      <p>Για να αλλάξετε το email σας, θα χρειαστεί να επιβεβαιώσετε και το παλιό και το νέο email.</p>
+      <cdx-field
+        :status="newEmailStatus"
+        :messages="{ error: newEmailValidationMessage }"
+      >
+        <template #label>Νέο Email</template>
+        <cdx-text-input
+          v-model="newEmail"
+          input-type="email"
+          :disabled="isSendingEmailChange"
+          @update:model-value="validateNewEmail"
+        />
+      </cdx-field>
+    </template>
+    <cdx-progress-bar v-if="isSendingEmailChange" inline />
+  </cdx-dialog>
+
+  <!-- Password Change Dialog -->
+  <cdx-dialog
+    :open="isChangingPassword"
+    title="Αλλαγή Κωδικού Πρόσβασης"
+    :primary-action="{ label: 'Αλλαγή', actionType: 'progressive', disabled: isChangingPasswordInProgress }"
+    :default-action="{ label: 'Ακύρωση' }"
+    @primary="onChangePassword"
+    @default="onClosePasswordChange"
+    @close="onClosePasswordChange"
+  >
+    <cdx-message v-if="passwordChangeError" type="error" inline>{{ passwordChangeError }}</cdx-message>
+    
+    <cdx-field
+      :status="currentPasswordStatus"
+      :messages="{ error: 'Ο τρέχων κωδικός είναι υποχρεωτικός' }"
+    >
+      <template #label>Τρέχων Κωδικός</template>
+      <cdx-text-input
+        v-model="currentPassword"
+        input-type="password"
+        :disabled="isChangingPasswordInProgress"
+        @update:model-value="currentPasswordStatus = 'default'"
+      />
+    </cdx-field>
+
+    <cdx-field
+      :status="newPasswordStatus"
+      :messages="{ error: 'Ο νέος κωδικός πρέπει να έχει τουλάχιστον 8 χαρακτήρες' }"
+    >
+      <template #label>Νέος Κωδικός</template>
+      <cdx-text-input
+        v-model="newPassword"
+        input-type="password"
+        :disabled="isChangingPasswordInProgress"
+        @update:model-value="validateNewPassword"
+      />
+    </cdx-field>
+
+    <cdx-field
+      :status="confirmNewPasswordStatus"
+      :messages="{ error: 'Οι κωδικοί δεν ταιριάζουν' }"
+    >
+      <template #label>Επιβεβαίωση Νέου Κωδικού</template>
+      <cdx-text-input
+        v-model="confirmNewPassword"
+        input-type="password"
+        :disabled="isChangingPasswordInProgress"
+        @update:model-value="validateConfirmNewPassword"
+      />
+    </cdx-field>
+
+    <cdx-progress-bar v-if="isChangingPasswordInProgress" inline />
+  </cdx-dialog>
+
+  <!-- Confirmation Dialog for Account Deletion -->
   <cdx-dialog
     :open="isConfirmingDeletion"
     title="Επιβεβαίωση αποστολής email"
@@ -87,6 +206,7 @@
     <cdx-progress-bar v-if="isSendingEmail" inline />
   </cdx-dialog>
 
+  <!-- OTP Entry Dialog for Account Deletion -->
   <cdx-dialog
     :open="isEnteringCode"
     title="Εισαγωγή κωδικού"
@@ -120,10 +240,17 @@ import {
 } from '@wikimedia/codex';
 import {
   cdxIconSettings,
-  cdxIconAlert,
   cdxIconUserAvatar
 } from '@wikimedia/codex-icons';
-import { user, signOut, sendOtp } from '../auth';
+import { 
+  user, 
+  signOut, 
+  sendReauthenticationOtp,
+  verifyReauthenticationOtp,
+  changeEmail,
+  updateUserPassword,
+  reauthenticateWithPassword
+} from '../auth';
 import { supabase } from '../supabase';
 import notificationService from '../notification';
 
@@ -146,6 +273,7 @@ const isImageLoading = ref(false);
 const fullNameStatus = ref('default');
 const fullNameValidationMessage = ref('');
 
+// Account Deletion State
 const isConfirmingDeletion = ref(false);
 const isEnteringCode = ref(false);
 const isSendingEmail = ref(false);
@@ -153,6 +281,26 @@ const isDeleting = ref(false);
 const otpCode = ref('');
 const emailError = ref('');
 const deleteError = ref('');
+
+// Email Change State
+const isChangingEmail = ref(false);
+const newEmail = ref('');
+const newEmailStatus = ref('default');
+const newEmailValidationMessage = ref('');
+const isSendingEmailChange = ref(false);
+const emailChangeSent = ref(false);
+const emailChangeError = ref('');
+
+// Password Change State
+const isChangingPassword = ref(false);
+const currentPassword = ref('');
+const newPassword = ref('');
+const confirmNewPassword = ref('');
+const currentPasswordStatus = ref('default');
+const newPasswordStatus = ref('default');
+const confirmNewPasswordStatus = ref('default');
+const isChangingPasswordInProgress = ref(false);
+const passwordChangeError = ref('');
 
 function validateFullName() {
   if (!fullName.value) {
@@ -176,6 +324,41 @@ function validateFullName() {
   
   fullNameStatus.value = 'default';
   fullNameValidationMessage.value = '';
+  return true;
+}
+
+function validateNewEmail() {
+  const emailRegex = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+  if (!newEmail.value || !emailRegex.test(newEmail.value)) {
+    newEmailStatus.value = 'error';
+    newEmailValidationMessage.value = 'Πρέπει να δώσετε μια έγκυρη διεύθυνση email.';
+    return false;
+  }
+  if (newEmail.value === user.value?.email) {
+    newEmailStatus.value = 'error';
+    newEmailValidationMessage.value = 'Το νέο email είναι ίδιο με το τρέχον.';
+    return false;
+  }
+  newEmailStatus.value = 'default';
+  newEmailValidationMessage.value = '';
+  return true;
+}
+
+function validateNewPassword() {
+  if (newPassword.value.length < 8) {
+    newPasswordStatus.value = 'error';
+    return false;
+  }
+  newPasswordStatus.value = 'default';
+  return true;
+}
+
+function validateConfirmNewPassword() {
+  if (newPassword.value !== confirmNewPassword.value) {
+    confirmNewPasswordStatus.value = 'error';
+    return false;
+  }
+  confirmNewPasswordStatus.value = 'default';
   return true;
 }
 
@@ -233,6 +416,8 @@ watch(() => props.modelValue, (isOpen) => {
     error.value = '';
     isConfirmingDeletion.value = false;
     isEnteringCode.value = false;
+    isChangingEmail.value = false;
+    isChangingPassword.value = false;
     otpCode.value = '';
     emailError.value = '';
     deleteError.value = '';
@@ -277,6 +462,78 @@ async function onSave() {
   }
 }
 
+// === EMAIL CHANGE HANDLERS ===
+async function onSendEmailChange() {
+  if (!validateNewEmail()) return;
+
+  isSendingEmailChange.value = true;
+  emailChangeError.value = '';
+
+  try {
+    await changeEmail(newEmail.value);
+    emailChangeSent.value = true;
+    notificationService.push('Email επιβεβαίωσης στάλθηκε!', 'success');
+  } catch (error) {
+    emailChangeError.value = error.message;
+    console.error('Error changing email:', error);
+  } finally {
+    isSendingEmailChange.value = false;
+  }
+}
+
+function onCloseEmailChange() {
+  isChangingEmail.value = false;
+  newEmail.value = '';
+  newEmailStatus.value = 'default';
+  emailChangeSent.value = false;
+  emailChangeError.value = '';
+}
+
+// === PASSWORD CHANGE HANDLERS ===
+async function onChangePassword() {
+  passwordChangeError.value = '';
+  
+  if (!currentPassword.value) {
+    currentPasswordStatus.value = 'error';
+    return;
+  }
+  
+  if (!validateNewPassword() || !validateConfirmNewPassword()) {
+    return;
+  }
+
+  isChangingPasswordInProgress.value = true;
+
+  try {
+    // Βήμα 1: Reauthentication με τον τρέχοντα κωδικό
+    await reauthenticateWithPassword(currentPassword.value);
+    
+    // Βήμα 2: Αλλαγή κωδικού
+    await updateUserPassword(newPassword.value);
+    
+    notificationService.push('Ο κωδικός άλλαξε με επιτυχία!', 'success');
+    onClosePasswordChange();
+    
+  } catch (error) {
+    passwordChangeError.value = error.message;
+    console.error('Error changing password:', error);
+  } finally {
+    isChangingPasswordInProgress.value = false;
+  }
+}
+
+function onClosePasswordChange() {
+  isChangingPassword.value = false;
+  currentPassword.value = '';
+  newPassword.value = '';
+  confirmNewPassword.value = '';
+  currentPasswordStatus.value = 'default';
+  newPasswordStatus.value = 'default';
+  confirmNewPasswordStatus.value = 'default';
+  passwordChangeError.value = '';
+}
+
+// === ACCOUNT DELETION HANDLERS ===
 function onCloseConfirmDialog() {
   isConfirmingDeletion.value = false;
   emailError.value = '';
@@ -292,9 +549,11 @@ async function onSendDeletionEmail() {
   isSendingEmail.value = true;
   emailError.value = '';
   try {
-    await sendOtp();
+    // Στέλνουμε OTP email για reauthentication
+    await sendReauthenticationOtp();
     isConfirmingDeletion.value = false;
     isEnteringCode.value = true;
+    notificationService.push('Κωδικός επιβεβαίωσης στάλθηκε στο email σας.', 'success');
   } catch (error) {
     emailError.value = error.message;
   } finally {
@@ -307,6 +566,10 @@ async function onDeleteAccount() {
   deleteError.value = '';
 
   try {
+    // Βήμα 1: Επιβεβαίωση OTP
+    await verifyReauthenticationOtp(otpCode.value);
+    
+    // Βήμα 2: Κλήση του Edge Function για διαγραφή
     const { error: functionError } = await supabase.functions.invoke('delete-user', {
       body: { otp: otpCode.value },
     });
@@ -370,6 +633,12 @@ function onClose() {
   flex-grow: 1;
 }
 
+.password-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #c8ccd1;
+}
+
 .delete-section {
   margin-top: 24px;
   padding-top: 16px;
@@ -378,10 +647,6 @@ function onClose() {
 
 .delete-section p {
   margin-bottom: 8px;
-}
-
-.warning-message {
-  margin-bottom: 16px;
 }
 
 @media (max-width: 600px) {

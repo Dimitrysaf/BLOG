@@ -2,6 +2,9 @@ import { ref, reactive } from 'vue';
 import { supabase } from './supabase';
 import notificationService from './notification';
 
+// This flag is essential to prevent a race condition where a `SIGNED_IN` event fires immediately after `PASSWORD_RECOVERY`.
+let isPasswordRecovery = false;
+
 // Reactive state for the session and user
 export const session = ref(null);
 export const user = ref(null);
@@ -79,6 +82,7 @@ export function closeForgotPasswordDialog() {
  * Closes the reset password dialog.
  */
 export function closeResetPasswordDialog() {
+    isPasswordRecovery = false; // Reset the flag if the user closes the dialog.
     authDialogsState.isResetPasswordOpen = false;
 }
 
@@ -112,12 +116,13 @@ export async function signInWithPassword(email, password) {
 
 /**
  * Sends a password reset email to the user.
+ * ΣΩΣΤΗ ΧΡΗΣΗ: Αυτό στέλνει email με magic link για password reset
  * @param {string} email
  * @returns {Promise<void>}
  */
 export async function sendPasswordReset(email) {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/?reset=true',
+        redirectTo: window.location.origin,
     });
     if (error) {
         // Don't throw the error, just log it. This is to prevent email enumeration.
@@ -178,30 +183,149 @@ export async function updateUserPassword(newPassword) {
         password: newPassword
     });
     if (error) throw error;
+    isPasswordRecovery = false; // The recovery process is complete, so lower the flag.
     return data;
 }
 
-export async function sendOtp() {
+/**
+ * ΝΕΟ: Αλλαγή Email
+ * Στέλνει confirmation email στο νέο email address
+ * Ο χρήστης πρέπει να επιβεβαιώσει και τα δύο emails (παλιό και νέο)
+ * @param {string} newEmail - The new email address
+ * @returns {Promise<object>}
+ */
+export async function changeEmail(newEmail) {
+  const { data, error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    {
+      emailRedirectTo: window.location.origin + '/?email-change-confirmed=true'
+    }
+  );
+  
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * ΝΕΟ: Reauthentication με OTP Email
+ * ΣΩΣΤΗ ΧΡΗΣΗ: Χρησιμοποιεί signInWithOtp για να στείλει OTP email
+ * Αυτό είναι το σωστό τρόπο για reauthentication με email verification
+ * @returns {Promise<void>}
+ */
+export async function sendReauthenticationOtp() {
   if (!user.value) {
     throw new Error('User not authenticated.');
   }
 
-  const { error } = await supabase.auth.reauthenticate();
+  // ΣΩΣΤΟΣ τρόπος: signInWithOtp στέλνει OTP email
+  const { error } = await supabase.auth.signInWithOtp({
+    email: user.value.email,
+    options: {
+      shouldCreateUser: false, // Σημαντικό: δεν θέλουμε να δημιουργήσει νέο user
+    }
+  });
 
   if (error) {
     throw error;
   }
 }
 
+/**
+ * ΝΕΟ: Επιβεβαίωση OTP για reauthentication
+ * Χρησιμοποιείται για επιβεβαίωση του OTP που στάλθηκε με email
+ * @param {string} otpToken - The OTP token from email
+ * @returns {Promise<object>}
+ */
+export async function verifyReauthenticationOtp(otpToken) {
+  if (!user.value) {
+    throw new Error('User not authenticated.');
+  }
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: user.value.email,
+    token: otpToken,
+    type: 'email'
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * ΕΝΑΛΛΑΚΤΙΚΗ ΛΥΣΗ: Reauthentication με Password
+ * Αν προτιμάς να ζητάς τον κωδικό αντί για OTP
+ * @param {string} password - The user's current password
+ * @returns {Promise<object>}
+ */
+export async function reauthenticateWithPassword(password) {
+  if (!user.value) {
+    throw new Error('User not authenticated.');
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: user.value.email,
+    password: password
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * ΝΕΟ: Ελέγχει αν η τρέχουσα session χρειάζεται reauthentication
+ * Χρήσιμο για sensitive operations
+ * @returns {boolean}
+ */
+export function needsReauthentication() {
+  if (!session.value) return true;
+  
+  // Ελέγχουμε αν η session είναι παλιά (π.χ. > 5 λεπτά)
+  const sessionAge = Date.now() - new Date(session.value.created_at).getTime();
+  const FIVE_MINUTES = 5 * 60 * 1000;
+  
+  return sessionAge > FIVE_MINUTES;
+}
+
+/**
+ * ΝΕΟ: Resend Email Verification
+ * Για χρήστες που δεν έχουν επιβεβαιώσει το email τους
+ * @returns {Promise<void>}
+ */
+export async function resendEmailVerification() {
+  if (!user.value) {
+    throw new Error('User not authenticated.');
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: user.value.email,
+    options: {
+      emailRedirectTo: window.location.origin
+    }
+  });
+
+  if (error) throw error;
+}
+
 
 // --- Auth State Management ---
 
-supabase.auth.getSession().then(({ data }) => {
-  session.value = data.session;
-  user.value = data.session?.user ?? null;
-});
-
 supabase.auth.onAuthStateChange((event, newSession) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    isPasswordRecovery = true; // Raise the flag to enter recovery mode.
+    if (window.location.hash.includes('type=recovery')) {
+      openResetPasswordDialog();
+      window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+    }
+    return; // Stop processing to prevent the temporary session from being set.
+  }
+  
+  // If in recovery mode, ignore any SIGNED_IN events that are not user-initiated.
+  if (isPasswordRecovery && event === 'SIGNED_IN') {
+    return; // This is the crucial step to prevent the auto-login.
+  }
+
+  // Proceed with normal auth state changes for all other events.
   const wasLoggedIn = !!user.value;
   session.value = newSession;
   user.value = newSession?.user ?? null;
@@ -212,11 +336,11 @@ supabase.auth.onAuthStateChange((event, newSession) => {
     notificationService.push(`Συνδεθήκατε ως ${username}`);
   } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
     notificationService.push('Αποσυνδεθήκατε.');
-  } else if (event === 'PASSWORD_RECOVERY') {
-      openResetPasswordDialog();
+  } else if (event === 'USER_UPDATED') {
+    // Ενημέρωση όταν αλλάζει το email ή άλλα στοιχεία
+    console.log('User updated:', user.value);
   }
 
-  // Automatically close all auth dialogs on successful login/logout/signup
   closeAuthDialog();
   closeRegisterDialog();
   closeForgotPasswordDialog();

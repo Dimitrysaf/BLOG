@@ -1,60 +1,89 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
+// supabase/functions/delete-user/index.ts
+
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
-    );
+    // Δημιουργία Supabase client με το Authorization header από το request
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: req.headers.get('Authorization')! },
+        },
+      }
+    )
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError) throw userError;
-    if (!user) throw new Error("User not found.");
-    
-    const { otp } = await req.json();
-    if (!otp) throw new Error("OTP is required.");
+    // Παίρνουμε τον authenticated user
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser()
 
-    const { error: otpError } = await userClient.auth.verifyOtp({
-      email: user.email,
-      token: otp,
-      type: 'email',
-    });
-
-    if (otpError) {
-      return new Response(
-        JSON.stringify({ error: "Invalid OTP" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (userError || !user) {
+      throw new Error('User not authenticated')
     }
 
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // Παίρνουμε το OTP από το request body
+    const { otp } = await req.json()
 
-    const { error: deleteError } = await adminClient.auth.admin.deleteUser(user.id);
-    if (deleteError) throw deleteError;
+    if (!otp) {
+      throw new Error('OTP is required')
+    }
+
+    // ΣΗΜΑΝΤΙΚΟ: Επιβεβαιώνουμε το OTP
+    // Αυτό εξασφαλίζει ότι ο χρήστης έχει πρόσβαση στο email του
+    const { error: verifyError } = await supabaseClient.auth.verifyOtp({
+      email: user.email!,
+      token: otp,
+      type: 'email',
+    })
+
+    if (verifyError) {
+      throw new Error('Invalid or expired OTP')
+    }
+
+    // Τώρα χρησιμοποιούμε τον Service Role client για διαγραφή
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // Διαγράφουμε τον χρήστη
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+      user.id
+    )
+
+    if (deleteError) {
+      throw deleteError
+    }
 
     return new Response(
-      JSON.stringify({ message: "User deleted successfully" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
+      JSON.stringify({ message: 'User deleted successfully' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
   } catch (error) {
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    )
   }
-});
+})
