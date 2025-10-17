@@ -29,6 +29,7 @@
           URL Εικόνας Προφίλ
         </template>
         <cdx-text-input
+          ref="urlInput"
           v-model="avatarUrl"
           :disabled="isLoading"
           :placeholder="avatarUrl ? '' : '(κενό)'"
@@ -94,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import {
   CdxDialog,
   CdxField,
@@ -127,6 +128,7 @@ const avatarUrl = ref('');
 const error = ref('');
 const imageError = ref(false);
 const isImageLoading = ref(false);
+const urlInput = ref(null);
 
 const fullNameStatus = ref('default');
 const fullNameValidationMessage = ref('');
@@ -206,7 +208,7 @@ watch(avatarUrl, (newUrl) => {
   }
 });
 
-watch(() => props.modelValue, (isOpen) => {
+watch(() => props.modelValue, async (isOpen) => {
   if (isOpen) {
     error.value = '';
     imageError.value = false;
@@ -215,7 +217,14 @@ watch(() => props.modelValue, (isOpen) => {
     fullNameValidationMessage.value = '';
     
     if (user.value) {
-        fetchProfile();
+      await fetchProfile();
+    }
+
+    await nextTick();
+
+    const inputElement = urlInput.value?.$el.querySelector('input');
+    if (inputElement) {
+      inputElement.focus();
     }
   }
 }, { immediate: true });
@@ -295,7 +304,7 @@ function onClose() {
 
 .danger-zone {
   margin-top: 24px;
-  margin-bottom: 24px;
+  padding-top: 8px;
   border-top: 1px solid #c8ccd1;
 }
 
