@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
+import { watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
@@ -45,6 +45,17 @@ watch(user, (currentUser, previousUser) => {
     checkUserProfile(currentUser);
   }
 }, { immediate: true }); // immediate: true runs the watcher on component mount
+
+onMounted(() => {
+  const query = router.currentRoute.value.query;
+  if (query['email-change-confirmed'] === 'true') {
+    notificationService.push('Το email σας άλλαξε με επιτυχία.');
+    // Create a new query object without the email-change-confirmed parameter
+    const newQuery = { ...query };
+    delete newQuery['email-change-confirmed'];
+    router.replace({ query: newQuery });
+  }
+});
 
 function handleProfileCompleted() {
   // Optionally, refresh the page or parts of it to show the new user name.
