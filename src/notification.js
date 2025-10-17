@@ -14,7 +14,7 @@ const push = (message, type, duration = 5000) => {
   // Add a 'visible' state for our new two-phase dismissal process
   state.notifications.push({ id, message, type, visible: true });
 
-  if (duration > 0) {
+  if (duration > 0 && type !== 'error') {
     setTimeout(() => {
       // This now calls 'hide', not 'dismiss'
       hide(id);

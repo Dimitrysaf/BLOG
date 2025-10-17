@@ -49,6 +49,7 @@ import {
 } from '@wikimedia/codex';
 import { cdxIconMessage } from '@wikimedia/codex-icons';
 import { user, sendPasswordReset } from '../auth';
+import notificationService from '../notification';
 
 const props = defineProps({
   modelValue: {
@@ -83,6 +84,12 @@ async function handlePrimaryAction() {
 }
 
 async function handleSendResetEmail() {
+  if (user.value) {
+    notificationService.push('Δεν μπορείτε να επαναφέρετε τον κωδικό πρόσβασης ενώ είστε συνδεδεμένοι.', 'warn');
+    onClose();
+    return;
+  }
+
   const isEmailValid = email.value.length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
   if (!isEmailValid) {
     emailStatus.value = 'error';
@@ -91,12 +98,9 @@ async function handleSendResetEmail() {
 
   isLoading.value = true;
   
-  // We call the function but don't expose the result to the user
-  // to prevent email enumeration attacks.
   try {
     await sendPasswordReset(email.value);
   } catch (error) {
-    // We can log the error for debugging, but we won't show it to the user.
     console.error("Password reset error:", error);
   } finally {
     isLoading.value = false;

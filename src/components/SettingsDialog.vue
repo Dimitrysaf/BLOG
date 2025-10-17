@@ -14,7 +14,7 @@
 
     <div class="image-url-field">
       <div class="avatar-preview">
-        <cdx-progress-indicator v-if="isImageLoading" />
+        <cdx-progress-indicator v-if="isImageLoading" aria-label="Φόρτωση εικόνας" />
         <img
           v-else-if="avatarUrl && !imageError"
           :src="avatarUrl"
