@@ -31,6 +31,12 @@
 
       <template #item-actions="{ row }">
         <div class="action-buttons">
+          <cdx-button
+            aria-label="Προβολή"
+            @click="viewPost(row)"
+          >
+            <cdx-icon :icon="cdxIconEye" />
+          </cdx-button>
           <cdx-toggle-button
             :model-value="row.is_published"
             aria-label="Toggle Published State"
@@ -108,7 +114,7 @@ import {
   CdxToggleButton,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload } from '@wikimedia/codex-icons';
+import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload, cdxIconEye } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import loadingService from '../../loading';
@@ -187,7 +193,7 @@ async function fetchPosts() {
   try {
     const { data, error } = await supabase
       .from('posts')
-      .select(`id, title, content, created_at, is_published, image_url, profiles ( full_name )`)
+      .select(`id, title, content, created_at, is_published, image_url, slug, profiles ( full_name )`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -198,6 +204,7 @@ async function fetchPosts() {
       content: post.content,
       is_published: post.is_published,
       image_url: post.image_url,
+      slug: post.slug, // Make sure slug is available
       author_name: post.profiles ? post.profiles.full_name : 'Άγνωστος',
       created_at_formatted: new Date(post.created_at).toLocaleDateString('el-GR'),
     }));
@@ -269,6 +276,10 @@ async function updatePublishedStatus(post, newStatus) {
 
 function editPost(post) {
   router.push({ name: 'PostEditor', params: { id: post.id } });
+}
+
+function viewPost(post) {
+  router.push(`/p/${post.slug}`);
 }
 
 function promptDelete(postId) {
