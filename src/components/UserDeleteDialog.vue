@@ -120,32 +120,23 @@ async function confirmDeleteWithReauth() {
   }
 
   isProcessing.value = true;
-  let error = null;
   try {
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      type: 'email_reauthenticate',
-      token: token.value
+    const { error } = await supabase.functions.invoke('delete-user', {
+      body: { otp: token.value }
     });
 
-    if (verifyError) {
-      throw new Error('Η επαλήθευση του κωδικού απέτυχε.');
+    if (error) {
+      throw error;
     }
-
-    const { error: deleteError } = await supabase.rpc('delete_user');
-    if (deleteError) throw deleteError;
 
     notificationService.push('Ο λογαριασμός σας διαγράφηκε με επιτυχία.', 'success');
     window.location.reload();
   } catch (e) {
-    error = e;
     notificationService.push(`Η διαγραφή του λογαριασμού απέτυχε: ${e.message}`, 'error');
     console.error('Error deleting account:', e.message);
     tokenStatus.value = 'error';
   } finally {
     isProcessing.value = false;
-    if (error && error.message.includes('séance')) { // If session is expired, force reload.
-        window.location.reload();
-    }
   }
 }
 

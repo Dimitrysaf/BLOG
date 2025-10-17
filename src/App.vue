@@ -82,7 +82,7 @@ html {
   position: fixed;
   top: 16px;
   right: 16px;
-  z-index: 1001;
+  z-index: 9999;
   width: 100%;
   max-width: 400px;
 }
