@@ -10,7 +10,7 @@
   >
     <div v-if="step === 'initial'">
       <p>Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά τον λογαριασμό σας; Αυτή η ενέργεια είναι μη αναστρέψιμη. Θα σας σταλεί ένας κωδικός στο email σας για επιβεβαίωση.</p>
-      <cdx-message v-if="errorMessage" type="error" inline allow-user-dismiss @close="errorMessage = ''">{{ errorMessage }}</cdx-message>
+      <cdx-message v-if="errorMessage" type="error" inline allow-user-dismiss @user-dismissed="errorMessage = ''">{{ errorMessage }}</cdx-message>
     </div>
 
     <div v-if="step === 'verify'">
@@ -28,6 +28,7 @@
           @update:model-value="tokenStatus = 'default'"
         />
       </cdx-field>
+      <cdx-message v-if="errorMessage" type="error" inline allow-user-dismiss @user-dismissed="errorMessage = ''">{{ errorMessage }}</cdx-message>
     </div>
 
     <cdx-progress-bar v-if="isProcessing" inline />
@@ -43,6 +44,7 @@ import {
   CdxTextInput,
   CdxMessage
 } from '@wikimedia/codex';
+import { user } from '../auth';
 import { supabase } from '../supabase';
 import notificationService from '../notification';
 
@@ -97,17 +99,31 @@ async function handlePrimaryAction() {
 }
 
 async function requestReauthentication() {
+  if (!user.value?.email) {
+    errorMessage.value = 'Δεν βρέθηκε email χρήστη.';
+    return;
+  }
+
   isProcessing.value = true;
   try {
-    const { error } = await supabase.auth.reauthenticate();
+    // Send OTP to user's email using signInWithOtp
+    // This works for both regular users and OAuth users
+    const { error } = await supabase.auth.signInWithOtp({
+      email: user.value.email,
+      options: {
+        shouldCreateUser: false, // Don't create new user
+      }
+    });
+
     if (error) {
       throw error;
     }
+
     step.value = 'verify';
     notificationService.push('Σας έχει σταλεί ένας κωδικός στο email σας.', 'success');
   } catch (e) {
-    errorMessage.value = e.message;
-    console.error('Reauthentication request error:', e.message);
+    errorMessage.value = e.message || 'Η αποστολή του κωδικού απέτυχε.';
+    console.error('OTP request error:', e);
   } finally {
     isProcessing.value = false;
   }
@@ -121,6 +137,8 @@ async function confirmDeleteWithReauth() {
 
   isProcessing.value = true;
   try {
+    // Call the Edge Function with the OTP
+    // The Edge Function will verify the OTP and delete the user
     const { error } = await supabase.functions.invoke('delete-user', {
       body: { otp: token.value }
     });
@@ -130,10 +148,16 @@ async function confirmDeleteWithReauth() {
     }
 
     notificationService.push('Ο λογαριασμός σας διαγράφηκε με επιτυχία.', 'success');
+    
+    // Sign out and reload
+    await supabase.auth.signOut();
     window.location.reload();
+
   } catch (e) {
-    notificationService.push(`Η διαγραφή του λογαριασμού απέτυχε: ${e.message}`, 'error');
-    console.error('Error deleting account:', e.message);
+    const errorMsg = e.message || 'Η διαγραφή του λογαριασμού απέτυχε.';
+    errorMessage.value = errorMsg;
+    notificationService.push(`Η διαγραφή του λογαριασμού απέτυχε: ${errorMsg}`, 'error');
+    console.error('Error deleting account:', e);
     tokenStatus.value = 'error';
   } finally {
     isProcessing.value = false;
