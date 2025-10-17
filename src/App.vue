@@ -48,12 +48,21 @@ watch(user, (currentUser, previousUser) => {
 
 onMounted(() => {
   const query = router.currentRoute.value.query;
+  const hash = router.currentRoute.value.hash;
+
+  // Final confirmation (after clicking link in new email)
   if (query['email-change-confirmed'] === 'true') {
     notificationService.push('Το email σας άλλαξε με επιτυχία.');
-    // Create a new query object without the email-change-confirmed parameter
     const newQuery = { ...query };
     delete newQuery['email-change-confirmed'];
-    router.replace({ query: newQuery });
+    router.replace({ query: newQuery, hash: '' }); // Clean URL
+    return;
+  }
+
+  // Intermediate confirmation (after clicking link in old email)
+  if (hash.includes('type=email_change')) {
+    notificationService.push('Υπέροχα, επιβεβαιώθηκε ότι είστε εσείς! Τώρα ελέγξτε το νέο σας email και πατήστε τον σύνδεσμο για επιβεβαίωση.');
+    router.replace({ hash: '' }); // Clean URL
   }
 });
 
