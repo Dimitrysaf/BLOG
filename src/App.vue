@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { watch, onMounted } from 'vue';
+import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
@@ -45,26 +45,6 @@ watch(user, (currentUser, previousUser) => {
     checkUserProfile(currentUser);
   }
 }, { immediate: true }); // immediate: true runs the watcher on component mount
-
-onMounted(() => {
-  const query = router.currentRoute.value.query;
-  const hash = router.currentRoute.value.hash;
-
-  // Final confirmation (after clicking link in new email)
-  if (query['email-change-confirmed'] === 'true') {
-    notificationService.push('Το email σας άλλαξε με επιτυχία.');
-    const newQuery = { ...query };
-    delete newQuery['email-change-confirmed'];
-    router.replace({ query: newQuery, hash: '' }); // Clean URL
-    return;
-  }
-
-  // Intermediate confirmation (after clicking link in old email)
-  if (hash.includes('message=Confirmation+link+accepted')) {
-    notificationService.push('Υπέροχα, επιβεβαιώθηκε ότι είστε εσείς! Τώρα ελέγξτε το νέο σας email και πατήστε τον σύνδεσμο για επιβεβαίωση.');
-    router.replace({ hash: '' }); // Clean URL
-  }
-});
 
 function handleProfileCompleted() {
   // Optionally, refresh the page or parts of it to show the new user name.

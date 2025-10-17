@@ -195,14 +195,17 @@ export async function updateUserPassword(newPassword) {
  * @returns {Promise<object>}
  */
 export async function changeEmail(newEmail) {
-  const { data, error } = await supabase.auth.updateUser(
-    { email: newEmail },
-    {
-      emailRedirectTo: window.location.origin + '/?email-change-confirmed=true'
-    }
-  );
+  // Set a flag in sessionStorage to indicate an email change is in progress.
+  sessionStorage.setItem('emailChangeInProgress', 'true');
   
-  if (error) throw error;
+  const { data, error } = await supabase.auth.updateUser({ email: newEmail });
+  
+  if (error) {
+    sessionStorage.removeItem('emailChangeInProgress'); // Clear the flag on error
+    throw error;
+  }
+  
+  notificationService.push('Στάλθηκε ένα email στην παλιά σας διεύθυνση. Κάντε κλικ στον σύνδεσμο για να συνεχίσετε.');
   return data;
 }
 
@@ -308,6 +311,21 @@ export async function resendEmailVerification() {
 }
 
 
+// --- Auth URL Handling (Run once on app load) ---
+
+function handleAuthURLs() {
+  const hash = window.location.hash;
+
+  // 1. Intermediate email change confirmation (from old email)
+  if (hash.includes('message=Confirmation link accepted')) {
+    notificationService.push('Υπέροχα, επιβεβαιώθηκε ότι είστε εσείς! Τώρα ελέγξτε το νέο σας email και πατήστε τον σύνδεσμο για επιβεβαίωση.');
+    // Clean the hash from the URL
+    window.history.replaceState(null, document.title, window.location.pathname + window.location.search);
+  }
+}
+
+handleAuthURLs();
+
 // --- Auth State Management ---
 
 supabase.auth.onAuthStateChange((event, newSession) => {
@@ -337,8 +355,15 @@ supabase.auth.onAuthStateChange((event, newSession) => {
   } else if (event === 'SIGNED_OUT' && !isLoggedIn && wasLoggedIn) {
     notificationService.push('Αποσυνδεθήκατε.');
   } else if (event === 'USER_UPDATED') {
-    // Ενημέρωση όταν αλλάζει το email ή άλλα στοιχεία
+    // Manually update the user ref to ensure UI reactivity
+    user.value = newSession.user;
     console.log('User updated:', user.value);
+    
+    // Check if an email change was in progress
+    if (sessionStorage.getItem('emailChangeInProgress') === 'true') {
+      notificationService.push('Το email σας άλλαξε με επιτυχία!');
+      sessionStorage.removeItem('emailChangeInProgress'); // Clean up the flag
+    }
   }
 
   closeAuthDialog();
