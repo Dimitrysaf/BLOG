@@ -14,6 +14,20 @@
     <sign-in-dialog />
     <user-forgot-psswd />
     <settings-dialog v-model="isSettingsDialogVisible" />
+
+    <cdx-dialog
+      v-model:open="isLogoutConfirmVisible"
+      title="Επιβεβαίωση Αποσύνδεσης"
+      primary-action-label="Αποσύνδεση"
+      secondary-action-label="Ακύρωση"
+      @primary="confirmLogout"
+      @secondary="cancelLogout"
+      :show-close-button="false"
+      close-on-escape
+      close-on-outside-click
+    >
+      <p>Είστε βέβαιοι ότι θέλετε να αποσυνδεθείτε;</p>
+    </cdx-dialog>
   </div>
 </template>
 
@@ -23,6 +37,7 @@ import { useRouter } from 'vue-router';
 import {
   CdxMenuButton,
   CdxIcon,
+  CdxDialog
 } from '@wikimedia/codex';
 import {
   cdxIconUserAvatar,
@@ -42,6 +57,7 @@ import { supabase } from '../supabase';
 const router = useRouter();
 const selection = ref(null);
 const isSettingsDialogVisible = ref(false);
+const isLogoutConfirmVisible = ref(false);
 const userRole = ref(null);
 
 watch(user, async (currentUser) => {
@@ -105,13 +121,22 @@ async function handleLogout() {
   router.push('/');
 }
 
+function confirmLogout() {
+  handleLogout();
+  isLogoutConfirmVisible.value = false;
+}
+
+function cancelLogout() {
+  isLogoutConfirmVisible.value = false;
+}
+
 function onSelect(newSelection) {
   switch (newSelection) {
     case 'login':
       openAuthDialog();
       break;
     case 'logout':
-      handleLogout();
+      isLogoutConfirmVisible.value = true;
       break;
     case 'signup':
       openRegisterDialog();
