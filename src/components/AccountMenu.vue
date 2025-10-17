@@ -19,9 +19,9 @@
       v-model:open="isLogoutConfirmVisible"
       title="Επιβεβαίωση Αποσύνδεσης"
       :primary-action="logoutPrimaryAction"
-      :secondary-action="logoutSecondaryAction"
+      :default-action="logoutDefaultAction"
       @primary="confirmLogout"
-      @secondary="cancelLogout"
+      @default="cancelLogout"
       :show-close-button="false"
       close-on-escape
       close-on-outside-click
@@ -65,7 +65,7 @@ const logoutPrimaryAction = {
   actionType: 'destructive'
 };
 
-const logoutSecondaryAction = {
+const logoutDefaultAction = {
   label: 'Ακύρωση'
 };
 
