@@ -26,34 +26,38 @@ const routes = [
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
     component: PrivacyPolicies,
+    meta: { title: 'Πολιτική Απορρήτου' },
   },
   {
     path: '/contact',
     name: 'Contact',
     component: Contact,
+    meta: { title: 'Επικοινωνία' },
   },
   {
     path: '/admin',
     name: 'AdminDashboard',
     component: AdminDashboard,
-    meta: { requiresAuth: true, requiredRole: 'admin' },
+    meta: { requiresAuth: true, requiredRole: 'admin', title: 'Πίνακας Ελέγχou' },
   },
   {
     path: '/admin/edit/:id',
     name: 'PostEditor',
     component: PostEditor,
     props: true, // Pass route params as props
-    meta: { requiresAuth: true, requiredRole: 'admin' },
+    meta: { requiresAuth: true, requiredRole: 'admin', title: 'Επεξεργασία Άρθρου' },
   },
   {
     path: '/forbidden',
     name: 'Forbidden',
     component: Forbidden,
+    meta: { title: 'Απαγορευμένη Πρόσβαση' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
+    meta: { title: 'Η Σελίδα δεν Βρέθηκε' },
   },
 ];
 
@@ -107,5 +111,44 @@ router.beforeEach(async (to, from, next) => {
     next();
   }
 });
+
+// After each navigation, update the document title
+router.afterEach(async (to) => {
+  const baseTitle = 'Το Ιστολόγιο του Δημήτρη';
+
+  if (to.name === 'Home') {
+    document.title = baseTitle;
+  } else if (to.name === 'Post' && to.params.slug) {
+    document.title = `${baseTitle} | Φόρτωση...`; // Set a temporary title
+    try {
+      const { data: post, error } = await supabase
+        .from('posts')
+        .select('title')
+        .eq('slug', to.params.slug)
+        .single();
+
+      if (error) throw error;
+
+      if (post) {
+        document.title = `${baseTitle} | ${post.title}`;
+      } else {
+        // If the post is not found, the NotFound component will be rendered.
+        // We can grab the title from its meta.
+        const notFoundRoute = router.getRoutes().find(r => r.name === 'NotFound');
+        if (notFoundRoute && notFoundRoute.meta.title) {
+          document.title = `${baseTitle} | ${notFoundRoute.meta.title}`;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching post title for document title:', err);
+      document.title = baseTitle; // Fallback to base title on error
+    }
+  } else if (to.meta && to.meta.title) {
+    document.title = `${baseTitle} | ${to.meta.title}`;
+  } else {
+    document.title = baseTitle; // Fallback for any other case
+  }
+});
+
 
 export default router;
