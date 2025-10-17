@@ -77,21 +77,25 @@
       <p class="danger-zone-label">Επικίνδυνη Ζώνη</p>
       <p>Η διαγραφή του λογαριασμού σας είναι οριστική και μη αναστρέψιμη.</p>
       <div class="danger-zone-buttons">
-        <cdx-button>
+        <cdx-button @click="openUserPasswordResetDialog">
           Αλλαγή Κωδικού Πρόσβασης
         </cdx-button>
-        <cdx-button>
+        <cdx-button @click="openUserMailChangeDialog">
           Αλλαγή Email
         </cdx-button>
         <cdx-button
           action="destructive"
           weight="primary"
+          @click="openUserDeleteDialog"
         >
           Διαγραφή λογαριασμού
         </cdx-button>
       </div>
     </div>
   </cdx-dialog>
+  <user-delete-dialog v-model="isUserDeleteDialogVisible" />
+  <user-mail-change-dialog v-model="isUserMailChangeDialogVisible" />
+  <user-forgot-psswd-dialog v-model="isUserPasswordResetDialogVisible" />
 </template>
 
 <script setup>
@@ -112,6 +116,9 @@ import {
 import { user } from '../auth';
 import { supabase } from '../supabase';
 import notificationService from '../notification';
+import UserDeleteDialog from './UserDeleteDialog.vue';
+import UserMailChangeDialog from './UserMailChange.vue';
+import UserForgotPsswdDialog from './UserForgotPsswd.vue';
 
 const props = defineProps({
   modelValue: {
@@ -129,6 +136,9 @@ const error = ref('');
 const imageError = ref(false);
 const isImageLoading = ref(false);
 const urlInput = ref(null);
+const isUserDeleteDialogVisible = ref(false);
+const isUserMailChangeDialogVisible = ref(false);
+const isUserPasswordResetDialogVisible = ref(false);
 
 const fullNameStatus = ref('default');
 const fullNameValidationMessage = ref('');
@@ -263,6 +273,21 @@ function onClose() {
   if (!isLoading.value) {
     emit('update:modelValue', false);
   }
+}
+
+function openUserDeleteDialog() {
+  isUserDeleteDialogVisible.value = true;
+  emit('update:modelValue', false);
+}
+
+function openUserMailChangeDialog() {
+  isUserMailChangeDialogVisible.value = true;
+  emit('update:modelValue', false);
+}
+
+function openUserPasswordResetDialog() {
+  isUserPasswordResetDialogVisible.value = true;
+  emit('update:modelValue', false);
 }
 </script>
 

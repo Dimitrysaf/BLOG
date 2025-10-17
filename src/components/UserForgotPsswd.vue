@@ -1,7 +1,6 @@
-
 <template>
   <cdx-dialog
-    :open="authDialogsState.isForgotPasswordOpen"
+    :open="modelValue"
     title="Επαναφορά Κωδικού Πρόσβασης"
     :primary-action="{ label: emailSent ? 'Κλείσιμο' : 'Αποστολή Email', actionType: 'progressive', disabled: isLoading }"
     :default-action="emailSent ? null : { label: 'Ακύρωση' }"
@@ -24,7 +23,7 @@
         <cdx-text-input
           v-model="email"
           input-type="email"
-          :disabled="isLoading"
+          :disabled="isLoading || (user && user.email)"
           @update:model-value="emailStatus = 'default'"
         />
       </cdx-field>
@@ -49,17 +48,26 @@ import {
   CdxProgressBar
 } from '@wikimedia/codex';
 import { cdxIconMessage } from '@wikimedia/codex-icons';
-import { authDialogsState, closeForgotPasswordDialog, sendPasswordReset } from '../auth';
+import { user, sendPasswordReset } from '../auth';
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false
+  }
+});
+
+const emit = defineEmits(['update:modelValue']);
 
 const isLoading = ref(false);
 const email = ref('');
 const emailSent = ref(false);
 const emailStatus = ref('default');
 
-watch(() => authDialogsState.isForgotPasswordOpen, (isOpen) => {
+watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     // Reset state when dialog opens
-    email.value = '';
+    email.value = user.value ? user.value.email : '';
     emailSent.value = false;
     isLoading.value = false;
     emailStatus.value = 'default';
@@ -97,7 +105,7 @@ async function handleSendResetEmail() {
 }
 
 function onClose() {
-  closeForgotPasswordDialog();
+  emit('update:modelValue', false);
 }
 </script>
 
