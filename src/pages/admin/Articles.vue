@@ -12,9 +12,10 @@
           <cdx-button
             weight="primary"
             action="progressive"
+            aria-label="Νέο Άρθρο"
             @click="openNewArticleDialog"
           >
-            Νέο Άρθρο
+            <cdx-icon :icon="cdxIconAdd" />
           </cdx-button>
           <cdx-button
             aria-label="Ανανέωση λίστας"
@@ -114,7 +115,7 @@ import {
   CdxToggleButton,
   CdxThumbnail
 } from '@wikimedia/codex';
-import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload, cdxIconEye } from '@wikimedia/codex-icons';
+import { cdxIconEdit, cdxIconTrash, cdxIconNewspaper, cdxIconUpload, cdxIconReload, cdxIconEye, cdxIconAdd } from '@wikimedia/codex-icons';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
 import loadingService from '../../loading';
