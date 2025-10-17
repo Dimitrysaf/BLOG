@@ -277,17 +277,14 @@ function onClose() {
 
 function openUserDeleteDialog() {
   isUserDeleteDialogVisible.value = true;
-  emit('update:modelValue', false);
 }
 
 function openUserMailChangeDialog() {
   isUserMailChangeDialogVisible.value = true;
-  emit('update:modelValue', false);
 }
 
 function openUserPasswordResetDialog() {
   isUserPasswordResetDialogVisible.value = true;
-  emit('update:modelValue', false);
 }
 </script>
 
