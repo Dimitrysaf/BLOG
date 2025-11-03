@@ -13,18 +13,16 @@
       </cdx-tabs>
       
       <div class="tab-content">
-        <Links v-show="activeTab === 'links'" />
-        <Users v-show="activeTab === 'users'" />
-        <Articles v-show="activeTab === 'posts'" />
-        <Comments v-show="activeTab === 'comments'" />
-        <Tags v-show="activeTab === 'tags'" />
+        <KeepAlive>
+          <component :is="currentTabComponent" />
+        </KeepAlive>
       </div>
     </div>
   </Container>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
@@ -60,8 +58,18 @@ const tabsData = ref([
   }
 ]);
 
+const componentMap = {
+  'links': Links,
+  'users': Users,
+  'posts': Articles,
+  'comments': Comments,
+  'tags': Tags
+};
+
 const defaultTab = tabsData.value[0].name;
 const activeTab = ref(defaultTab);
+
+const currentTabComponent = computed(() => componentMap[activeTab.value]);
 
 const syncTabFromHash = () => {
   const hash = route.hash.substring(1);
