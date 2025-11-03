@@ -287,18 +287,21 @@ function formatDate(dateString) {
 .post-page-wrapper {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 60px);
+  min-height: 100vh;
 }
 
 .main-content-area {
-  padding-top: 24px;
-  padding-bottom: 24px;
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-container {
   background-color: white;
+  flex-grow: 1;
   padding: 24px;
+  border: 1.714px solid #c8ccd1;
+  border-top: none;
 }
 
 .error-container {
@@ -394,6 +397,7 @@ function formatDate(dateString) {
 .comment-section {
   margin-top: 3rem;
   padding-top: 2rem;
+  padding-bottom: 2rem;
   border-top: 1px solid #c8ccd1;
 }
 
