@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
@@ -68,36 +68,24 @@ const tabsData = ref([
   }
 ]);
 
-// Initialize with a default. We will sync with the URL in onMounted.
-const activeTab = ref(tabsData.value[0].name);
+const defaultTab = tabsData.value[0].name;
 
-// When the user clicks a tab, this watcher updates the URL hash.
-watch(activeTab, (newTabName) => {
-  if (route.hash !== `#${newTabName}`) {
-    router.push({ hash: `#${newTabName}` });
-  }
-});
-
-// When the URL hash changes (e.g., browser back/forward), this watcher updates the active tab.
-watch(() => route.hash, (newHash) => {
-  const tabNameFromHash = newHash.substring(1);
-  if (tabsData.value.some(tab => tab.name === tabNameFromHash)) {
-    if (activeTab.value !== tabNameFromHash) {
-      activeTab.value = tabNameFromHash;
+const activeTab = computed({
+  get() {
+    const hash = route.hash.substring(1);
+    return tabsData.value.some(tab => tab.name === hash) ? hash : defaultTab;
+  },
+  set(newTabName) {
+    if (route.hash !== `#${newTabName}`) {
+      router.push({ hash: `#${newTabName}` });
     }
   }
 });
 
-// On initial component load, sync the tab with the URL.
+// On initial load, if there's no valid hash, set one.
 onMounted(() => {
-  const initialHash = route.hash.substring(1);
-  const isValidHash = tabsData.value.some(tab => tab.name === initialHash);
-  
-  if (isValidHash) {
-    activeTab.value = initialHash;
-  } else {
-    // If no valid hash is present, update the URL to reflect the default tab.
-    router.replace({ hash: `#${activeTab.value}` });
+  if (!route.hash || !tabsData.value.some(tab => tab.name === route.hash.substring(1))) {
+    router.replace({ hash: `#${defaultTab}` });
   }
 });
 </script>
