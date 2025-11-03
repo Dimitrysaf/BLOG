@@ -23,6 +23,12 @@
             <CdxIcon :icon="cdxIconCalendar" />
             <span>{{ formatDate(post.created_at) }}</span>
           </span>
+          <div v-if="tags.length" class="meta-item tags-meta">
+            <CdxIcon :icon="cdxIconTag" />
+            <div class="tags-list">
+                <span v-for="tag in tags" :key="tag.id" class="tag-item">{{ tag.name }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -51,7 +57,8 @@ import CommentList from '../components/CommentList.vue';
 import { CdxIcon, CdxMessage } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
-  cdxIconCalendar
+  cdxIconCalendar,
+  cdxIconTag
 } from '@wikimedia/codex-icons';
 
 import hljs from 'highlight.js/lib/core';
@@ -72,6 +79,7 @@ hljs.registerLanguage('powershell', powershell);
 const route = useRoute();
 const router = useRouter();
 const post = ref(null);
+const tags = ref([]);
 const error = ref(null);
 const postBody = ref(null);
 const commentListRef = ref(null);
@@ -94,9 +102,10 @@ const handleCommentAdded = () => {
   }
 };
 
-const fetchPost = async () => {
+const fetchPostAndTags = async () => {
   loadingService.show();
   try {
+    // Fetch Post
     const { data, error: fetchError } = await supabase
       .from('posts')
       .select('*, author:profiles(full_name)')
@@ -112,6 +121,19 @@ const fetchPost = async () => {
       }
     }
     post.value = data;
+
+    // Fetch Tags
+    if (post.value) {
+      const { data: tagsData, error: tagsError } = await supabase
+        .from('post_tags')
+        .select('tags(id, name)')
+        .eq('post_id', post.value.id);
+
+      if (tagsError) throw tagsError;
+      
+      tags.value = tagsData.map(t => t.tags).filter(Boolean); // Filter out any null tags
+    }
+
   } catch (e) {
     error.value = e.message;
   } finally {
@@ -135,7 +157,7 @@ watch(post, () => {
     }
 });
 
-onMounted(fetchPost);
+onMounted(fetchPostAndTags);
 
 function formatDate(dateString) {
   const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -274,7 +296,9 @@ function formatDate(dateString) {
 
 .post-meta {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
   color: white;
 }
 
@@ -289,6 +313,18 @@ function formatDate(dateString) {
   color: white;
 }
 
+.tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag-item {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
 
 .post-body {
   font-size: 1.1em;

@@ -67,7 +67,7 @@
         <cdx-text-input
           v-model="editableTag.name"
           label="Όνομα"
-          placeholder="π.χ., '''Vue.js'''"
+          placeholder="π.χ., 'Vue.js'"
           required
         />
       </cdx-field>
@@ -260,19 +260,28 @@ async function confirmDelete() {
   loadingService.show();
 
   try {
-    const { error } = await supabase
+    // First, delete all associations in the post_tags table
+    const { error: postTagsError } = await supabase
+      .from('post_tags')
+      .delete()
+      .eq('tag_id', tagToDeleteId.value);
+    
+    if (postTagsError) throw postTagsError;
+
+    // Then, delete the tag itself from the tags table
+    const { error: tagError } = await supabase
       .from('tags')
       .delete()
       .eq('id', tagToDeleteId.value);
 
-    if (error) throw error;
+    if (tagError) throw tagError;
 
     const deletedTagName = tags.value.find(t => t.id === tagToDeleteId.value)?.name || '';
     tags.value = tags.value.filter(t => t.id !== tagToDeleteId.value);
     notificationService.push(`Η ετικέτα "${deletedTagName}" διαγράφηκε με επιτυχία.`, 'success');
 
   } catch (err) {
-    notificationService.push('Η διαγραφή της ετικέτας απέτυχε.', 'error');
+    notificationService.push('Η διαγραφή της ετικέτας απέτυχε. Ενδέχεται να υπάρχουν προβλήματα με τα δικαιώματα ή τη βάση δεδομένων.', 'error');
     console.error('Error deleting tag:', err);
   } finally {
     isDeleting.value = false;

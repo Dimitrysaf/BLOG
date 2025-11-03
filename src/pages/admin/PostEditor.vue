@@ -23,7 +23,7 @@
           </cdx-field>
 
           <cdx-field>
-            <template #label>Tags</template>
+            <template #label>Ετικέτες</template>
             <TagSelector v-model="selectedTags" />
           </cdx-field>
 
@@ -262,7 +262,7 @@ async function fetchPostAndTags() {
         .eq('post_id', props.id);
 
     if (tagsError) throw tagsError;
-    selectedTags.value = tagsData.map(item => item.tags);
+    selectedTags.value = tagsData.map(item => item.tags).filter(Boolean);
 
     await nextTick();
     storeInitialState();
