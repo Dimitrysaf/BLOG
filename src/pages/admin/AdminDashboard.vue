@@ -10,20 +10,12 @@
           :label="tab.label"
           :disabled="tab.disabled"
         >
-          <div v-if="tab.name === 'links'" class="tab-content">
-            <Links />
-          </div>
-          <div v-else-if="tab.name === 'posts'" class="tab-content">
-            <Articles />
-          </div>
-          <div v-else-if="tab.name === 'users'" class="tab-content">
-            <Users />
-          </div>
-          <div v-else-if="tab.name === 'comments'" class="tab-content">
-            <Comments />
-          </div>
-          <div v-else-if="tab.name === 'tags'" class="tab-content">
-            <Tags />
+          <div class="tab-content">
+            <Links v-show="tab.name === 'links'" />
+            <Articles v-show="tab.name === 'posts'" />
+            <Users v-show="tab.name === 'users'" />
+            <Comments v-show="tab.name === 'comments'" />
+            <Tags v-show="tab.name === 'tags'" />
           </div>
         </cdx-tab>
       </cdx-tabs>
