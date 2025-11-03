@@ -9,16 +9,16 @@
           :name="tab.name"
           :label="tab.label"
           :disabled="tab.disabled"
-        >
-          <div class="tab-content">
-            <Links v-show="tab.name === 'links'" />
-            <Articles v-show="tab.name === 'posts'" />
-            <Users v-show="tab.name === 'users'" />
-            <Comments v-show="tab.name === 'comments'" />
-            <Tags v-show="tab.name === 'tags'" />
-          </div>
-        </cdx-tab>
+        />
       </cdx-tabs>
+      
+      <div class="tab-content">
+        <Links v-show="activeTab === 'links'" />
+        <Users v-show="activeTab === 'users'" />
+        <Articles v-show="activeTab === 'posts'" />
+        <Comments v-show="activeTab === 'comments'" />
+        <Tags v-show="activeTab === 'tags'" />
+      </div>
     </div>
   </Container>
 </template>
