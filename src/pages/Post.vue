@@ -329,8 +329,8 @@ function formatDate(dateString) {
 .post-details h1 {
   font-size: xxx-large;
   font-weight: normal;
-  line-height: xxx-large;
-  margin-bottom: 20px;
+  line-height: 1.2;
+  margin: 0;
   font-family: 'Times New Roman', Times, serif;
   background-color: white;
   color: #36c;
@@ -338,17 +338,19 @@ function formatDate(dateString) {
   text-decoration: underline;
   padding: 0 8px;
   word-break: break-word;
+  background-color: white;
+  border: 1.714px solid #c8ccd1;
 }
 
-/* New wrapper for metadata */
 .meta-wrapper {
   background-color: white;
-  color: black; /* Base color for text and icons */
+  color: black;
   padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+  border: 1.714px solid #c8ccd1;
 }
 
 .post-meta {
@@ -403,7 +405,7 @@ function formatDate(dateString) {
 
 @media (max-width: 768px) {
   .banner-content {
-    gap: 20px;
+    padding: 24px 16px;
   }
 
   .post-meta {
