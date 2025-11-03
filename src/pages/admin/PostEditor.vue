@@ -23,8 +23,8 @@
           </cdx-field>
 
           <cdx-field>
-            <template #label>Τρέχουσα Ώρα</template>
-            <cdx-text-input :model-value="currentTime" disabled />
+            <template #label>Tags</template>
+            <TagSelector v-model="selectedTags" />
           </cdx-field>
 
           <cdx-field>
@@ -137,6 +137,7 @@ import loadingService from '../../loading';
 import Container from '../../components/Container.vue';
 import ImageInsertDialog from '../../components/ImageInsertDialog.vue';
 import AuthorSelector from '../../components/AuthorSelector.vue';
+import TagSelector from '../../components/TagSelector.vue';
 import RichEditor from '../../components/RichEditor.vue';
 
 const props = defineProps({
@@ -148,13 +149,12 @@ const props = defineProps({
 
 const router = useRouter();
 const post = ref(null);
+const selectedTags = ref([]);
 const isSaving = ref(false);
 const errorLoading = ref(false);
 const isImageDialogVisible = ref(false);
 const showConfirmCloseDialog = ref(false);
 const isDirty = ref(false);
-const currentTime = ref('');
-let timeInterval = null;
 
 const isImagePreviewVisible = ref(false);
 const isImageLoading = ref(false);
@@ -162,6 +162,7 @@ const hasImageError = ref(false);
 
 const richEditorRef = ref(null);
 let initialPostState = {};
+let initialTagsState = [];
 
 const formattedCreatedAt = computed(() => {
   if (post.value && post.value.created_at) {
@@ -169,10 +170,6 @@ const formattedCreatedAt = computed(() => {
   }
   return '';
 });
-
-function updateTime() {
-  currentTime.value = new Date().toLocaleString('el-GR');
-}
 
 function showImagePreview() {
   isImagePreviewVisible.value = true;
@@ -218,6 +215,7 @@ watch(() => post.value?.image_url, (newUrl) => {
 function storeInitialState() {
   if (post.value) {
     initialPostState = JSON.parse(JSON.stringify(post.value));
+    initialTagsState = JSON.parse(JSON.stringify(selectedTags.value));
     isDirty.value = false;
   }
 }
@@ -234,27 +232,43 @@ watch(post, (newPostValue) => {
   }
 }, { deep: true });
 
-async function fetchPost() {
+watch(selectedTags, (newTags) => {
+    if (JSON.stringify(newTags) !== JSON.stringify(initialTagsState)) {
+        isDirty.value = true;
+    }
+}, { deep: true });
+
+async function fetchPostAndTags() {
   loadingService.show();
   errorLoading.value = false;
   try {
-    const { data, error } = await supabase
+    // Fetch post
+    const { data: postData, error: postError } = await supabase
       .from('posts')
       .select('*, profiles(full_name)')
       .eq('id', props.id)
       .single();
 
-    if (error) throw error;
-    post.value = data;
-    // Ensure content is not null, fallback to empty string
+    if (postError) throw postError;
+    post.value = postData;
     if (post.value.content === null) {
         post.value.content = '';
     }
+
+    // Fetch tags
+    const { data: tagsData, error: tagsError } = await supabase
+        .from('post_tags')
+        .select('tags(*)')
+        .eq('post_id', props.id);
+
+    if (tagsError) throw tagsError;
+    selectedTags.value = tagsData.map(item => item.tags);
+
     await nextTick();
     storeInitialState();
   } catch (err) {
-    console.error('Error fetching post:', err);
-    notificationService.push('Αποτυχία φόρτωσης άρθρου.', 'error');
+    console.error('Error fetching post and tags:', err);
+    notificationService.push('Αποτυχία φόρτωσης άρθρου ή ετικετών.', 'error');
     errorLoading.value = true;
   } finally {
     loadingService.hide();
@@ -275,14 +289,34 @@ async function saveContent() {
   };
 
   try {
-    const { error } = await supabase
+    // 1. Save the post content
+    const { error: postError } = await supabase
       .from('posts')
       .update(updatedPost)
       .eq('id', post.value.id);
+    if (postError) throw postError;
 
-    if (error) throw error;
+    // 2. Remove all existing tags for this post
+    const { error: deleteError } = await supabase
+      .from('post_tags')
+      .delete()
+      .eq('post_id', post.value.id);
+    if (deleteError) throw deleteError;
+
+    // 3. Insert the new set of tags
+    if (selectedTags.value && selectedTags.value.length > 0) {
+      const newPostTags = selectedTags.value.map(tag => ({
+        post_id: post.value.id,
+        tag_id: tag.id
+      }));
+      const { error: insertError } = await supabase
+        .from('post_tags')
+        .insert(newPostTags);
+      if (insertError) throw insertError;
+    }
     
-    await fetchPost(); // Refetch to reset dirty state
+    // 4. Refetch data to reset dirty state
+    await fetchPostAndTags(); 
     notificationService.push('Το άρθρο αποθηκεύτηκε με επιτυχία.');
     success = true;
   } catch (err) {
@@ -328,14 +362,9 @@ function handleImageInsert(url) {
 }
 
 onMounted(() => {
-  fetchPost();
-  updateTime();
-  timeInterval = setInterval(updateTime, 1000);
+  fetchPostAndTags();
 });
 
-onBeforeUnmount(() => {
-  clearInterval(timeInterval);
-});
 </script>
 
 <style scoped>

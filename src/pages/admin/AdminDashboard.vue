@@ -22,6 +22,9 @@
           <div v-else-if="tab.name === 'comments'" class="tab-content">
             <Comments />
           </div>
+          <div v-else-if="tab.name === 'tags'" class="tab-content">
+            <Tags />
+          </div>
         </cdx-tab>
       </cdx-tabs>
     </div>
@@ -36,6 +39,7 @@ import Articles from './Articles.vue';
 import Users from './Users.vue';
 import Comments from './Comments.vue';
 import Links from './Links.vue';
+import Tags from './Tags.vue';
 
 const tabsData = ref([
   {
@@ -53,6 +57,10 @@ const tabsData = ref([
   {
     name: 'comments',
     label: 'Διαχείριση Σχολίων',
+  },
+  {
+    name: 'tags',
+    label: 'Διαχείριση Ετικετών',
   }
 ]);
 
