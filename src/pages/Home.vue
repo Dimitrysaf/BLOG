@@ -4,7 +4,7 @@
         <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
       </Container>
     </div>
-    <Container>
+    <Container class="white-background">
       <Posts />
     </Container>
 </template>
@@ -15,6 +15,9 @@ import Posts from '../components/Posts.vue';
 </script>
 
 <style scoped>
+.white-background {
+  background-color: white;
+}
 .blue-banner {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
@@ -26,7 +29,7 @@ import Posts from '../components/Posts.vue';
   align-items: center;
   text-align: center;
   position: relative;
-  margin-bottom: 24px; /* Added margin to separate banner from posts */
+  margin-bottom: 24px;
 }
 
 .banner-logo {

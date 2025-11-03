@@ -1,4 +1,3 @@
-
 <template>
   <!-- Error State -->
   <div v-if="error" class="error-container">
@@ -46,7 +45,7 @@
       </div>
     </div>
 
-    <Container>
+    <Container class="white-background">
       <div ref="postBody" class="post-body" v-html="post.content"></div>
     </Container>
 
@@ -284,6 +283,10 @@ function formatDate(dateString) {
 </style>
 
 <style scoped>
+.white-background {
+  background-color: white;
+}
+
 .error-container {
   display: flex;
   justify-content: center;
@@ -377,7 +380,7 @@ function formatDate(dateString) {
 
 .comment-section {
   margin-top: 3rem;
-  background-color: #f8f9fa;
+  background-color: white;
   padding-top: 2rem;
   padding-bottom: 2rem;
   border-top: 1px solid #c8ccd1;
