@@ -7,7 +7,7 @@
   </div>
 
   <!-- Content -->
-  <div v-else-if="post" class="post-page-container">
+  <div v-else-if="post" class="post-page-wrapper">
     <div class="blue-banner" :style="bannerStyle">
       <div class="banner-content">
         <div class="post-details">
@@ -45,14 +45,15 @@
       </div>
     </div>
 
-    <Container class="white-background">
-      <div ref="postBody" class="post-body" v-html="post.content"></div>
-    </Container>
-
-    <!-- Comment Section -->
-    <div class="comment-section">
-      <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
-      <CommentList :post-id="post.id" ref="commentListRef" />
+    <div class="main-content-area">
+        <Container class="content-container">
+            <div ref="postBody" class="post-body" v-html="post.content"></div>
+            <!-- Comment Section -->
+            <div class="comment-section">
+                <DoComment :post-id="post.id" @comment-added="handleCommentAdded" />
+                <CommentList :post-id="post.id" ref="commentListRef" />
+            </div>
+        </Container>
     </div>
 
   </div>
@@ -283,8 +284,21 @@ function formatDate(dateString) {
 </style>
 
 <style scoped>
-.white-background {
+.post-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 60px);
+}
+
+.main-content-area {
+  padding-top: 24px;
+  padding-bottom: 24px;
+  flex-grow: 1;
+}
+
+.content-container {
   background-color: white;
+  padding: 24px;
 }
 
 .error-container {
@@ -298,7 +312,6 @@ function formatDate(dateString) {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
   width: 100%;
-  margin-bottom: 24px;
 }
 
 .banner-content {
@@ -380,11 +393,8 @@ function formatDate(dateString) {
 
 .comment-section {
   margin-top: 3rem;
-  background-color: white;
   padding-top: 2rem;
-  padding-bottom: 2rem;
   border-top: 1px solid #c8ccd1;
-  flex-grow: 1;
 }
 
 @media (max-width: 768px) {

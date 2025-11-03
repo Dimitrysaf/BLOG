@@ -1,12 +1,16 @@
 <template>
-    <div class="blue-banner">
-      <Container>
-        <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
-      </Container>
+    <div class="home-page-wrapper">
+        <div class="blue-banner">
+        <Container>
+            <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
+        </Container>
+        </div>
+        <div class="main-content-area">
+            <Container class="content-container">
+                <Posts />
+            </Container>
+        </div>
     </div>
-    <Container class="white-background">
-      <Posts />
-    </Container>
 </template>
 
 <script setup lang="ts">
@@ -15,9 +19,24 @@ import Posts from '../components/Posts.vue';
 </script>
 
 <style scoped>
-.white-background {
-  background-color: white;
+.home-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 60px); /* Adjust 60px based on your header's height */
 }
+
+.main-content-area {
+  padding-top: 24px;
+  padding-bottom: 24px;
+  flex-grow: 1;
+}
+
+.content-container {
+  background-color: white;
+  padding-top: 24px; /* Add some padding inside the white box */
+  padding-bottom: 24px;
+}
+
 .blue-banner {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
@@ -29,7 +48,6 @@ import Posts from '../components/Posts.vue';
   align-items: center;
   text-align: center;
   position: relative;
-  margin-bottom: 24px;
 }
 
 .banner-logo {
