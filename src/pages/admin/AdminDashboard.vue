@@ -2,7 +2,7 @@
   <Container>
     <div class="admin-dashboard">
       <h1>Πίνακας Ελέγχoυ</h1>
-      <cdx-tabs v-model="activeTab">
+      <cdx-tabs v-model:active="activeTab">
         <cdx-tab
           v-for="tab in tabsData"
           :key="tab.name"
@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
@@ -69,35 +69,40 @@ const tabsData = ref([
 ]);
 
 const defaultTab = tabsData.value[0].name;
+const activeTab = ref(defaultTab);
 
-const activeTab = computed({
-  get() {
-    const hash = route.hash.substring(1);
-    return tabsData.value.some(tab => tab.name === hash) ? hash : defaultTab;
-  },
-  set(newTabName) {
-    if (route.hash !== `#${newTabName}`) {
-      router.push({ hash: `#${newTabName}` });
-    }
+const syncTabFromHash = () => {
+  const hash = route.hash.substring(1);
+  if (hash && tabsData.value.some(tab => tab.name === hash)) {
+    activeTab.value = hash;
+  } else {
+    activeTab.value = defaultTab;
+    router.replace({ hash: `#${defaultTab}` });
+  }
+};
+
+watch(activeTab, (newTab) => {
+  if (route.hash !== `#${newTab}`) {
+    router.push({ hash: `#${newTab}` });
   }
 });
 
-// On initial load, if there's no valid hash, set one.
+watch(() => route.hash, () => {
+  syncTabFromHash();
+});
+
 onMounted(() => {
-  if (!route.hash || !tabsData.value.some(tab => tab.name === route.hash.substring(1))) {
-    router.replace({ hash: `#${defaultTab}` });
-  }
+  syncTabFromHash();
 });
 </script>
 
 <style scoped>
-
 h1 {
   margin-bottom: 20px;
 }
 
 .tab-content {
-  padding: 80px 20px 20px; /* Adjusted for a 60px top gap */
-  background-color: #fff; /* Ensure content area has a background */
+  padding: 80px 20px 20px;
+  background-color: #fff;
 }
 </style>
