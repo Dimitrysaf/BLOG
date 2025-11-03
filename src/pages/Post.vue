@@ -14,22 +14,28 @@
         <div class="post-details">
           <h1>{{ post.title }}</h1>
         </div>
-        <div class="post-meta">
-          <span v-if="post.author" class="meta-item">
-            <CdxIcon :icon="cdxIconUserAvatarOutline" />
-            <span>{{ post.author.full_name }}</span>
-          </span>
-          <span class="meta-item">
-            <CdxIcon :icon="cdxIconCalendar" />
-            <span>{{ formatDate(post.created_at) }}</span>
-          </span>
-          <div v-if="tags.length" class="meta-item tags-meta">
+
+        <!-- Wrapper for all metadata with a white background -->
+        <div class="meta-wrapper">
+          <div class="post-meta">
+            <span v-if="post.author" class="meta-item">
+              <CdxIcon :icon="cdxIconUserAvatarOutline" />
+              <span>{{ post.author.full_name }}</span>
+            </span>
+            <span class="meta-item">
+              <CdxIcon :icon="cdxIconCalendar" />
+              <span>{{ formatDate(post.created_at) }}</span>
+            </span>
+          </div>
+
+          <div v-if="tags.length" class="tags-container">
             <CdxIcon :icon="cdxIconTag" />
             <div class="tags-list">
-                <span v-for="tag in tags" :key="tag.id" class="tag-item">{{ tag.name }}</span>
+              <span v-for="tag in tags" :key="tag.id" class="tag-item">{{ tag.name }}</span>
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -277,7 +283,7 @@ function formatDate(dateString) {
   align-items: center;
   text-align: center;
   padding: 60px 16px 40px;
-  gap: 32px;
+  gap: 24px;
 }
 
 .post-details h1 {
@@ -294,12 +300,22 @@ function formatDate(dateString) {
   word-break: break-word;
 }
 
+/* New wrapper for metadata */
+.meta-wrapper {
+  background-color: white;
+  color: black; /* Base color for text and icons */
+  padding: 1rem 8px; /* 1rem top/bottom, 8px left/right */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
 .post-meta {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 16px 24px;
-  color: white;
 }
 
 .meta-item {
@@ -309,21 +325,27 @@ function formatDate(dateString) {
   font-size: 1rem;
 }
 
-.meta-item .cdx-icon {
-  color: white;
+.tags-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .tag-item {
-    background-color: rgba(255, 255, 255, 0.2);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.9rem;
+  background-color: #f8f9fa; /* Light gray background */
+  color: black; /* Black text for contrast */
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  border: 1px solid #c8ccd1;
 }
 
 .post-body {
@@ -342,6 +364,10 @@ function formatDate(dateString) {
 }
 
 @media (max-width: 768px) {
+  .banner-content {
+    gap: 20px;
+  }
+
   .post-meta {
     flex-direction: column;
     gap: 16px;
