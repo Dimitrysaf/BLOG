@@ -185,6 +185,17 @@ function formatDate(dateString) {
 @import 'highlight.js/styles/atom-one-dark.css';
 
 .post-body p { margin-block: 0 1em; }
+
+.post-body > p:first-of-type::first-letter {
+  font-size: 3em;
+  line-height: 1;
+  float: left;
+  padding-right: 8px;
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: bold;
+  color: #36c;
+}
+
 .post-body h1,
 .post-body h2,
 .post-body h3 { margin-block: 1.5em 0.5em; line-height: 1.2; }
