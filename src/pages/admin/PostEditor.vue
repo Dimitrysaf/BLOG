@@ -24,7 +24,14 @@
 
           <cdx-field>
             <template #label>Ετικέτες</template>
-            <TagSelector v-model="selectedTags" />
+            <TagSelector 
+              v-model="selectedTags" 
+              placeholder="Προσθήκη ετικετών..."
+              @update:validation="tagValidation = $event"
+            />
+            <cdx-message v-if="tagValidation.status === 'error'" type="error" inline style="margin-top: 8px;">
+              {{ tagValidation.message }}
+            </cdx-message>
           </cdx-field>
 
           <cdx-field>
@@ -129,7 +136,8 @@ import {
   CdxProgressBar,
   CdxField,
   CdxTextInput,
-  CdxDialog
+  CdxDialog,
+  CdxMessage
 } from '@wikimedia/codex';
 import { supabase } from '../../supabase';
 import notificationService from '../../notification';
@@ -155,6 +163,7 @@ const errorLoading = ref(false);
 const isImageDialogVisible = ref(false);
 const showConfirmCloseDialog = ref(false);
 const isDirty = ref(false);
+const tagValidation = ref({ status: 'default', message: '' });
 
 const isImagePreviewVisible = ref(false);
 const isImageLoading = ref(false);
