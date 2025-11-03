@@ -3,26 +3,42 @@
     <div class="admin-dashboard">
       <h1>Πίνακας Ελέγχoυ</h1>
       <cdx-tabs v-model:active="activeTab">
-        <cdx-tab
-          v-for="tab in tabsData"
-          :key="tab.name"
-          :name="tab.name"
-          :label="tab.label"
-          :disabled="tab.disabled"
-        />
+        <cdx-tab name="links" label="Σύνδεσμοι">
+          <div class="tab-content">
+            <Links v-if="visitedTabs.has('links')" v-show="activeTab === 'links'" />
+          </div>
+        </cdx-tab>
+        
+        <cdx-tab name="users" label="Διαχείριση Χρηστών">
+          <div class="tab-content">
+            <Users v-if="visitedTabs.has('users')" v-show="activeTab === 'users'" />
+          </div>
+        </cdx-tab>
+        
+        <cdx-tab name="posts" label="Διαχείριση Άρθρων">
+          <div class="tab-content">
+            <Articles v-if="visitedTabs.has('posts')" v-show="activeTab === 'posts'" />
+          </div>
+        </cdx-tab>
+        
+        <cdx-tab name="comments" label="Διαχείριση Σχολίων">
+          <div class="tab-content">
+            <Comments v-if="visitedTabs.has('comments')" v-show="activeTab === 'comments'" />
+          </div>
+        </cdx-tab>
+        
+        <cdx-tab name="tags" label="Διαχείριση Ετικετών">
+          <div class="tab-content">
+            <Tags v-if="visitedTabs.has('tags')" v-show="activeTab === 'tags'" />
+          </div>
+        </cdx-tab>
       </cdx-tabs>
-      
-      <div class="tab-content">
-        <KeepAlive>
-          <component :is="currentTabComponent" />
-        </KeepAlive>
-      </div>
     </div>
   </Container>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { CdxTabs, CdxTab } from '@wikimedia/codex';
 import Container from '../../components/Container.vue';
@@ -35,46 +51,17 @@ import Tags from './Tags.vue';
 const route = useRoute();
 const router = useRouter();
 
-const tabsData = ref([
-  {
-    name: 'links',
-    label: 'Σύνδεσμοι',
-  },
-  {
-    name: 'users',
-    label: 'Διαχείριση Χρηστών',
-  },
-  {
-    name: 'posts',
-    label: 'Διαχείριση Άρθρων',
-  },
-  {
-    name: 'comments',
-    label: 'Διαχείριση Σχολίων',
-  },
-  {
-    name: 'tags',
-    label: 'Διαχείριση Ετικετών',
-  }
-]);
-
-const componentMap = {
-  'links': Links,
-  'users': Users,
-  'posts': Articles,
-  'comments': Comments,
-  'tags': Tags
-};
-
-const defaultTab = tabsData.value[0].name;
+const defaultTab = 'links';
 const activeTab = ref(defaultTab);
-
-const currentTabComponent = computed(() => componentMap[activeTab.value]);
+const visitedTabs = ref(new Set([defaultTab]));
 
 const syncTabFromHash = () => {
   const hash = route.hash.substring(1);
-  if (hash && tabsData.value.some(tab => tab.name === hash)) {
+  const validTabs = ['links', 'users', 'posts', 'comments', 'tags'];
+  
+  if (hash && validTabs.includes(hash)) {
     activeTab.value = hash;
+    visitedTabs.value.add(hash);
   } else {
     activeTab.value = defaultTab;
     router.replace({ hash: `#${defaultTab}` });
@@ -82,6 +69,7 @@ const syncTabFromHash = () => {
 };
 
 watch(activeTab, (newTab) => {
+  visitedTabs.value.add(newTab);
   if (route.hash !== `#${newTab}`) {
     router.push({ hash: `#${newTab}` });
   }
