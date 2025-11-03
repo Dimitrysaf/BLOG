@@ -42,8 +42,8 @@ import Comments from './Comments.vue';
 import Links from './Links.vue';
 import Tags from './Tags.vue';
 
-const router = useRoute();
-const vueRouter = useRouter();
+const route = useRoute();
+const router = useRouter();
 
 const tabsData = ref([
   {
@@ -68,33 +68,38 @@ const tabsData = ref([
   }
 ]);
 
-const getTabFromHash = () => {
-  const hash = router.hash.substring(1);
-  return tabsData.value.some(tab => tab.name === hash) ? hash : tabsData.value[0].name;
-};
+// Initialize with a default. We will sync with the URL in onMounted.
+const activeTab = ref(tabsData.value[0].name);
 
-const activeTab = ref(getTabFromHash());
-
-watch(activeTab, (newTab) => {
-  if (newTab && `#${newTab}` !== router.hash) {
-    vueRouter.push({ hash: `#${newTab}` });
+// When the user clicks a tab, this watcher updates the URL hash.
+watch(activeTab, (newTabName) => {
+  if (route.hash !== `#${newTabName}`) {
+    router.push({ hash: `#${newTabName}` });
   }
 });
 
-watch(() => router.hash, (newHash) => {
-  const tabName = newHash.substring(1);
-  if (tabsData.value.some(tab => tab.name === tabName)) {
-    activeTab.value = tabName;
+// When the URL hash changes (e.g., browser back/forward), this watcher updates the active tab.
+watch(() => route.hash, (newHash) => {
+  const tabNameFromHash = newHash.substring(1);
+  if (tabsData.value.some(tab => tab.name === tabNameFromHash)) {
+    if (activeTab.value !== tabNameFromHash) {
+      activeTab.value = tabNameFromHash;
+    }
   }
 });
 
+// On initial component load, sync the tab with the URL.
 onMounted(() => {
-  const initialTab = getTabFromHash();
-  if (activeTab.value !== initialTab || !router.hash) {
-    vueRouter.replace({ hash: `#${initialTab}` });
+  const initialHash = route.hash.substring(1);
+  const isValidHash = tabsData.value.some(tab => tab.name === initialHash);
+  
+  if (isValidHash) {
+    activeTab.value = initialHash;
+  } else {
+    // If no valid hash is present, update the URL to reflect the default tab.
+    router.replace({ hash: `#${activeTab.value}` });
   }
 });
-
 </script>
 
 <style scoped>
