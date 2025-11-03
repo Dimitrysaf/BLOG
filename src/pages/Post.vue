@@ -31,7 +31,14 @@
           <div v-if="tags.length" class="tags-container">
             <CdxIcon :icon="cdxIconTag" />
             <div class="tags-list">
-              <span v-for="tag in tags" :key="tag.id" class="tag-item">{{ tag.name }}</span>
+              <span 
+                v-for="tag in tags" 
+                :key="tag.id" 
+                class="tag-item"
+                v-tooltip="tag.description"
+              >
+                {{ tag.name }}
+              </span>
             </div>
           </div>
         </div>
@@ -60,7 +67,7 @@ import loadingService from '../loading.js';
 import Container from '../components/Container.vue';
 import DoComment from '../components/DoComment.vue';
 import CommentList from '../components/CommentList.vue';
-import { CdxIcon, CdxMessage } from '@wikimedia/codex';
+import { CdxIcon, CdxMessage, CdxTooltip } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
   cdxIconCalendar,
@@ -74,6 +81,9 @@ import ts from 'highlight.js/lib/languages/typescript';
 import xml from 'highlight.js/lib/languages/xml';
 import bash from 'highlight.js/lib/languages/bash';
 import powershell from 'highlight.js/lib/languages/powershell';
+
+// Register the CdxTooltip directive
+const vTooltip = CdxTooltip;
 
 hljs.registerLanguage('css', css);
 hljs.registerLanguage('javascript', js);
@@ -128,16 +138,16 @@ const fetchPostAndTags = async () => {
     }
     post.value = data;
 
-    // Fetch Tags
+    // Fetch Tags with descriptions
     if (post.value) {
       const { data: tagsData, error: tagsError } = await supabase
         .from('post_tags')
-        .select('tags(id, name)')
+        .select('tags(id, name, description)') // Include description
         .eq('post_id', post.value.id);
 
       if (tagsError) throw tagsError;
       
-      tags.value = tagsData.map(t => t.tags).filter(Boolean); // Filter out any null tags
+      tags.value = tagsData.map(t => t.tags).filter(Boolean);
     }
 
   } catch (e) {
@@ -343,9 +353,9 @@ function formatDate(dateString) {
   background-color: #f8f9fa; /* Light gray background */
   color: black; /* Black text for contrast */
   padding: 4px 8px;
-  border-radius: 4px;
   font-size: 0.9rem;
   border: 1px solid #c8ccd1;
+  border-radius: 0;
 }
 
 .post-body {

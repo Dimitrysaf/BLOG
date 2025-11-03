@@ -64,17 +64,17 @@
       @close="closeDialog"
     >
       <cdx-field class="dialog-field">
+        <template #label>Όνομα</template>
         <cdx-text-input
           v-model="editableTag.name"
-          label="Όνομα"
           placeholder="π.χ., 'Vue.js'"
           required
         />
       </cdx-field>
       <cdx-field class="dialog-field">
+        <template #label>Περιγραφή</template>
         <cdx-text-area
           v-model="editableTag.description"
-          label="Περιγραφή"
           placeholder="Μια σύντομη περιγραφή της ετικέτας."
         />
       </cdx-field>
