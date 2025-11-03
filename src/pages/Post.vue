@@ -325,7 +325,7 @@ function formatDate(dateString) {
 .meta-wrapper {
   background-color: white;
   color: black; /* Base color for text and icons */
-  padding: 1rem 8px; /* 1rem top/bottom, 8px left/right */
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
