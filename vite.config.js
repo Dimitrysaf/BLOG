@@ -1,18 +1,14 @@
 
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import sitemap from 'vite-plugin-sitemap';
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-
-// Load environment variables from .env file
-dotenv.config();
 
 // Function to fetch dynamic routes from Supabase
-async function getDynamicRoutes() {
+async function getDynamicRoutes(env) {
   // Ensure environment variables are loaded
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error("Supabase environment variables are not set. Sitemap generation for dynamic routes will be skipped.");
@@ -30,9 +26,12 @@ async function getDynamicRoutes() {
       console.error("Error fetching posts from Supabase:", error);
       return [];
     }
+    
+    // Log the fetched posts to confirm data is received
+    console.log('Fetched posts for sitemap:', posts);
 
-    // Map the post slugs to the route format /post/:slug
-    return posts.map(post => `/post/${post.slug}`);
+    // Map the post slugs to the correct route format /p/:slug
+    return posts.map(post => `/p/${post.slug}`);
   } catch (error) {
     console.error("An unexpected error occurred during sitemap generation:", error);
     return [];
@@ -40,8 +39,12 @@ async function getDynamicRoutes() {
 }
 
 // Vite configuration
-export default defineConfig(async () => {
-  const dynamicRoutes = await getDynamicRoutes();
+export default defineConfig(async ({ mode }) => {
+  // Load env file based on the build mode
+  const env = loadEnv(mode, process.cwd(), '');
+
+  const dynamicRoutes = await getDynamicRoutes(env);
+  console.log('Dynamic routes for sitemap:', dynamicRoutes);
 
   return {
     plugins: [
@@ -49,6 +52,7 @@ export default defineConfig(async () => {
       sitemap({
         hostname: 'https://dimblog.vercel.app',
         dynamicRoutes: dynamicRoutes,
+        fileName: 'sitemap.xml',
       }),
     ],
     server: {
