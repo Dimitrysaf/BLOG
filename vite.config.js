@@ -53,6 +53,9 @@ export default defineConfig(async ({ mode }) => {
         hostname: 'https://dimblog.vercel.app',
         dynamicRoutes: dynamicRoutes,
         fileName: 'sitemap.xml',
+        lastmod: new Date(), 
+        changefreq: 'daily', 
+        priority: 0.7 
       }),
     ],
     server: {
