@@ -1,5 +1,12 @@
 <template>
   <div>
+    <SEOMeta
+      title="Το Ιστολόγιο του Δημήτρη"
+      description="Ένα blog για πολιτική, τεχνολογία, προγραμματισμό και τρέχοντα θέματα. Αναλύσεις, σχόλια και προβληματισμοί από τον Δημήτρη Μηλιάτη."
+      image="public/bradning.png"
+      type="website"
+    />
+    
     <div class="blue-banner">
       <Container>
         <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
@@ -11,9 +18,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import Container from '../components/Container.vue';
-import Posts from '../components/Posts.vue';
+<script setup>
+import Container from '../components/Container.vue'
+import Posts from '../components/Posts.vue'
+import SEOMeta from '../components/SEOMeta.vue'
 </script>
 
 <style scoped>

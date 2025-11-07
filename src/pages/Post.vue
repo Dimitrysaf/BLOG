@@ -45,7 +45,7 @@
       </div>
     </div>
 
-    <div class="main-content-area">
+    <div class="main-content-area" :aria-label="'Main content of the article: ' + post.title">
         <Container class="content-container">
             <div ref="postBody" class="post-body" v-html="post.content"></div>
             <!-- Comment Section -->
@@ -61,6 +61,7 @@
 
 <script setup>
 import { ref, onMounted, watch, nextTick, computed } from 'vue';
+import SEOMeta from '../components/SEOMeta.vue'
 import { useRoute, useRouter } from 'vue-router';
 import { supabase } from '../supabase';
 import loadingService from '../loading.js';
