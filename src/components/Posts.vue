@@ -18,20 +18,10 @@
         v-for="post in posts"
         :key="post.id"
         class="post-card post-card--blog"
+        :thumbnail="post.image_url ? { url: post.image_url } : null"
         :force-thumbnail="true"
         @click="navigateToPost(post.slug)"
       >
-        <template #thumbnail>
-          <img 
-            v-if="post.image_url"
-            :src="post.image_url" 
-            :alt="post.title"
-            loading="lazy"
-            width="300"
-            height="200"
-            style="object-fit: cover; width: 100%; height: 100%;"
-          />
-        </template>
         <template #title>{{ post.title }}</template>
         <template #description>
             <div class="card-footer">
