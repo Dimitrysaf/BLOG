@@ -105,6 +105,17 @@
         </cdx-button>
         <cdx-button @click="editor.chain().focus().setHorizontalRule().run()" aria-label="Horizontal Rule" weight="quiet">—</cdx-button>
       </div>
+       <div class="editor-button-group">
+        <cdx-button @click="editor.chain().focus().unsetAllMarks().run()" aria-label="Clear Formatting" weight="quiet">
+          <cdx-icon :icon="cdxIconClear" />
+        </cdx-button>
+        <cdx-button @click="editor.chain().focus().toggleSubscript().run()" :class="{ 'is-active': editor.isActive('subscript') }" aria-label="Subscript" weight="quiet">
+          <cdx-icon :icon="cdxIconSubscript" />
+        </cdx-button>
+        <cdx-button @click="editor.chain().focus().toggleSuperscript().run()" :class="{ 'is-active': editor.isActive('superscript') }" aria-label="Superscript" weight="quiet">
+          <cdx-icon :icon="cdxIconSuperscript" />
+        </cdx-button>
+      </div>
       <div class="editor-button-group">
         <cdx-button @click="$emit('show-image-dialog')" aria-label="Add Image" weight="quiet">
           <cdx-icon :icon="cdxIconImage" />
@@ -132,6 +143,9 @@ import { TableHeader } from '@tiptap/extension-table-header';
 import { TableRow } from '@tiptap/extension-table-row';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import TextStyle from '@tiptap/extension-text-style';
 import { onBeforeUnmount, watch } from 'vue';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
@@ -149,7 +163,8 @@ import {
   cdxIconQuotes, cdxIconCode, cdxIconUndo, cdxIconRedo, cdxIconTrash,
   cdxIconTableAddColumnBefore, cdxIconTableAddColumnAfter,
   cdxIconTableAddRowBefore, cdxIconTableAddRowAfter, cdxIconSubtract,
-  cdxIconUnderline, cdxIconAlignLeft, cdxIconAlignCenter, cdxIconAlignRight
+  cdxIconUnderline, cdxIconAlignLeft, cdxIconAlignCenter, cdxIconAlignRight,
+  cdxIconClear, cdxIconSubscript, cdxIconSuperscript
 } from '@wikimedia/codex-icons';
 
 const lowlight = createLowlight();
@@ -173,8 +188,15 @@ const editor = useEditor({
   content: props.modelValue,
   extensions: [
     StarterKit.configure({ 
-        heading: { levels: [1, 2, 3] },
-        codeBlock: false
+        heading: { 
+          levels: [1, 2, 3],
+        },
+        codeBlock: false,
+        strike: {
+          HTMLAttributes: {
+            class: 'strike-through-styling'
+          }
+        }
     }),
     CodeBlockLowlight.configure({ lowlight }),
     Image,
@@ -184,6 +206,9 @@ const editor = useEditor({
     TableCell,
     Underline,
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    Subscript,
+    Superscript,
+    TextStyle,
   ],
   editorProps: {
     attributes: { class: 'ProseMirror' },
