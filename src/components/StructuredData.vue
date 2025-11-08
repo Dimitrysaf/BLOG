@@ -4,7 +4,7 @@ import { computed } from 'vue';
 const props = defineProps({
   type: {
     type: String,
-    default: 'Article'
+    required: true
   },
   title: String,
   description: String,
@@ -14,22 +14,42 @@ const props = defineProps({
   url: String
 });
 
-const jsonLd = computed(() => ({
-  "@context": "https://schema.org",
-  "@type": props.type,
-  "headline": props.title,
-  "description": props.description,
-  "image": props.image,
-  "author": {
-    "@type": "Person",
-    "name": props.author
-  },
-  "datePublished": props.publishedTime,
-  "mainEntityOfPage": {
-    "@type": "WebPage",
-    "@id": props.url
+const jsonLd = computed(() => {
+  if (props.type === 'Article') {
+    return {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": props.title,
+      "description": props.description,
+      "image": props.image,
+      "author": {
+        "@type": "Person",
+        "name": props.author
+      },
+      "datePublished": props.publishedTime,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": props.url
+      }
+    };
   }
-}));
+
+  if (props.type === 'WebSite') {
+    return {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Το Ιστολόγιο του Δημήτρη",
+      "url": "https://dimblog.vercel.app",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://dimblog.vercel.app/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    };
+  }
+
+  return {};
+});
 </script>
 
 <template>

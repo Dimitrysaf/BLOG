@@ -1,5 +1,6 @@
 <template>
   <div id="app-container">
+    <StructuredData type="WebSite" />
     <SpeedInsights/>
     <div class="notification-container">
       <Notification
@@ -35,6 +36,7 @@ import notificationService from './notification';
 import { user } from './auth';
 import { isCompleteProfileDialogOpen, checkUserProfile, closeCompleteProfileDialog } from './profile';
 import { SpeedInsights } from "@vercel/speed-insights/vue"
+import StructuredData from './components/StructuredData.vue';
 
 const router = useRouter();
 
