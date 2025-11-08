@@ -414,6 +414,13 @@ function formatDate(dateString) {
   border-top: 1px solid #c8ccd1;
 }
 
+@media (max-width: 1254px) {
+  .content-container {
+    border-left: none;
+    border-right: none;
+  }
+}
+
 @media (max-width: 768px) {
   .banner-content {
     padding: 24px 16px;
