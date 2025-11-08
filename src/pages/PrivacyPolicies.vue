@@ -1,4 +1,5 @@
 <template>
+  <SEOMeta />
   <Container>
     <h1>Πολιτική Απορρήτου</h1>
     <p>Η προστασία των προσωπικών σας δεδομένων είναι σημαντική για εμάς. Αυτή η πολιτική απορρήτου εξηγεί τι είδους δεδομένα συλλέγουμε, πώς τα χρησιμοποιούμε και πώς τα προστατεύουμε.</p>
@@ -40,6 +41,7 @@
 
 <script setup>
 import Container from '../components/Container.vue';
+import SEOMeta from '../components/SEOMeta.vue';
 </script>
 
 <style scoped>

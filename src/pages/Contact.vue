@@ -1,4 +1,5 @@
 <template>
+  <SEOMeta />
   <Container>
     <div class="contact-container">
       <h1>Επικοινωνία</h1>
@@ -41,6 +42,7 @@
 <script setup>
 import Container from '../components/Container.vue';
 import { CdxImage } from '@wikimedia/codex';
+import SEOMeta from '../components/SEOMeta.vue';
 </script>
 
 <style scoped>

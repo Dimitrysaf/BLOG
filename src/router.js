@@ -17,38 +17,60 @@ const routes = [
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
     component: () => import('./pages/PrivacyPolicies.vue'),
-    meta: { title: 'Πολιτική Απορρήτου' },
+    meta: { 
+      title: 'Πολιτική Απορρήτου',
+      description: 'Διαβάστε την πολιτική απορρήτου του ιστολογίου για να κατανοήσετε πώς συλλέγονται, χρησιμοποιούνται και προστατεύονται οι πληροφορίες σας.'
+    },
   },
   {
     path: '/contact',
     name: 'Contact',
     component: () => import('./pages/Contact.vue'),
-    meta: { title: 'Επικοινωνία' },
+    meta: { 
+      title: 'Επικοινωνία',
+      description: 'Επικοινωνήστε μαζί μας για οποιαδήποτε ερώτηση, πρόταση ή σχόλιο.'
+    },
   },
   {
     path: '/admin',
     name: 'AdminDashboard',
     component: () => import('./pages/admin/AdminDashboard.vue'),
-    meta: { requiresAuth: true, requiredRole: 'admin', title: 'Πίνακας Ελέγχou' },
+    meta: { 
+      requiresAuth: true, 
+      requiredRole: 'admin', 
+      title: 'Πίνακας Ελέγχou',
+      noindex: true
+    },
   },
   {
     path: '/admin/edit/:id',
     name: 'PostEditor',
     component: () => import('./pages/admin/PostEditor.vue'),
     props: true, // Pass route params as props
-    meta: { requiresAuth: true, requiredRole: 'admin', title: 'Επεξεργασία Άρθρου' },
+    meta: { 
+      requiresAuth: true, 
+      requiredRole: 'admin', 
+      title: 'Επεξεργασία Άρθρου',
+      noindex: true
+    },
   },
   {
     path: '/forbidden',
     name: 'Forbidden',
     component: () => import('./pages/Forbidden.vue'),
-    meta: { title: 'Απαγορευμένη Πρόσβαση' },
+    meta: { 
+      title: 'Απαγορευμένη Πρόσβαση',
+      noindex: true
+    },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('./pages/NotFound.vue'),
-    meta: { title: 'Η Σελίδα δεν Βρέθηκε' },
+    meta: { 
+      title: 'Η Σελίδα δεν Βρέθηκε',
+      noindex: true
+    },
   },
 ];
 

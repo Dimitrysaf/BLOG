@@ -1,4 +1,5 @@
 <template>
+  <SEOMeta />
   <Container>
     <div class="admin-dashboard">
       <h1>Πίνακας Ελέγχoυ</h1>
@@ -46,6 +47,7 @@ import Users from './Users.vue';
 import Comments from './Comments.vue';
 import Links from './Links.vue';
 import Tags from './Tags.vue';
+import SEOMeta from '../../components/SEOMeta.vue';
 
 const activeTab = ref('posts');
 </script>

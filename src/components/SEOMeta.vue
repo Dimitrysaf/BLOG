@@ -2,16 +2,17 @@
 <script setup>
 import { useHead } from '@unhead/vue'
 import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import StructuredData from './StructuredData.vue';
 
 const props = defineProps({
   title: {
     type: String,
-    required: true
+    default: ''
   },
   description: {
     type: String,
-    required: true
+    default: ''
   },
   image: {
     type: String,
@@ -35,10 +36,16 @@ const props = defineProps({
   }
 })
 
+const route = useRoute()
+
+// Use prop if available, otherwise fall back to route meta
+const finalTitle = computed(() => props.title || route.meta.title || 'Το Ιστολόγιο του Δημήτρη')
+const finalDescription = computed(() => props.description || route.meta.description || 'Ένα ιστολόγιο για την τεχνολογία, τον προγραμματισμό και άλλα ενδιαφέροντα.')
+
 const fullTitle = computed(() => 
-  props.title === 'Το Ιστολόγιο του Δημήτρη' 
-    ? props.title 
-    : `${props.title} | Το Ιστολόγιο του Δημήτρη`
+  finalTitle.value === 'Το Ιστολόγιο του Δημήτρη' 
+    ? finalTitle.value 
+    : `${finalTitle.value} | Το Ιστολόγιο του Δημήτρη`
 )
 
 const fullUrl = computed(() => {
@@ -52,20 +59,23 @@ const fullImageUrl = computed(() => {
 })
 
 const metaTags = computed(() => {
+  const robotsContent = route.meta.noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large';
+  const googlebotContent = route.meta.noindex ? 'noindex, nofollow' : 'index, follow';
+
   const tags = [
     // Basic Meta Tags
-    { name: 'description', content: props.description },
+    { name: 'description', content: finalDescription.value },
     { name: 'author', content: props.author },
-    { name: 'robots', content: 'index, follow, max-image-preview:large' },
-    { name: 'googlebot', content: 'index, follow' },
+    { name: 'robots', content: robotsContent },
+    { name: 'googlebot', content: googlebotContent },
     
     // Open Graph
     { property: 'og:title', content: fullTitle.value },
-    { property: 'og:description', content: props.description },
+    { property: 'og:description', content: finalDescription.value },
     { property: 'og:image', content: fullImageUrl.value },
     { property: 'og:image:width', content: '1200' },
     { property: 'og:image:height', content: '630' },
-    { property: 'og:image:alt', content: props.description },
+    { property: 'og:image:alt', content: finalDescription.value },
     { property: 'og:url', content: fullUrl.value },
     { property: 'og:type', content: props.type },
     { property: 'og:site_name', content: 'Το Ιστολόγιο του Δημήτρη' },
@@ -76,7 +86,7 @@ const metaTags = computed(() => {
     { name: 'twitter:site', content: '@dimitris_miliatis' },
     { name: 'twitter:creator', content: '@dimitris_miliatis' },
     { name: 'twitter:title', content: fullTitle.value },
-    { name: 'twitter:description', content: props.description },
+    { name: 'twitter:description', content: finalDescription.value },
     { name: 'twitter:image', content: fullImageUrl.value },
   ]
 
@@ -111,8 +121,8 @@ useHead({
   <StructuredData
     v-if="type === 'article'"
     type="Article"
-    :title="title"
-    :description="description"
+    :title="finalTitle"
+    :description="finalDescription"
     :image="fullImageUrl"
     :author="author"
     :publishedTime="publishedTime"

@@ -1,4 +1,5 @@
 <template>
+  <SEOMeta />
   <Container>
     <div class="post-editor-page">
       <div class="page-header">
@@ -147,6 +148,7 @@ import ImageInsertDialog from '../../components/ImageInsertDialog.vue';
 import AuthorSelector from '../../components/AuthorSelector.vue';
 import TagSelector from '../../components/TagSelector.vue';
 import RichEditor from '../../components/RichEditor.vue';
+import SEOMeta from '../../components/SEOMeta.vue';
 
 const props = defineProps({
   id: {

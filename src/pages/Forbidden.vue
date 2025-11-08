@@ -1,4 +1,5 @@
 <template>
+  <SEOMeta />
   <Container>
     <div class="forbidden-page">
       <h1 class="code">403</h1>
@@ -18,6 +19,7 @@
 import { CdxButton, CdxIcon } from '@wikimedia/codex';
 import { cdxIconHome } from '@wikimedia/codex-icons';
 import Container from '../components/Container.vue';
+import SEOMeta from '../components/SEOMeta.vue';
 </script>
 
 <style scoped>
