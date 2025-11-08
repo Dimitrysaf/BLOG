@@ -2,61 +2,52 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { supabase } from './supabase'; // Import supabase client
 import { openAuthDialog } from './auth'; // Correctly import the specific function
 
-import Home from './pages/Home.vue';
-import NotFound from './pages/NotFound.vue';
-import Post from './pages/Post.vue';
-import AdminDashboard from './pages/admin/AdminDashboard.vue';
-import PostEditor from './pages/admin/PostEditor.vue'; // Import PostEditor
-import Forbidden from './pages/Forbidden.vue';
-import PrivacyPolicies from './pages/PrivacyPolicies.vue';
-import Contact from './pages/Contact.vue';
-
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
+    component: () => import('./pages/Home.vue'),
   },
   {
     path: '/p/:slug',
     name: 'Post',
-    component: Post,
+    component: () => import('./pages/Post.vue'),
   },
   {
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
-    component: PrivacyPolicies,
+    component: () => import('./pages/PrivacyPolicies.vue'),
     meta: { title: 'Πολιτική Απορρήτου' },
   },
   {
     path: '/contact',
     name: 'Contact',
-    component: Contact,
+    component: () => import('./pages/Contact.vue'),
     meta: { title: 'Επικοινωνία' },
   },
   {
     path: '/admin',
     name: 'AdminDashboard',
-    component: AdminDashboard,
+    component: () => import('./pages/admin/AdminDashboard.vue'),
     meta: { requiresAuth: true, requiredRole: 'admin', title: 'Πίνακας Ελέγχou' },
   },
   {
     path: '/admin/edit/:id',
     name: 'PostEditor',
-    component: PostEditor,
+    component: () => import('./pages/admin/PostEditor.vue'),
     props: true, // Pass route params as props
     meta: { requiresAuth: true, requiredRole: 'admin', title: 'Επεξεργασία Άρθρου' },
   },
   {
     path: '/forbidden',
     name: 'Forbidden',
-    component: Forbidden,
+    component: () => import('./pages/Forbidden.vue'),
     meta: { title: 'Απαγορευμένη Πρόσβαση' },
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: NotFound,
+    component: () => import('./pages/NotFound.vue'),
     meta: { title: 'Η Σελίδα δεν Βρέθηκε' },
   },
 ];
