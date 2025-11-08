@@ -1,6 +1,6 @@
 
 <template>
-  <Container class="comment-list-container">
+  <div class="comment-list-container">
     <div class="comments-header">
       <h3 class="comments-title">Σχόλια ({{ comments.length }})</h3>
       <CdxButton
@@ -23,7 +23,7 @@
     <div v-else class="no-comments-container">
       <p>Δεν υπάρχουν σχόλια ακόμα. Γίνε ο πρώτος που θα σχολιάσει!</p>
     </div>
-  </Container>
+  </div>
 </template>
 
 <script setup>
@@ -31,7 +31,6 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { supabase } from '../supabase';
 import { CdxMessage, CdxButton, CdxMenuItem, CdxIcon } from '@wikimedia/codex';
 import { cdxIconUserAvatar, cdxIconReload } from '@wikimedia/codex-icons';
-import Container from './Container.vue';
 import loadingService from '../loading';
 
 const props = defineProps({

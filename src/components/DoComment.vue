@@ -1,6 +1,6 @@
 
 <template>
-  <Container class="do-comment-container">
+  <div class="do-comment-container">
     <div v-if="user">
       <CdxField
         :status="status"
@@ -37,7 +37,7 @@
         Πρέπει να είστε <a href="#" @click.prevent="openAuthDialog" class="footer-link">συνδεδεμένοι</a> για να σχολιάσετε.
       </CdxMessage>
     </div>
-  </Container>
+  </div>
 </template>
 
 <script setup>
@@ -46,7 +46,6 @@ import { supabase } from '../supabase';
 import { user, openAuthDialog } from '../auth';
 import { CdxField, CdxTextArea, CdxButton, CdxMessage } from '@wikimedia/codex';
 import notificationService from '../notification';
-import Container from './Container.vue';
 
 const MAX_CHARS = 1000;
 

@@ -282,6 +282,16 @@ function formatDate(dateString) {
     position: relative;
     z-index: 1;
 }
+
+.post-body a {
+  color: #36c;
+  text-decoration: none;
+  font-family: sans-serif;
+}
+
+.post-body a:hover {
+  text-decoration: underline;
+}
 </style>
 
 <style scoped>
