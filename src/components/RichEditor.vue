@@ -123,9 +123,32 @@
         <cdx-button @click="addTable" aria-label="Insert Table" weight="quiet">
           <cdx-icon :icon="cdxIconTable" />
         </cdx-button>
+		<cdx-toggle-button
+			ref="linkTrigger"
+			v-model="showLinkPopover"
+			aria-label="Add link"
+			weight="quiet"
+		>
+			<cdx-icon :icon="cdxIconLink" />
+		</cdx-toggle-button>
       </div>
     </div>
-
+	<cdx-popover
+		v-model:open="showLinkPopover"
+		:anchor="linkTrigger"
+		placement="bottom-start"
+		:render-in-place="true"
+		title="Insert Link"
+		:use-close-button="true"
+		:icon="cdxIconLink"
+		:primary-action="{ label: 'Insert', actionType: 'progressive' }"
+		:default-action="{ label: 'Cancel' }"
+		@primary="setLink"
+		@default="showLinkPopover = false"
+	>
+		<cdx-text-input v-model="linkUrl" placeholder="Enter URL" />
+		<cdx-text-input v-model="linkText" placeholder="Enter text" />
+	</cdx-popover>
     <div class="editor-content-wrapper">
       <editor-content :editor="editor" />
     </div>
@@ -146,7 +169,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Subscript from '@tiptap/extension-subscript';
 import Superscript from '@tiptap/extension-superscript';
 import { TextStyle } from '@tiptap/extension-text-style';
-import { onBeforeUnmount, watch } from 'vue';
+import { onBeforeUnmount, watch, ref } from 'vue';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { createLowlight } from 'lowlight';
 import css from 'highlight.js/lib/languages/css';
@@ -155,8 +178,9 @@ import ts from 'highlight.js/lib/languages/typescript';
 import html from 'highlight.js/lib/languages/xml';
 import bash from 'highlight.js/lib/languages/bash';
 import powershell from 'highlight.js/lib/languages/powershell';
+import Link from '@tiptap/extension-link';
 
-import { CdxButton, CdxIcon } from '@wikimedia/codex';
+import { CdxButton, CdxIcon, CdxPopover, CdxTextInput, CdxToggleButton } from '@wikimedia/codex';
 import {
   cdxIconBold, cdxIconItalic, cdxIconStrikethrough, cdxIconTextStyle,
   cdxIconListBullet, cdxIconListNumbered, cdxIconImage, cdxIconTable,
@@ -164,7 +188,7 @@ import {
   cdxIconTableAddColumnBefore, cdxIconTableAddColumnAfter,
   cdxIconTableAddRowBefore, cdxIconTableAddRowAfter, cdxIconSubtract,
   cdxIconUnderline, cdxIconAlignLeft, cdxIconAlignCenter, cdxIconAlignRight,
-  cdxIconClear, cdxIconSubscript, cdxIconSuperscript
+  cdxIconClear, cdxIconSubscript, cdxIconSuperscript, cdxIconLink
 } from '@wikimedia/codex-icons';
 
 const lowlight = createLowlight();
@@ -209,6 +233,9 @@ const editor = useEditor({
     Subscript,
     Superscript,
     TextStyle,
+	Link.configure({
+		openOnClick: false,
+	})
   ],
   editorProps: {
     attributes: { class: 'ProseMirror' },
@@ -236,6 +263,26 @@ function insertImage(url) {
     editor.value.chain().focus().setImage({ src: url }).run();
   }
 }
+
+const showLinkPopover = ref(false);
+const linkUrl = ref('');
+const linkText = ref('');
+const linkTrigger = ref();
+
+function setLink() {
+	if (linkUrl.value && editor.value) {
+		const { from, to } = editor.value.state.selection;
+		if (linkText.value) {
+			editor.value.chain().focus().insertContentAt({ from, to }, `<a href="${linkUrl.value}">${linkText.value}</a>`).run();
+		} else {
+			editor.value.chain().focus().extendMarkRange('link').setLink({ href: linkUrl.value }).run();
+		}
+		showLinkPopover.value = false;
+		linkUrl.value = '';
+		linkText.value = '';
+	}
+}
+
 
 onBeforeUnmount(() => {
   if (editor.value) {
