@@ -128,6 +128,7 @@
 			v-model="showLinkPopover"
 			aria-label="Add link"
 			weight="quiet"
+			:class="{ 'is-active': editor.isActive('link') }"
 		>
 			<cdx-icon :icon="cdxIconLink" />
 		</cdx-toggle-button>
@@ -138,16 +139,23 @@
 		:anchor="linkTrigger"
 		placement="bottom-start"
 		:render-in-place="true"
-		title="Insert Link"
+		title="Εισαγωγή Συνδέσμου"
 		:use-close-button="true"
 		:icon="cdxIconLink"
-		:primary-action="{ label: 'Insert', actionType: 'progressive' }"
-		:default-action="{ label: 'Cancel' }"
+		:primary-action="{ label: 'Εισαγωγή', actionType: 'progressive' }"
+		:default-action="{ label: 'Ακύρωση' }"
 		@primary="setLink"
 		@default="showLinkPopover = false"
+		:stacked-actions="true"
 	>
-		<cdx-text-input v-model="linkUrl" placeholder="Enter URL" />
-		<cdx-text-input v-model="linkText" placeholder="Enter text" />
+		<cdx-field>
+			<cdx-text-input v-model="linkUrl" placeholder="https://..." />
+			<template #label>URL</template>
+		</cdx-field>
+		<cdx-field>
+			<cdx-text-input v-model="linkText" placeholder="Κείμενο συνδέσμου" />
+			<template #label>Κείμενο</template>
+		</cdx-field>
 	</cdx-popover>
     <div class="editor-content-wrapper">
       <editor-content :editor="editor" />
@@ -180,7 +188,7 @@ import bash from 'highlight.js/lib/languages/bash';
 import powershell from 'highlight.js/lib/languages/powershell';
 import Link from '@tiptap/extension-link';
 
-import { CdxButton, CdxIcon, CdxPopover, CdxTextInput, CdxToggleButton } from '@wikimedia/codex';
+import { CdxButton, CdxIcon, CdxPopover, CdxTextInput, CdxToggleButton, CdxField } from '@wikimedia/codex';
 import {
   cdxIconBold, cdxIconItalic, cdxIconStrikethrough, cdxIconTextStyle,
   cdxIconListBullet, cdxIconListNumbered, cdxIconImage, cdxIconTable,
@@ -317,7 +325,8 @@ defineExpose({ insertImage });
   padding: 0.25rem;
   background: white;
 }
-.editor-toolbar .cdx-button.is-active {
+.editor-toolbar .cdx-button.is-active,
+.editor-toolbar .cdx-toggle-button.is-active {
   background-color: #eaf3ff;
   color: #36c;
 }
