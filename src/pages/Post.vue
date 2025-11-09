@@ -5,44 +5,41 @@
         Η φόρτωση της ανάρτησης απέτυχε: {{ error }}
       </CdxMessage>
   </div>
-
   <!-- Content -->
   <div v-else-if="post" class="post-page-wrapper">
     <div class="blue-banner" :style="bannerStyle">
-      <div class="banner-content">
-        <div class="post-details">
-          <h1>{{ post.title }}</h1>
-        </div>
-
-        <!-- Wrapper for all metadata with a white background -->
-        <div class="meta-wrapper">
-          <div class="post-meta">
-            <span v-if="post.author" class="meta-item">
-              <CdxIcon :icon="cdxIconUserAvatarOutline" />
-              <span>{{ post.author.full_name }}</span>
-            </span>
-            <span class="meta-item">
-              <CdxIcon :icon="cdxIconCalendar" />
-              <span>{{ formatDate(post.created_at) }}</span>
-            </span>
+      <Container>
+        <div class="banner-content">
+          <div class="post-details">
+            <h1>{{ post.title }}</h1>
           </div>
-
-          <div v-if="tags.length" class="tags-container">
-            <CdxIcon :icon="cdxIconTag" />
-            <div class="tags-list">
-              <span 
-                v-for="tag in tags" 
-                :key="tag.id" 
-                class="tag-item"
-                v-tooltip="tag.description"
-              >
-                {{ tag.name }}
+          <!-- Wrapper for all metadata with a white background -->
+          <div class="meta-wrapper">
+            <div class="post-meta">
+              <span v-if="post.author" class="meta-item">
+                <CdxIcon :icon="cdxIconUserAvatarOutline" />
+                <span>{{ post.author.full_name }}</span>
               </span>
+              <span class="meta-item">
+                <CdxIcon :icon="cdxIconCalendar" />
+                <span>{{ formatDate(post.created_at) }}</span>
+              </span>
+            </div>
+            <div v-if="tags.length" class="tags-container">
+              <CdxIcon :icon="cdxIconTag" />
+              <div class="tags-list">
+                <span 
+                  v-for="tag in tags" 
+                  :key="tag.id" 
+                  class="tag-item"
+                  v-tooltip="tag.description"
+                >
+                  {{ tag.name }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-
-      </div>
         <div class="share-button-banner-container">
             <ShareButton
               v-if="post"
@@ -51,8 +48,8 @@
               :description="postDescription"
             />
         </div>
+      </Container>
     </div>
-
     <div class="main-content-area" :aria-label="'Main content of the article: ' + post.title">
         <Container class="content-container">
             <div ref="postBody" class="post-body" v-html="post.content"></div>
@@ -63,7 +60,6 @@
             </div>
         </Container>
     </div>
-
   </div>
 </template>
 
