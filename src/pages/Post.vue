@@ -43,6 +43,14 @@
         </div>
 
       </div>
+        <div class="share-button-banner-container">
+            <ShareButton
+              v-if="post"
+              :title="post.title"
+              :url="postUrl"
+              :description="postDescription"
+            />
+        </div>
     </div>
 
     <div class="main-content-area" :aria-label="'Main content of the article: ' + post.title">
@@ -68,6 +76,7 @@ import loadingService from '../loading.js';
 import Container from '../components/Container.vue';
 import DoComment from '../components/DoComment.vue';
 import CommentList from '../components/CommentList.vue';
+import ShareButton from '../components/ShareButton.vue';
 import { CdxIcon, CdxMessage, CdxTooltip } from '@wikimedia/codex';
 import {
   cdxIconUserAvatarOutline,
@@ -100,6 +109,18 @@ const tags = ref([]);
 const error = ref(null);
 const postBody = ref(null);
 const commentListRef = ref(null);
+
+const postDescription = computed(() => {
+  if (post.value?.content) {
+    const div = document.createElement('div');
+    div.innerHTML = post.value.content;
+    const text = div.textContent || div.innerText || '';
+    return text.substring(0, 160) + '...';
+  }
+  return post.value?.title || '';
+});
+
+const postUrl = computed(() => window.location.href);
 
 const bannerStyle = computed(() => {
   if (post.value?.image_url) {
@@ -326,6 +347,7 @@ function formatDate(dateString) {
   background-color: #36c;
   border-bottom: 4px solid rgba(0, 0, 0, 0.096);
   width: 100%;
+  position: relative;
 }
 
 .banner-content {
@@ -414,6 +436,15 @@ function formatDate(dateString) {
   border-top: 1px solid #c8ccd1;
 }
 
+.share-button-banner-container {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+
 @media (max-width: 1254px) {
   .content-container {
     border-left: none;
@@ -430,6 +461,11 @@ function formatDate(dateString) {
     flex-direction: column;
     gap: 16px;
     align-items: center;
+  }
+
+  .share-button-banner-container {
+    position: static;
+    margin-top: 16px;
   }
 }
 </style>
