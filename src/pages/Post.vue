@@ -415,8 +415,8 @@ function formatDate(dateString) {
 }
 
 .tag-item {
-  background-color: #f8f9fa; /* Light gray background */
-  color: black; /* Black text for contrast */
+  background-color: #f8f9fa; 
+  color: black;
   padding: 4px 8px;
   font-size: 0.9rem;
   border: 1px solid #c8ccd1;
@@ -461,11 +461,6 @@ function formatDate(dateString) {
     flex-direction: column;
     gap: 16px;
     align-items: center;
-  }
-
-  .share-button-banner-container {
-    position: static;
-    margin-top: 16px;
   }
 }
 </style>
