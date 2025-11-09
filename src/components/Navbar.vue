@@ -1,8 +1,11 @@
 <template>
-  <nav class="navbar">
+  <nav class="navbar" role="navigation" aria-label="Main Navigation">
     <Container>
       <div class="navbar-content">
-        <router-link to="/" class="logo">To Ιστολόγιο<br /><span class="sublogo">του Δημήτρη</span></router-link>
+        <router-link to="/" class="logo" aria-label="Homepage">
+          <span aria-hidden="true">To Ιστολόγιο</span><br />
+          <span class="sublogo" aria-hidden="true">του Δημήτρη</span>
+        </router-link>
         <div class="navbar-actions">
           <Search />
           <AccountMenu />

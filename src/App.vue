@@ -9,12 +9,16 @@
         :notification="notification"
       />
     </div>
-    <Navbar/>
-    <div class="main-content">
+    <header role="banner">
+      <Navbar/>
+    </header>
+    <main role="main" class="main-content">
       <router-view :key="$route.fullPath" />
-    </div>
+    </main>
     <CookieBanner />
-    <Footer />
+    <footer role="contentinfo">
+      <Footer />
+    </footer>
     <UserCompleteDialog 
       v-model="isCompleteProfileDialogOpen"
       @profile-completed="handleProfileCompleted"

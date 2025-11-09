@@ -1,6 +1,5 @@
-# Allow all user agents to crawl the entire site
 User-agent: *
-Disallow: /admin/
+Allow: /
+Disallow: /admin
 
-# Point crawlers to the sitemap
-Sitemap: https://dimblog.vercel.app/sitemap.xml
+Sitemap: https://your-website.com/sitemap.xml

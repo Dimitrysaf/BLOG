@@ -3,13 +3,14 @@
     <SEOMeta
       title="Το Ιστολόγιο του Δημήτρη"
       description="Ένα blog για πολιτική, τεχνολογία, προγραμματισμό και τρέχοντα θέματα. Αναλύσεις, σχόλια και προβληματισμοί από τον Δημήτρη Μηλιάτη."
-      image="public/bradning.png"
+      image="/bradning.png"
       type="website"
     />
     
     <div class="blue-banner">
       <Container>
         <h1 class="banner-title">Το Ιστολόγιο του <span class="highlight">Δημήτρη</span></h1>
+        <p class="banner-description">Καλώς ήρθατε στο Ιστολόγιό μου όπου μοιράζομαι τις σκέψεις μου για την πολιτική, την τεχνολογία, τον προγραμματισμό και τα τρέχοντα γεγονότα ή παντελώς άσχετα πράγματα. Ανάλυση, σχολιασμός και προβληματισμοί από μένα Δημήτρη Μηλιάτη.</p>
       </Container>
     </div>
     <Container>
@@ -55,5 +56,12 @@ import SEOMeta from '../components/SEOMeta.vue'
   font-style: italic;
   text-decoration: underline;
   padding: 0 8px;
+}
+
+.banner-description {
+  color: white;
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 </style>
